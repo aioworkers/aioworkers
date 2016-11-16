@@ -60,6 +60,10 @@ class MergeDict(dict):
                 value = type(self)(value)
             super().__setitem__(key, value)
 
+    def update(self, d, *args, **kwargs):
+        for k, v in d.items():
+            self[k] = v
+
     def get(self, key, default=None):
         if '.' in key:
             d = self
@@ -69,6 +73,7 @@ class MergeDict(dict):
                     d = d[k]
                 except:
                     return default
+            return d
         else:
             return super().get(key, default)
 
