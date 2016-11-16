@@ -3,7 +3,21 @@ import asyncio
 
 class BaseApplication:
     def __init__(self, *, config, **kwargs):
-        self.config = kwargs.pop('config', None)
+        self.config = config
+
+    @classmethod
+    async def prepare(cls, kwargs):
+        return kwargs
+
+    async def init(self):
+        pass
+
+    @classmethod
+    async def factory(cls, **kwargs):
+        kwargs = await cls.prepare(kwargs)
+        app = cls(**kwargs)
+        await app.init()
+        return app
 
     def run_forever(self, **kwargs):
         loop = self.loop
