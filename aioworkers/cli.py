@@ -1,11 +1,11 @@
 import argparse
 import asyncio
+import logging.config
 
 from . import config, utils
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--config', required=True)
 parser.add_argument('--host')
 parser.add_argument('-p', '--port', type=int)
 
@@ -18,9 +18,16 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-def main():
-    args = parser.parse_args()
-    conf = config.load_conf(args.config)
+def main(*config_files, args=None, config_dirs=()):
+    if args is None:
+        args = parser.parse_args()
+        if getattr(args, 'config', None):
+            config_files += (args.config,)
+    conf = config.load_conf(*config_files, search_dirs=config_dirs)
+
+    if 'logging' in conf:
+        logging.config.dictConfig(conf.logging)
+
     if args.host:
         conf['http.host'] = args.host
     if args.port is not None:
@@ -33,9 +40,11 @@ def main():
     else:
         from .app import Application as cls
 
-    app = cls(loop=asyncio.get_event_loop(), config=conf)
+    loop = asyncio.get_event_loop()
+    app = loop.run_until_complete(cls.factory(loop=loop, config=conf))
     app.run_forever(host=conf.http.host, port=conf.http.port)
 
 
 if __name__ == '__main__':
+    parser.add_argument('-c', '--config', required=True)
     main()
