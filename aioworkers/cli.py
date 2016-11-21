@@ -2,7 +2,9 @@ import argparse
 import asyncio
 import logging.config
 
-from . import config, utils
+from . import config
+from .app import BaseApplication
+from .core import loader
 
 
 parser = argparse.ArgumentParser()
@@ -24,6 +26,8 @@ def main(*config_files, args=None, config_dirs=()):
         if getattr(args, 'config', None):
             config_files += (args.config,)
     conf = config.load_conf(*config_files, search_dirs=config_dirs)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(loader.load_entities(conf, loop=loop))
 
     if 'logging' in conf:
         logging.config.dictConfig(conf.logging)
@@ -33,15 +37,15 @@ def main(*config_files, args=None, config_dirs=()):
     if args.port is not None:
         conf['http.port'] = args.port
 
-    if conf.get('app.cls'):
-        cls = utils.import_name(conf.app.cls)
-    elif conf.http.port:
-        from .http import Application as cls
+    if isinstance(conf.get('app'), BaseApplication):
+        app = conf['app']
     else:
-        from .app import Application as cls
+        if conf.http.port:
+            from .http import Application as cls
+        else:
+            from .app import Application as cls
+        app = loop.run_until_complete(cls.factory(loop=loop, config=conf))
 
-    loop = asyncio.get_event_loop()
-    app = loop.run_until_complete(cls.factory(loop=loop, config=conf))
     app.run_forever(host=conf.http.host, port=conf.http.port)
 
 
