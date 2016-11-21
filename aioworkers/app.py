@@ -31,6 +31,12 @@ class BaseApplication:
             pass
         loop.close()
 
+    def __getitem__(self, item):
+        v = self.config.get(item)
+        if v:
+            return v
+        return super().__getitem__(item)
+
 
 class Application(BaseApplication, dict):
     def __init__(self, *, loop, config, **kwargs):
