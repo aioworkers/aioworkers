@@ -1,13 +1,19 @@
 import asyncio
+from abc import ABC
 
 
-class AbstractEntity:
+class AbstractEntity(ABC):
     def __init__(self, config, *, context=None, loop=None):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        self.loop = loop
+        self._loop = loop or asyncio.get_event_loop()
         self._context = context
         self._config = config
+
+    async def init(self):
+        pass
+
+    @property
+    def loop(self):
+        return self._loop
 
 
 class AbstractNamedEntity(AbstractEntity):
