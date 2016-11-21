@@ -20,9 +20,10 @@ class MergeDict(dict):
         return type(self).__name__ + r
 
     def __getattr__(self, item):
-        if item in self:
+        try:
             return self[item]
-        raise AttributeError(item)
+        except KeyError:
+            raise AttributeError(item)
 
     def __setattr__(self, key, value):
         self[key] = value
@@ -65,17 +66,20 @@ class MergeDict(dict):
             self[k] = v
 
     def get(self, key, default=None):
-        if '.' in key:
+        try:
+            return self[key]
+        except:
+            return default
+
+    def __getitem__(self, item):
+        if '.' in item:
             d = self
-            path = key.split('.')
+            path = item.split('.')
             for k in path:
-                try:
-                    d = d[k]
-                except:
-                    return default
+                d = d[k]
             return d
         else:
-            return super().get(key, default)
+            return super().__getitem__(item)
 
     def __call__(self, *args, **kwargs):
         for arg in args:

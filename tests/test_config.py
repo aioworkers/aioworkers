@@ -8,9 +8,19 @@ def test_dict_create():
     assert d.d.g == 1
 
 
-def test_dict_dot_get():
+def test_dict_dot_get_1():
     d = MergeDict(f=3, d=dict(g=1))
     assert d.get('f.d.e.d') is None
+
+
+def test_dict_dot_get_2():
+    d = MergeDict(f=3, d=dict(g=1))
+    assert d.get('d.g') == 1
+
+
+def test_dict_dot_get_3():
+    d = MergeDict(f=3, d=dict(g=1))
+    assert d['d.g'] == 1
 
 
 def test_dict_replace1():
