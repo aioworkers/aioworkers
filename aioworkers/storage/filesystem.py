@@ -2,6 +2,7 @@ import hashlib
 import os
 
 from . import base
+from .. import utils
 
 
 class FileSystemStorage(base.AbstractStorage):
@@ -33,6 +34,7 @@ class FileSystemStorage(base.AbstractStorage):
         await self.loop.run_in_executor(
             self.executor, self._write, k, value)
 
+    @utils.method_replicate_result(key=lambda self, k: k)
     async def get(self, key):
         k = self._make_key(key)
         return await self.loop.run_in_executor(
