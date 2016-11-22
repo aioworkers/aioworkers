@@ -38,13 +38,14 @@ def main(*config_files, args=None, config_dirs=()):
         conf['http.port'] = args.port
 
     if isinstance(conf.get('app'), BaseApplication):
-        app = conf['app']
+        app = conf.app
     else:
         if conf.http.port:
             from .http import Application as cls
         else:
             from .app import Application as cls
         app = loop.run_until_complete(cls.factory(loop=loop, config=conf))
+        conf['app'] = app
 
     app.run_forever(host=conf.http.host, port=conf.http.port)
 
