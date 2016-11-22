@@ -15,6 +15,14 @@ class AbstractEntity(ABC):
     def loop(self):
         return self._loop
 
+    @property
+    def config(self):
+        return self._config
+
+    @property
+    def context(self):
+        return self._context
+
 
 class AbstractNamedEntity(AbstractEntity):
     def __init__(self, config, *, context=None, loop=None):
