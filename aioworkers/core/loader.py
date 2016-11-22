@@ -16,6 +16,8 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=()):
         cls = utils.import_name(conf['app.cls'])
         conf['app'] = await cls.factory(config=conf['app'], loop=loop)
         context = Context(conf, loop=loop)
+    elif context is None:
+        context = Context(conf, loop=loop)
 
     for k, v in conf.items():
         if not isinstance(v, Mapping):
