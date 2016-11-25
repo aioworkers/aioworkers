@@ -17,5 +17,5 @@ Easy configurable workers based on asyncio
 Features
 --------
 
-* Specify abstract class for communication between components in application
+* Specify abstract class for communication between components
 * Configuration subsystem
