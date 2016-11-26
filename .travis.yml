@@ -1,0 +1,14 @@
+language: python
+sudo: false
+python:
+  - 3.5.2
+install:
+  - pip install -U pip setuptools
+  - pip install -U pytest-runner pytest-aiohttp pytest-pep8 pytest-mock pytest-cov
+  - pip install -U uvloop aiohttp aiohttp_apiset
+  - pip install codecov
+  - python setup.py install
+script: py.test
+
+after_success:
+  - codecov
