@@ -6,7 +6,9 @@ from ..utils import import_name
 
 class Context(AbstractEntity, Mapping):
     def __getitem__(self, item):
-        if isinstance(item, str):
+        if item is None:
+            return
+        elif isinstance(item, str):
             try:
                 return self._config[item]
             except:
