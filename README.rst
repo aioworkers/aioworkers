@@ -6,6 +6,20 @@ aioworkers
 .. image:: https://img.shields.io/pypi/v/aioworkers.svg
         :target: https://pypi.python.org/pypi/aioworkers
 
+.. image:: https://img.shields.io/travis/aamalev/aioworkers.svg
+        :target: https://travis-ci.org/aamalev/aioworkers
+
+.. image:: https://codecov.io/gh/aamalev/aioworkers/branch/master/graph/badge.svg
+        :target: https://codecov.io/gh/aamalev/aioworkers
+
+.. image:: https://readthedocs.org/projects/aioworkers/badge/?version=latest
+        :target: https://aioworkers.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
+.. image:: https://pyup.io/repos/github/aamalev/aioworkers/shield.svg
+     :target: https://pyup.io/repos/github/aamalev/aioworkers/
+     :alt: Updates
+
 
 Easy configurable workers based on asyncio
 
