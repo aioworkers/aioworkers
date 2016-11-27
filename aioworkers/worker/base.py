@@ -38,7 +38,8 @@ class Worker(AbstractWorker):
         self._stoped_at = None
         self._future = None
         if self.config.get('run'):
-            self.run = import_name(self.config.run)
+            run = import_name(self.config.run)
+            self.run = lambda value=None: run(self, value)
         self._input = self.context[self.config.get('input')]
         self._output = self.context[self.config.get('output')]
         if self._input or self._output:
