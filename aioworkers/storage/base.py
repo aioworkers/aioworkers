@@ -3,14 +3,20 @@ from abc import abstractmethod
 from aioworkers.core.base import AbstractNamedEntity
 
 
-class AbstractStorage(AbstractNamedEntity):
+class AbstractStorageReadOnly(AbstractNamedEntity):
+    @abstractmethod
+    async def get(self, key):
+        raise NotImplementedError()
+
+
+class AbstractStorageWriteOnly(AbstractNamedEntity):
     @abstractmethod
     async def set(self, key, value):
         raise NotImplementedError()
 
-    @abstractmethod
-    async def get(self, key):
-        raise NotImplementedError()
+
+class AbstractStorage(AbstractStorageReadOnly, AbstractStorageWriteOnly):
+    pass
 
 
 class AbstractListedStorage(AbstractStorage):
