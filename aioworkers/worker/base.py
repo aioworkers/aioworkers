@@ -52,6 +52,14 @@ class Worker(AbstractWorker):
         if self.config.get('autorun'):
             await self.start()
 
+    @property
+    def input(self):
+        return self._input
+
+    @property
+    def output(self):
+        return self._output
+
     async def runner(self):
         try:
             if self._sleep_start:
