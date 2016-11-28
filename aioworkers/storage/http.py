@@ -12,7 +12,7 @@ class Storage(base.AbstractStorageReadOnly):
         semaphore: int
         allow_hosts: list
         prefix: url prefix
-        format: [json|form|str|bytes]
+        format: [json|str|bytes]
     """
     async def init(self):
         self._prefix = self.config.get('prefix')
@@ -35,9 +35,7 @@ class Storage(base.AbstractStorageReadOnly):
         async with self._semaphore:
             with client.ClientSession(loop=self.loop) as session:
                 async with session.get(url) as response:
-                    if self._format == 'form':
-                        return await response.post()
-                    elif self._format in ('str', 'bytes'):
+                    if self._format in ('str', 'bytes'):
                         data = await response.read()
                     else:
                         return await response.json()
