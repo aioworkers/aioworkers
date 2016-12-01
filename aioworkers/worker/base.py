@@ -40,9 +40,7 @@ class Worker(AbstractWorker):
         if self.config.get('run'):
             run = import_name(self.config.run)
             self.run = lambda value=None: run(self, value)
-        self._input = self.context[self.config.get('input')]
-        self._output = self.context[self.config.get('output')]
-        if self._input or self._output:
+        if self.input is not None or self.output is not None:
             self._persist = True
         else:
             self._persist = self.config.get('persist')
@@ -54,11 +52,11 @@ class Worker(AbstractWorker):
 
     @property
     def input(self):
-        return self._input
+        return self.context[self.config.get('input')]
 
     @property
     def output(self):
-        return self._output
+        return self.context[self.config.get('output')]
 
     async def runner(self):
         try:
@@ -66,13 +64,13 @@ class Worker(AbstractWorker):
                 await asyncio.sleep(self._sleep_start, loop=self.loop)
             while True:
                 try:
-                    if self._input:
-                        args = (await self._input.get(),)
+                    if self.input is not None:
+                        args = (await self.input.get(),)
                     else:
                         args = ()
                     result = await self.run(*args)
-                    if self._output:
-                        await self._output.put(result)
+                    if self.output is not None:
+                        await self.output.put(result)
                 except BaseException:
                     self.logger.exception('ERROR')
                 if not self._persist:
