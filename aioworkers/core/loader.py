@@ -28,7 +28,7 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=()):
             if 'name' not in v:
                 v['name'] = '.'.join(path + (k,))
             cls = utils.import_name(v['cls'])
-            logger.info(v['cls'], cls)
+            logger.debug('Imported "{}" as {}'.format(v['cls'], cls))
             conf[k] = cls(v, context=context, loop=loop)
             entities[path + (k,)] = conf[k]
         else:
