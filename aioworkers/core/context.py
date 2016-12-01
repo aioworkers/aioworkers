@@ -23,7 +23,7 @@ class Context(AbstractEntity, Mapping):
                 args = item.get('args', ())
                 kwargs = item.get('kwargs', {})
                 return func(*args, **kwargs)
-        raise KeyError
+        raise KeyError(item)
 
     def __getattr__(self, item):
         try:
