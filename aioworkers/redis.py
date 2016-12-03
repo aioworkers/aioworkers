@@ -5,15 +5,12 @@ It depends on aioredis
 
 import asyncio
 
-from .core.formatter import get_formatter
+from .core.formatter import FormattedEntity
 from .storage.base import AbstractStorage
 from .queue.base import AbstractQueue
 
 
-class RedisPool:
-    async def init(self):
-        self._formatter = get_formatter(self.config.get('format'))
-
+class RedisPool(FormattedEntity):
     @property
     def pool(self):
         key_pool = self.config.get('pool', 'redis_pool')
@@ -27,7 +24,7 @@ class RedisQueue(RedisPool, AbstractQueue):
         return super().init()
 
     async def put(self, value):
-        value = self._formatter.encode(value)
+        value = self.encode(value)
         async with self.pool as conn:
             return await conn.rpush(self._key, value)
 
@@ -35,7 +32,7 @@ class RedisQueue(RedisPool, AbstractQueue):
         async with self._lock:
             async with self.pool as conn:
                 result = await conn.blpop(self._key)
-        value = self._formatter.decode(result[-1])
+        value = self.decode(result[-1])
         return value
 
     async def length(self):
@@ -45,7 +42,7 @@ class RedisQueue(RedisPool, AbstractQueue):
     async def list(self):
         async with self.pool as conn:
             return [
-                self._formatter.decode(i)
+                self.decode(i)
                 for i in await conn.lrange(self._key, 0, -1)]
 
     async def clear(self):
@@ -65,7 +62,7 @@ class RedisZQueue(RedisQueue):
 
     async def put(self, value):
         score, val = value
-        val = self._formatter.encode(val)
+        val = self.encode(val)
         async with self.pool as conn:
             return await conn.zadd(self._key, score, val)
 
@@ -75,7 +72,7 @@ class RedisZQueue(RedisQueue):
                 async with self.pool as conn:
                     lv = await conn.eval(self._script, [self._key])
                 if lv:
-                    return self._formatter.decode(lv)
+                    return self.decode(lv)
                 await asyncio.sleep(self._timeout, loop=self.loop)
 
     async def length(self):
@@ -84,7 +81,7 @@ class RedisZQueue(RedisQueue):
 
     async def list(self):
         async with self.pool as conn:
-            return [self._formatter.decode(i)
+            return [self.decode(i)
                     for i in await conn.zrange(self._key)]
 
 
@@ -94,11 +91,11 @@ class RedisStorage(RedisPool, AbstractStorage):
         return super().init()
 
     async def set(self, key, value):
-        value = self._formatter.encode(value)
+        value = self.encode(value)
         async with self.pool as conn:
             return await conn.set(self._prefix + key, value)
 
     async def get(self, key):
         async with self.pool as conn:
             value = await conn.get(self._prefix + key)
-        return self._formatter.decode(value)
+        return self.decode(value)
