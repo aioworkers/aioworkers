@@ -15,14 +15,15 @@ class TimestampQueue(AbstractQueue):
         return len(self._queue)
 
     async def get(self):
-        timestamp, value = heapq.nsmallest(1, self._queue)[0]
-        if time.time() >= timestamp:
-            ts, value = heapq.heappop(self._queue)
-            return value
+        if self._queue:
+            timestamp, value = heapq.nsmallest(1, self._queue)[0]
+            if time.time() >= timestamp:
+                ts, value = heapq.heappop(self._queue)
+                return value
+            if not self._future or self._future.done():
+                self._future = self.loop.create_task(self._timer())
         waiter = self.loop.create_future()
         self._waiters.append(waiter)
-        if not self._future or self._future.done():
-            self._future = self.loop.create_task(self._timer())
         return await waiter
 
     async def put(self, value):
