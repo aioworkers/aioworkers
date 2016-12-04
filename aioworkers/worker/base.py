@@ -73,6 +73,8 @@ class Worker(AbstractWorker):
                     result = await self.run(*args)
                     if self._output is not None:
                         await self._output.put(result)
+                except asyncio.CancelledError:
+                    raise
                 except BaseException:
                     self.logger.exception('ERROR')
                 if not self._persist:
