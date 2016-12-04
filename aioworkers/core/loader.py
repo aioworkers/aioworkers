@@ -2,12 +2,13 @@ import logging
 from collections import Mapping
 
 from .. import utils
-from .context import Context
 
 logger = logging.getLogger(__name__)
 
 
 async def load_entities(conf, context=None, loop=None, entities=None, path=()):
+    from .context import Context
+
     ents = {}
     if entities is None:
         entities = ents

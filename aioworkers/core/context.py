@@ -1,10 +1,32 @@
+import asyncio
 from collections import Mapping
 
 from .base import AbstractEntity
+from ..core.loader import load_entities
 from ..utils import import_name
 
 
 class Context(AbstractEntity, Mapping):
+    async def init(self):
+        self._entities = {}
+        self._on_stop = []
+
+        await load_entities(
+            self.config, context=self, loop=self.loop,
+            entities=self._entities)
+
+        inits = []
+        for i in self._entities.values():
+            inits.append(i.init())
+            if hasattr(i, 'stop'):
+                self._on_stop.append(i.stop())
+        if inits:
+            await asyncio.wait(inits, loop=self.loop)
+
+    async def stop(self):
+        if self._on_stop:
+            await asyncio.wait(self._on_stop, loop=self.loop)
+
     def __getitem__(self, item):
         if item is None:
             return
