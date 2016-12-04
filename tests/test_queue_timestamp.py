@@ -33,3 +33,11 @@ async def test_put_unique(loop):
     assert 2 == await q.get()
     assert 1 == await q.get()
     assert not q
+
+
+async def test_stop(loop):
+    q = TimestampQueue({}, loop=loop)
+    await q.init()
+    q.get()
+    await q.put((1, 1))
+    await q.stop()

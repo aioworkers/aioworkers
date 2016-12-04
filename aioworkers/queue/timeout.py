@@ -11,20 +11,27 @@ class TimestampQueue(AbstractQueue):
         self._queue = []
         self._waiters = []
 
+    async def stop(self):
+        if self._future and not self._future.done():
+            self._future.cancel()
+        for i in self._waiters:
+            i.cancel()
+
     def __len__(self):
         return len(self._queue)
 
-    async def get(self):
+    def get(self):
+        waiter = self.loop.create_future()
         if self._queue:
             timestamp, value = heapq.nsmallest(1, self._queue)[0]
             if time.time() >= timestamp:
                 ts, value = heapq.heappop(self._queue)
-                return value
+                waiter.set_result(value)
+                return waiter
             if not self._future or self._future.done():
                 self._future = self.loop.create_task(self._timer())
-        waiter = self.loop.create_future()
         self._waiters.append(waiter)
-        return await waiter
+        return waiter
 
     async def put(self, value):
         heapq.heappush(self._queue, value)
