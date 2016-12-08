@@ -24,7 +24,7 @@ def main(*config_files, args=None, config_dirs=()):
     if args is None:
         args = parser.parse_args()
         if getattr(args, 'config', None):
-            config_files += (args.config,)
+            config_files += tuple(args.config)
     conf = config.load_conf(*config_files, search_dirs=config_dirs)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(loader.load_entities(conf, loop=loop))
@@ -51,5 +51,5 @@ def main(*config_files, args=None, config_dirs=()):
 
 
 if __name__ == '__main__':
-    parser.add_argument('-c', '--config', required=True)
+    parser.add_argument('-c', '--config', nargs='*', required=True)
     main()
