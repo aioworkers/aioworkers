@@ -54,11 +54,11 @@ class Worker(AbstractWorker):
 
     @property
     def input(self):
-        return self._input
+        return self.context[self.config.get('input')]
 
     @property
     def output(self):
-        return self._output
+        return self.context[self.config.get('output')]
 
     async def runner(self):
         try:
@@ -87,8 +87,21 @@ class Worker(AbstractWorker):
     async def run(self, value=None):
         raise NotImplementedError()
 
+    @property
+    def started_at(self):
+        return getattr(self, '_started_at', None)
+
+    @property
+    def stoped_at(self):
+        return getattr(self, '_stoped_at', None)
+
     def running(self):
-        return self._future is not None and not self._future.done()
+        if not hasattr(self, '_future'):
+            return False
+        elif self._future is None:
+            return False
+        else:
+            return not self._future.done()
 
     async def start(self):
         if not self.running():
@@ -96,18 +109,23 @@ class Worker(AbstractWorker):
             self._stoped_at = None
             self._future = self.loop.create_task(self.runner())
 
-    async def stop(self):
-        if self.running():
+    async def stop(self, force=True):
+        if not self.running():
+            pass
+        elif force:
             self._future.cancel()
             self._stoped_at = datetime.datetime.now()
             try:
                 await self._future
             except asyncio.CancelledError:
                 pass
+        else:
+            self._persist = False
+            await self._future
 
     async def status(self):
         return {
-            'started_at': self._started_at,
-            'stoped_at': self._stoped_at,
+            'started_at': self.started_at,
+            'stoped_at': self.stoped_at,
             'running': self.running(),
         }
