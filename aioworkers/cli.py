@@ -3,8 +3,7 @@ import asyncio
 import logging.config
 
 from . import config
-from .app import BaseApplication
-from .core import loader
+from .core.context import Context
 
 
 parser = argparse.ArgumentParser()
@@ -26,8 +25,6 @@ def main(*config_files, args=None, config_dirs=()):
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
     conf = config.load_conf(*config_files, search_dirs=config_dirs)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(loader.load_entities(conf, loop=loop))
 
     if 'logging' in conf:
         logging.config.dictConfig(conf.logging)
@@ -37,17 +34,18 @@ def main(*config_files, args=None, config_dirs=()):
     if args.port is not None:
         conf['http.port'] = args.port
 
-    if isinstance(conf.get('app'), BaseApplication):
-        app = conf.app
-    else:
-        if conf.http.port:
-            from .http import Application as cls
-        else:
-            from .app import Application as cls
-        app = loop.run_until_complete(cls.factory(loop=loop, config=conf))
-        conf['app'] = app
+    loop = asyncio.get_event_loop()
+    context = Context(conf, loop=loop)
 
-    app.run_forever(host=conf.http.host, port=conf.http.port)
+    if not conf.get('app.cls'):
+        if conf.get('http.port'):
+            conf['app.cls'] = 'aioworkers.http.Application'
+        else:
+            conf['app.cls'] = 'aioworkers.app.Application'
+
+    loop.run_until_complete(context.init())
+    context.app.on_shutdown.append(lambda x: context.stop())
+    context.app.run_forever(host=conf.http.host, port=conf.http.port)
 
 
 if __name__ == '__main__':
