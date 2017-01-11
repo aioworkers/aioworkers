@@ -16,7 +16,16 @@ class AbstractStorageWriteOnly(AbstractNamedEntity):
 
 
 class AbstractStorage(AbstractStorageReadOnly, AbstractStorageWriteOnly):
-    pass
+    async def copy(self, key_source, storage_dest, key_dest):
+        data = await self.get(key_source)
+        await storage_dest.set(key_dest, data)
+        return data is None
+
+    async def move(self, key_source, storage_dest, key_dest):
+        result = await self.copy(key_source, storage_dest, key_dest)
+        if result:
+            await self.set(key_source, None)
+        return result
 
 
 class AbstractListedStorage(AbstractStorage):
