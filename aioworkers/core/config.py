@@ -110,8 +110,11 @@ class Config:
         }
         self.search_dirs = [Path(i) for i in search_dirs]
 
-    def load(self, *filenames):
-        config = MergeDict()
+    def load(self, *filenames, base=None):
+        if base is None:
+            config = MergeDict()
+        else:
+            config = base
         fns = []
         for fn in filenames:
             if isinstance(fn, str):
