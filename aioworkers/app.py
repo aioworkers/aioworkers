@@ -2,8 +2,9 @@ import asyncio
 
 
 class BaseApplication:
-    def __init__(self, *, config, **kwargs):
+    def __init__(self, *, config, context, **kwargs):
         self.config = config
+        self.context = context
 
     @classmethod
     async def prepare(cls, kwargs):
@@ -19,6 +20,15 @@ class BaseApplication:
         await app.init()
         return app
 
+
+class Application(BaseApplication, dict):
+    def __init__(self, *, loop, config, context, **kwargs):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        self.loop = loop
+        self.on_shutdown = []
+        super().__init__(config=config, context=context)
+
     def run_forever(self, **kwargs):
         loop = self.loop
 
@@ -29,12 +39,7 @@ class BaseApplication:
             loop.run_forever()
         except KeyboardInterrupt:
             pass
+        finally:
+            loop.run_until_complete(
+                asyncio.wait([coro(self) for coro in self.on_shutdown]))
         loop.close()
-
-
-class Application(BaseApplication, dict):
-    def __init__(self, *, loop, config, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        self.loop = loop
-        super().__init__(config=config)
