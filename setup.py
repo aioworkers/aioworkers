@@ -23,7 +23,7 @@ setup(
     author="Alexander Malev",
     author_email='yttrium@somedev.ru',
     url='https://github.com/aamalev/aioworkers',
-    packages=find_packages(include=['aioworkers*']),
+    packages=[i for i in find_packages() if i.startswith('aioworkers')],
     include_package_data=True,
     install_requires=requirements,
     license="Apache Software License 2.0",
