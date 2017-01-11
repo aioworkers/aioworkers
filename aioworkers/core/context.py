@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections import Mapping
 
 from .base import AbstractEntity
@@ -10,6 +11,7 @@ class Context(AbstractEntity, Mapping):
     async def init(self):
         self._entities = {}
         self._on_stop = []
+        self.logger = logging.getLogger('aioworkers')
 
         await load_entities(
             self.config, context=self, loop=self.loop,
@@ -21,11 +23,19 @@ class Context(AbstractEntity, Mapping):
             if hasattr(i, 'stop'):
                 self._on_stop.append(i.stop())
         if inits:
-            await asyncio.wait(inits, loop=self.loop)
+            await self.wait_all(inits)
+
+    async def wait_all(self, coros):
+        if not coros:
+            return
+        d, p = await asyncio.wait(coros, loop=self.loop)
+        assert not p
+        for f in d:
+            if f.exception():
+                self.logger.exception('ERROR', exc_info=f.exception())
 
     async def stop(self):
-        if self._on_stop:
-            await asyncio.wait(self._on_stop, loop=self.loop)
+        await self.wait_all(self._on_stop)
 
     def __getitem__(self, item):
         if item is None:
