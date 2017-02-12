@@ -23,9 +23,15 @@ class Supervisor(Worker):
     def _wait(self, lmbd):
         return self.context.wait_all([lmbd(w) for w in self._children])
 
+    def get_child_config(self):
+        return self.config.child
+
     def create_child(self):
-        conf = self.config.child
+        conf = self.get_child_config()
         cls = utils.import_name(conf.cls)
+        if 'name' not in conf:
+            name = self.name + '.child'
+            conf['name'] = name
         return cls(conf, context=self.context, loop=self.loop)
 
     async def run(self, value=None):
