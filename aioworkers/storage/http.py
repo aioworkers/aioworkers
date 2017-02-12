@@ -32,7 +32,7 @@ class RoStorage(base.AbstractStorageReadOnly):
     async def stop(self):
         self.session.close()
 
-    def _make_url(self, key):
+    def raw_key(self, key):
         if self._prefix:
             url = self._prefix / key
         elif self._template and isinstance(key, Mapping):
@@ -50,7 +50,7 @@ class RoStorage(base.AbstractStorageReadOnly):
         return url
 
     async def get(self, key):
-        url = self._make_url(key)
+        url = self.raw_key(key)
         async with self._semaphore:
             async with self.session.get(url) as response:
                 logger = self.context.logger
@@ -89,7 +89,7 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
         return getattr(self.session, self.config.get('set', 'post'))
 
     async def set(self, key, value):
-        url = self._make_url(key)
+        url = self.raw_key(key)
         if self._format == 'json':
             data = json.dumps(value)
             headers = {'content-type': 'application/json'}

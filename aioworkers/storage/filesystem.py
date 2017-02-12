@@ -32,25 +32,25 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         with open(key, 'rb') as f:
             return self.decode(f.read())
 
-    def _make_key(self, key):
+    def raw_key(self, key):
         if os.path.isabs(key):
             raise ValueError(key)
         return os.path.join(self._config.path, key)
 
     async def set(self, key, value):
-        k = self._make_key(key)
+        k = self.raw_key(key)
         await self.loop.run_in_executor(
             self.executor, self._write, k, value)
 
     @utils.method_replicate_result(key=lambda self, k: k)
     async def get(self, key):
-        k = self._make_key(key)
+        k = self.raw_key(key)
         return await self.loop.run_in_executor(
             self.executor, self._read, k)
 
     def _copy(self, key_source, storage_dest, key_dest, copy_func):
-        s = self._make_key(key_source)
-        d = storage_dest._make_key(key_dest)
+        s = self.raw_key(key_source)
+        d = storage_dest.raw_key(key_dest)
         if os.path.exists(s):
             copy_func(s, d)
         elif not os.path.exists(d):
@@ -78,13 +78,13 @@ class NestedFileSystemStorage(FileSystemStorage):
     def _nested(self, key):
         return os.path.join(key[:2], key[2:4], key)
 
-    def _make_key(self, key):
-        return super()._make_key(self._nested(key))
+    def raw_key(self, key):
+        return super().raw_key(self._nested(key))
 
 
 class HashFileSystemStorage(NestedFileSystemStorage):
-    def _make_key(self, key):
+    def raw_key(self, key):
         hash = hashlib.md5()
         hash.update(key.encode())
         d = hash.hexdigest()
-        return super()._make_key(d)
+        return super().raw_key(d)
