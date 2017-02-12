@@ -86,16 +86,22 @@ class RedisZQueue(RedisQueue):
 
 
 class RedisStorage(RedisPool, AbstractStorage):
+    def raw_key(self, key):
+        return self._prefix + key
+
     def init(self):
         self._prefix = self.config.get('prefix')
         return super().init()
 
     async def set(self, key, value):
+        key = self.raw_key(key)
         value = self.encode(value)
         async with self.pool as conn:
-            return await conn.set(self._prefix + key, value)
+            return await conn.set(key, value)
 
     async def get(self, key):
+        key = self.raw_key(key)
         async with self.pool as conn:
-            value = await conn.get(self._prefix + key)
-        return self.decode(value)
+            value = await conn.get(key)
+        if value:
+            return self.decode(value)
