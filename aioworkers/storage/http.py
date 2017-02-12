@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from collections import Mapping
+from collections import Mapping, Sequence
 
 from aiohttp import client
 from yarl import URL
@@ -14,6 +14,7 @@ class RoStorage(base.AbstractStorageReadOnly):
     config:
         semaphore: int
         allow_hosts: list
+        return_status: bool, method get returns tuple (CODE, VALUE)
         prefix: url prefix
         template: url template
         format: [json|str|bytes]
@@ -27,6 +28,7 @@ class RoStorage(base.AbstractStorageReadOnly):
             self.config.get('semaphore', 20), loop=self.loop)
         self._allow_hosts = self.config.get('allow_hosts')
         self._format = self.config.get('format', 'json')
+        self._return_status = self.config.get('return_status', False)
         self.session = client.ClientSession(loop=self.loop)
 
     async def stop(self):
@@ -37,7 +39,7 @@ class RoStorage(base.AbstractStorageReadOnly):
             url = self._prefix / key
         elif self._template and isinstance(key, Mapping):
             url = URL(self._template.format_map(key))
-        elif self._template and isinstance(key, (list, tuple)):
+        elif self._template and isinstance(key, Sequence):
             url = URL(self._template.format(*key))
         elif self._template:
             url = URL(self._template.format(key))
@@ -49,13 +51,13 @@ class RoStorage(base.AbstractStorageReadOnly):
             raise KeyError(key)
         return url
 
-    async def get(self, key):
+    async def _get(self, key):
         url = self.raw_key(key)
         async with self._semaphore:
             async with self.session.get(url) as response:
                 logger = self.context.logger
                 if response.status == 404:
-                    return
+                    return response.status, None
                 elif response.status >= 400:
                     if logger.getEffectiveLevel() == logging.DEBUG:
                         logger.debug(
@@ -63,16 +65,27 @@ class RoStorage(base.AbstractStorageReadOnly):
                             'returned code %s:\n%s' % (
                                 url, response.status,
                                 (await response.read()).decode()))
-                    return
+                    return response.status, None
                 elif self._format in ('str', 'bytes'):
                     data = await response.read()
                 else:
-                    return await response.json()
+                    return response.status, await response.json()
+                status = response.status
         if self._format == 'str':
-            return data.decode()
+            return status, data.decode()
+        return status, data
+
+    async def get(self, key):
+        status, data = await self._get(key)
+        if self._return_status:
+            return status, data
         return data
 
     async def copy(self, key_source, storage_dest, key_dest):
+        """ Return True if data are copied
+        * optimized for http->fs copy
+        * not supported return_status
+        """
         from aioworkers.storage.filesystem import FileSystemStorage
         if not isinstance(storage_dest, FileSystemStorage):
             return super().copy(key_source, storage_dest, key_dest)
