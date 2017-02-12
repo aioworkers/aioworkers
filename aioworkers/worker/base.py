@@ -3,11 +3,13 @@ import datetime
 import logging
 from abc import abstractmethod
 
-from ..core.base import AbstractEntity
+import collections
+
+from ..core.base import AbstractNamedEntity
 from ..utils import import_name
 
 
-class AbstractWorker(AbstractEntity):
+class AbstractWorker(AbstractNamedEntity):
     @abstractmethod  # pragma: no cover
     async def start(self):
         raise NotImplementedError()
@@ -37,12 +39,11 @@ class Worker(AbstractWorker):
         self._started_at = None
         self._stoped_at = None
         self._future = None
+        self.counter = collections.Counter()
         if self.config.get('run'):
             run = import_name(self.config.run)
             self.run = lambda value=None: run(self, value)
-        self._input = self.context[self.config.get('input')]
-        self._output = self.context[self.config.get('output')]
-        if self._input is not None or self._output is not None:
+        if self.config.get('input') or self.config.get('output'):
             self._persist = True
         else:
             self._persist = self.config.get('persist')
@@ -50,7 +51,7 @@ class Worker(AbstractWorker):
         self._sleep_start = self.config.get('sleep_start')
         self.logger = logging.getLogger(self.config.get('logger', __name__))
         if self.config.get('autorun'):
-            await self.start()
+            self.context.on_start.append(self.start())
 
     @property
     def input(self):
@@ -66,17 +67,23 @@ class Worker(AbstractWorker):
                 await asyncio.sleep(self._sleep_start, loop=self.loop)
             while True:
                 try:
-                    if self._input is not None:
-                        args = (await self._input.get(),)
+                    if self.input is not None:
+                        args = (await self.input.get(),)
                     else:
                         args = ()
+                    self.counter['run'] += 1
                     result = await self.run(*args)
-                    if self._output is not None:
-                        await self._output.put(result)
+                    self.counter['done'] += 1
+                    if self.output is not None:
+                        await self.output.put(result)
                 except asyncio.CancelledError:
                     raise
                 except BaseException:
-                    self.logger.exception('ERROR')
+                    self.counter['error'] += 1
+                    self.logger.exception('ERROR {} {}'.format(
+                        self.name,
+                        self.config.get('run', type(self)),
+                    ))
                 if not self._persist:
                     return
                 if self._sleep:
@@ -128,4 +135,5 @@ class Worker(AbstractWorker):
             'started_at': self.started_at,
             'stoped_at': self.stoped_at,
             'running': self.running(),
+            **self.counter,
         }
