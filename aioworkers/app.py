@@ -26,6 +26,7 @@ class Application(BaseApplication, dict):
         if loop is None:
             loop = asyncio.get_event_loop()
         self.loop = loop
+        self.on_startup = []
         self.on_shutdown = []
         super().__init__(config=config, context=context)
 
@@ -36,10 +37,15 @@ class Application(BaseApplication, dict):
               "(Press CTRL+C to quit)")
 
         try:
+            if self.on_startup:
+                on_startup = [coro(self) for coro in self.on_startup]
+                loop.run_until_complete(asyncio.wait(on_startup))
+
             loop.run_forever()
         except KeyboardInterrupt:
             pass
         finally:
-            loop.run_until_complete(
-                asyncio.wait([coro(self) for coro in self.on_shutdown]))
+            if self.on_shutdown:
+                on_shutdown = [coro(self) for coro in self.on_shutdown]
+                loop.run_until_complete(asyncio.wait(on_shutdown))
         loop.close()

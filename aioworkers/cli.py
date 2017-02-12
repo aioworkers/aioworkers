@@ -44,6 +44,7 @@ def main(*config_files, args=None, config_dirs=()):
             conf['app.cls'] = 'aioworkers.app.Application'
 
     loop.run_until_complete(context.init())
+    context.app.on_startup.append(lambda x: context.start())
     context.app.on_shutdown.append(lambda x: context.stop())
     context.app.run_forever(host=conf.http.host, port=conf.http.port)
 
