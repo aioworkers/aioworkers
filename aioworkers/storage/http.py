@@ -16,6 +16,7 @@ class RoStorage(base.AbstractStorageReadOnly):
         allow_hosts: list
         return_status: bool, method get returns tuple (CODE, VALUE)
         prefix: url prefix
+        headers: Mapping or None
         template: url template
         format: [json|str|bytes]
     """
@@ -29,7 +30,8 @@ class RoStorage(base.AbstractStorageReadOnly):
         self._allow_hosts = self.config.get('allow_hosts')
         self._format = self.config.get('format', 'json')
         self._return_status = self.config.get('return_status', False)
-        self.session = client.ClientSession(loop=self.loop)
+        self.session = client.ClientSession(
+            headers=self.config.get('headers'), loop=self.loop)
 
     async def stop(self):
         self.session.close()
