@@ -5,6 +5,7 @@ from aioworkers.worker.supervisor import Supervisor
 
 async def test_autorun(loop):
     config = MergeDict(
+        name='',
         autorun=True,
         children=1,
         child={
@@ -14,6 +15,7 @@ async def test_autorun(loop):
     context = Context(config, loop=loop)
     worker = Supervisor(config, context=context, loop=loop)
     await worker.init()
+    await context.start()
     await worker._future
     assert worker._started_at
     assert not worker.running()
