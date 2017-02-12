@@ -4,6 +4,9 @@ from . import base
 
 
 class AbstractMetaListStorage(base.AbstractStorage):
+    def raw_key(self, key):
+        return key
+
     @property
     def storages(self):
         return map(lambda x: self.context[x], self.config.storages)
@@ -34,6 +37,9 @@ class Replicator(AbstractMetaListStorage):
 
 
 class Cache(base.AbstractStorage):
+    def raw_key(self, key):
+        return key
+
     @property
     def storage(self):
         return self.context[self.config.storage]
@@ -45,9 +51,10 @@ class Cache(base.AbstractStorage):
     async def get(self, key):
         v = await self.storage.get(key)
         if v is not None:
-            await self.storage.set(key, v)
             return v
-        return await self.source.get(key)
+        v = await self.source.get(key)
+        await self.storage.set(key, v)
+        return v
 
     def set(self, key, value):
         return self.storage.set(key, value)
