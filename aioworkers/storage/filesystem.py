@@ -26,6 +26,27 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             with open(key, 'wb') as f:
                 f.write(self.encode(value))
 
+    def _write_chunk(self, f, data):
+        return self.loop.run_in_executor(
+            self.executor, f.write, data)
+
+    def _open(self, key, mode='rb'):
+        path = self.raw_key(key)
+
+        def file_open(path, mode):
+            if 'w' in mode or '+' in mode:
+                d = os.path.dirname(path)
+                if not os.path.exists(d):
+                    os.makedirs(d)
+            return open(path, mode)
+
+        return self.loop.run_in_executor(
+            self.executor, file_open, path, mode)
+
+    def _close(self, f):
+        return self.loop.run_in_executor(
+            self.executor, f.close)
+
     def _read(self, key):
         if not os.path.exists(key):
             return

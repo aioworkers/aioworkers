@@ -72,6 +72,32 @@ class RoStorage(base.AbstractStorageReadOnly):
             return data.decode()
         return data
 
+    async def copy(self, key_source, storage_dest, key_dest):
+        from aioworkers.storage.filesystem import FileSystemStorage
+        if not isinstance(storage_dest, FileSystemStorage):
+            return super().copy(key_source, storage_dest, key_dest)
+        url = self.raw_key(key_source)
+        logger = self.context.logger
+        async with self._semaphore:
+            async with self.session.get(url) as response:
+                if response.status == 404:
+                    return
+                elif response.status >= 400:
+                    if logger.getEffectiveLevel() == logging.DEBUG:
+                        logger.debug(
+                            'HttpStorage request to %s '
+                            'returned code %s:\n%s' % (
+                                url, response.status,
+                                (await response.read()).decode()))
+                    return
+                f = await storage_dest._open(key_dest, 'wb')
+                try:
+                    async for chunk in response.content.iter_any():
+                        await storage_dest._write_chunk(f, chunk)
+                    return True
+                finally:
+                    await storage_dest._close(f)
+
 
 class Storage(RoStorage, base.AbstractStorageWriteOnly):
     """ RW storage over http
