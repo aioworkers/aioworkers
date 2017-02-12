@@ -8,11 +8,14 @@ from ..utils import import_name
 
 
 class Context(AbstractEntity, Mapping):
-    async def init(self):
+    def __init__(self, *args, **kwargs):
         self._entities = {}
-        self._on_stop = []
+        self.on_start = []
+        self.on_stop = []
         self.logger = logging.getLogger('aioworkers')
+        super().__init__(*args, **kwargs)
 
+    async def init(self):
         await load_entities(
             self.config, context=self, loop=self.loop,
             entities=self._entities)
@@ -21,9 +24,8 @@ class Context(AbstractEntity, Mapping):
         for i in self._entities.values():
             inits.append(i.init())
             if hasattr(i, 'stop'):
-                self._on_stop.append(i.stop())
-        if inits:
-            await self.wait_all(inits)
+                self.on_stop.append(i.stop())
+        await self.wait_all(inits)
 
     async def wait_all(self, coros):
         if not coros:
@@ -34,8 +36,11 @@ class Context(AbstractEntity, Mapping):
             if f.exception():
                 self.logger.exception('ERROR', exc_info=f.exception())
 
+    async def start(self):
+        await self.wait_all(self.on_start)
+
     async def stop(self):
-        await self.wait_all(self._on_stop)
+        await self.wait_all(self.on_stop)
 
     def __getitem__(self, item):
         if item is None:
