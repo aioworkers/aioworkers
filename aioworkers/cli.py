@@ -49,6 +49,10 @@ def main(*config_files, args=None, config_dirs=()):
     context.app.run_forever(host=conf.http.host, port=conf.http.port)
 
 
-if __name__ == '__main__':
+def main_with_conf():
     parser.add_argument('-c', '--config', nargs='*', required=True)
     main()
+
+
+if __name__ == '__main__':
+    main_with_conf()
