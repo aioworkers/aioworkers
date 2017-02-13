@@ -14,6 +14,7 @@ class AbstractMetaListStorage(base.AbstractStorage):
 
 class Fallback(AbstractMetaListStorage):
     async def get(self, key):
+        key = self.raw_key(key)
         for storage in self.storages:
             v = await storage.get(key)
             if v is not None:
@@ -29,9 +30,11 @@ class Replicator(AbstractMetaListStorage):
 
     async def get(self, key):
         storage = next(self._pool)
+        key = self.raw_key(key)
         return await storage.get(key)
 
     async def set(self, key, value):
+        key = self.raw_key(key)
         for storage in self.storages:
             await storage.set(key, value)
 
@@ -49,6 +52,7 @@ class Cache(base.AbstractStorage):
         return self.context[self.config.source]
 
     async def get(self, key):
+        key = self.raw_key(key)
         v = await self.storage.get(key)
         if v is not None:
             return v
@@ -57,6 +61,7 @@ class Cache(base.AbstractStorage):
         return v
 
     def set(self, key, value):
+        key = self.raw_key(key)
         return self.storage.set(key, value)
 
 
