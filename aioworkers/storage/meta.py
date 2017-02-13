@@ -58,3 +58,22 @@ class Cache(base.AbstractStorage):
 
     def set(self, key, value):
         return self.storage.set(key, value)
+
+
+class FutureStorage(base.AbstractStorage):
+    async def init(self):
+        self._futures = {}
+
+    def raw_key(self, key):
+        return key
+
+    async def set(self, key, value):
+        future = self.get(key)
+        future.set_result(value)
+
+    def get(self, key):
+        key = self.raw_key(key)
+        if key in self._futures:
+            return self._futures[key]
+        else:
+            return self._futures.setdefault(key, self.loop.create_future())
