@@ -19,11 +19,13 @@ class AbstractQueue(AbstractReader, AbstractWriter):
 
 class Queue(asyncio.Queue, AbstractQueue):
     def __init__(self, config, *, context=None, loop=None):
+        maxsize = config.get('maxsize', 0)
         AbstractQueue.__init__(self, config, context=context, loop=loop)
-        asyncio.Queue.__init__(self, maxsize=config.maxsize, loop=loop)
+        asyncio.Queue.__init__(self, maxsize=maxsize, loop=loop)
 
 
 class PriorityQueue(asyncio.PriorityQueue, AbstractQueue):
     def __init__(self, config, *, context=None, loop=None):
+        maxsize = config.get('maxsize', 0)
         AbstractQueue.__init__(self, config, context=context, loop=loop)
-        asyncio.Queue.__init__(self, maxsize=config.maxsize, loop=loop)
+        asyncio.Queue.__init__(self, maxsize=maxsize, loop=loop)
