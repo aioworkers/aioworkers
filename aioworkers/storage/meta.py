@@ -1,3 +1,4 @@
+import weakref
 from itertools import cycle
 
 from . import base
@@ -67,7 +68,10 @@ class Cache(base.AbstractStorage):
 
 class FutureStorage(base.AbstractStorage):
     async def init(self):
-        self._futures = {}
+        if self.config.get('weak', True):
+            self._futures = weakref.WeakValueDictionary()
+        else:
+            self._futures = {}
 
     def raw_key(self, key):
         return key
@@ -81,4 +85,5 @@ class FutureStorage(base.AbstractStorage):
         if key in self._futures:
             return self._futures[key]
         else:
-            return self._futures.setdefault(key, self.loop.create_future())
+            return self._futures.setdefault(
+                key, self.loop.create_future())
