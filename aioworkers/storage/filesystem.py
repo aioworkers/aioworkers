@@ -72,6 +72,9 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
     def _copy(self, key_source, storage_dest, key_dest, copy_func):
         s = self.raw_key(key_source)
         d = storage_dest.raw_key(key_dest)
+        target_dir = os.path.dirname(d)
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
         if os.path.exists(s):
             copy_func(s, d)
         elif not os.path.exists(d):
@@ -105,7 +108,8 @@ class NestedFileSystemStorage(FileSystemStorage):
 
 class HashFileSystemStorage(NestedFileSystemStorage):
     def raw_key(self, key):
+        ext = os.path.splitext(key)[-1]
         hash = hashlib.md5()
         hash.update(key.encode())
-        d = hash.hexdigest()
+        d = hash.hexdigest() + ext
         return super().raw_key(d)
