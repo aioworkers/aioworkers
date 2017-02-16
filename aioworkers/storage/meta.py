@@ -79,10 +79,10 @@ class FutureStorage(base.AbstractStorage):
     async def set(self, key, value):
         raw_key = self.raw_key(key)
         if raw_key in self._futures:
-            future = self._futures[key]
+            future = self._futures[raw_key]
         elif self.config.get('exists_set'):
             future = self._futures.setdefault(
-                key, self.loop.create_future())
+                raw_key, self.loop.create_future())
         else:
             return
         future.set_result(value)
