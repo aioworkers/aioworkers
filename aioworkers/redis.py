@@ -4,6 +4,7 @@ It depends on aioredis
 """
 
 import asyncio
+import time
 
 from .core.formatter import FormattedEntity
 from .storage.base import AbstractStorage
@@ -83,6 +84,32 @@ class RedisZQueue(RedisQueue):
         async with self.pool as conn:
             return [self.decode(i)
                     for i in await conn.zrange(self._key)]
+
+
+class TimestampZQueue(RedisZQueue):
+    async def init(self):
+        await super().init()
+        self._script = """
+            local val = redis.call('ZRANGE', KEYS[1], 0, 0, 'WITHSCORES')
+            if val then
+                if tonumber(val[2]) < tonumber(ARGV[1]) then
+                    redis.call('zrem', KEYS[1], val[1])
+                else
+                    return nil
+                end
+            end
+            return val[1]
+            """
+
+    async def get(self):
+        async with self._lock:
+            while True:
+                async with self.pool as conn:
+                    lv = await conn.eval(
+                        self._script, [self._key], [time.time()])
+                if lv:
+                    return self.decode(lv)
+                await asyncio.sleep(self._timeout, loop=self.loop)
 
 
 class RedisStorage(RedisPool, AbstractStorage):
