@@ -50,7 +50,7 @@ def main(*config_files, args=None, config_dirs=()):
 
 
 def main_with_conf():
-    parser.add_argument('-c', '--config', nargs='*', required=True)
+    parser.add_argument('-c', '--config', nargs='+')
     main()
 
 
