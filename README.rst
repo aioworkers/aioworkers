@@ -29,6 +29,7 @@ Easy configurable workers based on asyncio
   `pyyaml <https://pypi.python.org/pypi/pyyaml>`_,
   `uvloop <https://pypi.python.org/pypi/uvloop>`_,
   `aiohttp <https://pypi.python.org/pypi/aiohttp>`_,
+  `yarl <https://pypi.python.org/pypi/yarl>`_,
   `aiohttp_apiset <https://pypi.python.org/pypi/aiohttp_apiset>`_,
   `aioredis <https://pypi.python.org/pypi/aioredis>`_.
 * Documentation: https://aioworkers.readthedocs.io.
