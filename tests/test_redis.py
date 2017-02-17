@@ -90,6 +90,11 @@ async def test_ts_zqueue(loop, mocker):
     context = config
     q = TimestampZQueue(config, context=context, loop=loop)
     await q.init()
+
+    with pytest.raises(TypeError):
+        with mocker.patch('asyncio.sleep'):
+            await q.get()
+
     await q.put((time.time() + 4, 'c'))
     await q.put((4, 'a'))
     assert 2 == await q.length()

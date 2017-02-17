@@ -57,7 +57,7 @@ class RedisZQueue(RedisQueue):
         self._timeout = self.config.timeout
         self._script = """
             local val = redis.call('zrange', KEYS[1], 0, 0)
-            if val then redis.call('zrem', KEYS[1], val[1]) end
+            if val[1] then redis.call('zrem', KEYS[1], val[1]) end
             return val[1]
             """
 
@@ -91,7 +91,7 @@ class TimestampZQueue(RedisZQueue):
         await super().init()
         self._script = """
             local val = redis.call('ZRANGE', KEYS[1], 0, 0, 'WITHSCORES')
-            if val then
+            if val[1] then
                 if tonumber(val[2]) < tonumber(ARGV[1]) then
                     redis.call('zrem', KEYS[1], val[1])
                 else
