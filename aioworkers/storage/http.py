@@ -132,7 +132,11 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
     async def set(self, key, value):
         url = self.raw_key(key)
         if self._format == 'json':
-            data = json.dumps(value)
+            if self.config.get('dumps'):
+                dumps = self.context[self.config.dumps]
+            else:
+                dumps = json.dumps
+            data = dumps(value)
             headers = {'content-type': 'application/json'}
         else:
             data = value
