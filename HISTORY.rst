@@ -2,6 +2,22 @@
 History
 =======
 
+0.3.0 (2017-02-17)
+------------------
+
+* Added FutureStorage
+* Added TimestampZQueue on redis
+* Added Subprocess and Supervisor workers
+* Added method copy and move for Storage
+* Propagate file extension in HashFileSystemStorage
+* Added method to AbstractStorage raw_key
+* Cli refactor
+* Added counter in Worker
+* Used app startup and shutdown signals
+* Contains for MergeDict
+* Base Queue maxsize optional
+
+
 0.2.0 (2016-12-05)
 ------------------
 
