@@ -8,6 +8,11 @@ def test_dict_create():
     assert d.d.g == 1
 
 
+def test_contains():
+    d = MergeDict(f=3, d=dict(g=1))
+    assert 'd.g' in d
+
+
 def test_dict_dot_get_1():
     d = MergeDict(f=3, d=dict(g=1))
     assert d.get('f.d.e.d') is None

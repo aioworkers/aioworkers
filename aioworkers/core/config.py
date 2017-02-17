@@ -81,6 +81,14 @@ class MergeDict(dict):
         else:
             return super().__getitem__(item)
 
+    def __contains__(self, key):
+        try:
+            self[key]
+        except KeyError:
+            return False
+        else:
+            return True
+
     def __call__(self, *args, **kwargs):
         for arg in args:
             if isinstance(arg, dict):
