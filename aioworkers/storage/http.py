@@ -3,10 +3,10 @@ import json
 import logging
 from collections import Mapping, Sequence
 
-from aiohttp import client
+from aiohttp import client, errors
 from yarl import URL
 
-from . import base
+from . import base, StorageError
 
 
 class RoStorage(base.AbstractStorageReadOnly):
@@ -53,8 +53,7 @@ class RoStorage(base.AbstractStorageReadOnly):
             raise KeyError(key)
         return url
 
-    async def _get(self, key):
-        url = self.raw_key(key)
+    async def _get(self, url):
         async with self._semaphore:
             async with self.session.get(url) as response:
                 logger = self.context.logger
@@ -78,7 +77,13 @@ class RoStorage(base.AbstractStorageReadOnly):
         return status, data
 
     async def get(self, key):
-        status, data = await self._get(key)
+        url = self.raw_key(key)
+
+        try:
+            status, data = await self._get(url)
+        except errors.ClientOSError as e:
+            raise StorageError('URL %s: %s' % (url, e)) from e
+
         if self._return_status:
             return status, data
         return data
