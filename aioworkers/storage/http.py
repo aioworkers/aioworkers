@@ -18,7 +18,7 @@ class RoStorage(base.AbstractStorageReadOnly):
         prefix: url prefix
         headers: Mapping or None
         template: url template
-        format: [json|str|bytes]
+        format: [json|str|bytes], default json
     """
     async def init(self):
         self._prefix = self.config.get('prefix')
@@ -53,40 +53,35 @@ class RoStorage(base.AbstractStorageReadOnly):
             raise KeyError(key)
         return url
 
-    async def _get(self, url):
+    async def _request(self, url, *, method='get', **kwargs):
         async with self._semaphore:
-            async with self.session.get(url) as response:
-                logger = self.context.logger
-                if response.status == 404:
-                    return response.status, None
-                elif response.status >= 400:
-                    if logger.getEffectiveLevel() == logging.DEBUG:
-                        logger.debug(
-                            'HttpStorage request to %s '
-                            'returned code %s:\n%s' % (
-                                url, response.status,
-                                (await response.read()).decode()))
-                    return response.status, None
-                elif self._format in ('str', 'bytes'):
-                    data = await response.read()
-                else:
+            coro = getattr(self.session, method)
+            async with coro(url, **kwargs) as response:
+                if self._format == 'json':
                     return response.status, await response.json()
-                status = response.status
-        if self._format == 'str':
-            return status, data.decode()
-        return status, data
+                elif self._format == 'str':
+                    return response.status, await response.text()
+                else:
+                    return response.status, await response.read()
 
-    async def get(self, key):
-        url = self.raw_key(key)
-
+    async def request(self, url, **kwargs):
         try:
-            status, data = await self._get(url)
+            status, data = await self._request(url, **kwargs)
         except errors.ClientOSError as e:
             raise StorageError('URL %s: %s' % (url, e)) from e
+
+        if status == 404:
+            data = None
+        elif status >= 400:
+            raise StorageError('URL %s: %s' % (url, status))
 
         if self._return_status:
             return status, data
         return data
+
+    def get(self, key):
+        url = self.raw_key(key)
+        return self.request(url)
 
     async def copy(self, key_source, storage_dest, key_dest):
         """ Return True if data are copied
@@ -124,17 +119,16 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
     config:
         semaphore: int
         allow_hosts: list
+        return_status: bool, method get returns tuple (CODE, VALUE)
         prefix: url prefix
         template: url template
-        format: [json|str|bytes]
-        set: [post|put|patch]
+        headers: Mapping or None
+        format: [json|str|bytes], default json
+        set: [post|put|patch], default post
+        dumps: str, path in context to dumps
     """
 
-    @property
-    def method_set(self):
-        return getattr(self.session, self.config.get('set', 'post'))
-
-    async def set(self, key, value):
+    def set(self, key, value):
         url = self.raw_key(key)
         if self._format == 'json':
             if self.config.get('dumps'):
@@ -146,13 +140,7 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
         else:
             data = value
             headers = {}
-        async with self._semaphore:
-            async with self.method_set(
-                    url, data=data, headers=headers) as response:
-                logger = self.context.logger
-                if logger.getEffectiveLevel() == logging.DEBUG:
-                    logger.debug(
-                        'HttpStorage request to %s returned code %s:\n%s' % (
-                            url, response.status,
-                            (await response.read()).decode()))
-                assert response.status <= 400, response.status
+
+        return self.request(
+            url, method=self.config.get('set', 'post'),
+            data=data, headers=headers)

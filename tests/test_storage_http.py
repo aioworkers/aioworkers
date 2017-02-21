@@ -2,6 +2,7 @@ import pytest
 
 from aioworkers.core.config import MergeDict
 from aioworkers.core.context import Context
+from aioworkers.storage import StorageError
 from aioworkers.storage.http import Storage
 
 
@@ -18,5 +19,5 @@ async def test_set_get(loop):
     storage = Storage(config, context=context, loop=loop)
     await storage.init()
     assert data in await storage.get(key)
-    with pytest.raises(AssertionError):
+    with pytest.raises(StorageError):
         await storage.set(key, data)
