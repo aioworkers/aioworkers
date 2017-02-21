@@ -121,3 +121,7 @@ async def test_storage(loop):
     await q.init()
     await q.set('g', {'f': 3})
     assert {'f': 3} == await q.get('g')
+    assert 1 == await q.length()
+    assert ['g'] == await q.list()
+    await q.set('g', None)
+    assert not await q.length()
