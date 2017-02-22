@@ -2,6 +2,13 @@
 History
 =======
 
+0.3.3 (2017-02-22)
+------------------
+
+* Refactor http storage
+* RedisStorage based on AbstractListedStorage
+
+
 0.3.2 (2017-02-20)
 ------------------
 
