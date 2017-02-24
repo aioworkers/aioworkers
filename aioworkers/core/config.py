@@ -97,6 +97,11 @@ class MergeDict(dict):
         for k, v in kwargs.items():
             self[k] = v
 
+    def __dir__(self):
+        r = list(self.keys())
+        r.extend(super().__dir__())
+        return r
+
 
 def yaml_loader(filename: Path, search_dirs=(), encoding='utf-8'):
     import yaml

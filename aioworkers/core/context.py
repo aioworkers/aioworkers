@@ -62,6 +62,11 @@ class Context(AbstractEntity, Mapping):
                 return func(*args, **kwargs)
         raise KeyError(item)
 
+    def __dir__(self):
+        r = list(self.config)
+        r.extend(super().__dir__())
+        return r
+
     def __getattr__(self, item):
         try:
             return self._config[item]
