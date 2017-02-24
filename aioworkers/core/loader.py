@@ -15,8 +15,13 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=()):
 
     if conf.get('app.cls'):
         cls = utils.import_name(conf['app.cls'])
-        conf['app'] = await cls.factory(
+        app = await cls.factory(
             config=conf, context=context, loop=loop)
+        conf['app'] = app
+
+        if context is not None:
+            app.on_startup.append(lambda x: context.start())
+            app.on_shutdown.append(lambda x: context.stop())
 
     elif context is None:
         context = Context(conf, loop=loop)

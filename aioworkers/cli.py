@@ -34,18 +34,16 @@ def main(*config_files, args=None, config_dirs=()):
     if args.port is not None:
         conf['http.port'] = args.port
 
-    loop = asyncio.get_event_loop()
-    context = Context(conf, loop=loop)
-
     if not conf.get('app.cls'):
         if conf.get('http.port'):
             conf['app.cls'] = 'aioworkers.http.Application'
         else:
             conf['app.cls'] = 'aioworkers.app.Application'
 
+    loop = asyncio.get_event_loop()
+    context = Context(conf, loop=loop)
+
     loop.run_until_complete(context.init())
-    context.app.on_startup.append(lambda x: context.start())
-    context.app.on_shutdown.append(lambda x: context.stop())
     context.app.run_forever(host=conf.http.host, port=conf.http.port)
 
 
