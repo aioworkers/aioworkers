@@ -10,7 +10,7 @@ class MergeDict(dict):
             kwargs = result
         super().__init__()
         for k, v in kwargs.items():
-            if isinstance(v, dict):
+            if type(v) is dict:
                 self[k] = type(self)(v)
             else:
                 self[k] = v
@@ -33,7 +33,7 @@ class MergeDict(dict):
         if replace:
             key = key.strip('!')
 
-        is_dict = isinstance(value, dict)
+        is_dict = type(value) is dict
 
         if '.' in key:
             *path, z = key.split('.')
