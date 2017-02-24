@@ -9,6 +9,7 @@ from .core.context import Context
 parser = argparse.ArgumentParser()
 parser.add_argument('--host')
 parser.add_argument('-p', '--port', type=int)
+parser.add_argument('-i', '--interact', action='store_true')
 
 
 try:
@@ -44,6 +45,11 @@ def main(*config_files, args=None, config_dirs=()):
     context = Context(conf, loop=loop)
 
     loop.run_until_complete(context.init())
+
+    if args.interact:
+        from .core.interact import shell
+        shell(context)
+
     context.app.run_forever(host=conf.http.host, port=conf.http.port)
 
 
