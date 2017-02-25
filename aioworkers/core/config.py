@@ -33,7 +33,8 @@ class MergeDict(dict):
         if replace:
             key = key.strip('!')
 
-        is_dict = type(value) is dict
+        is_dict = type(value) is dict or \
+                  isinstance(value, MergeDict)
 
         if '.' in key:
             *path, z = key.split('.')
