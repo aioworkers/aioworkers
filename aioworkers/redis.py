@@ -6,6 +6,8 @@ It depends on aioredis
 import asyncio
 import time
 
+import aioredis
+
 from .core.formatter import FormattedEntity
 from .storage.base import AbstractListedStorage
 from .queue.base import AbstractQueue
@@ -30,9 +32,13 @@ class RedisQueue(RedisPool, AbstractQueue):
             return await conn.rpush(self._key, value)
 
     async def get(self):
-        async with self._lock:
+        await self._lock.acquire()
+        try:
             async with self.pool as conn:
                 result = await conn.blpop(self._key)
+            self._lock.release()
+        except aioredis.errors.PoolClosedError:
+            await self._lock.acquire()
         value = self.decode(result[-1])
         return value
 
@@ -68,13 +74,17 @@ class RedisZQueue(RedisQueue):
             return await conn.zadd(self._key, score, val)
 
     async def get(self):
-        async with self._lock:
-            while True:
+        await self._lock.acquire()
+        while True:
+            try:
                 async with self.pool as conn:
                     lv = await conn.eval(self._script, [self._key])
-                if lv:
-                    return self.decode(lv)
-                await asyncio.sleep(self._timeout, loop=self.loop)
+            except aioredis.errors.PoolClosedError:
+                await self._lock.acquire()
+            if lv:
+                self._lock.release()
+                return self.decode(lv)
+            await asyncio.sleep(self._timeout, loop=self.loop)
 
     async def length(self):
         async with self.pool as conn:
@@ -102,14 +112,18 @@ class TimestampZQueue(RedisZQueue):
             """
 
     async def get(self):
-        async with self._lock:
-            while True:
+        await self._lock.acquire()
+        while True:
+            try:
                 async with self.pool as conn:
                     lv = await conn.eval(
                         self._script, [self._key], [time.time()])
-                if lv:
-                    return self.decode(lv)
-                await asyncio.sleep(self._timeout, loop=self.loop)
+            except aioredis.errors.PoolClosedError:
+                await self._lock.acquire()
+            if lv:
+                self._lock.release()
+                return self.decode(lv)
+            await asyncio.sleep(self._timeout, loop=self.loop)
 
 
 class RedisStorage(RedisPool, AbstractListedStorage):
