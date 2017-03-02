@@ -1,4 +1,5 @@
 import uuid
+from unittest import mock
 
 import aioredis
 import pytest
@@ -91,8 +92,12 @@ async def test_ts_zqueue(loop, mocker):
     q = TimestampZQueue(config, context=context, loop=loop)
     await q.init()
 
-    with pytest.raises(TypeError):
-        with mocker.patch('asyncio.sleep'):
+    async def breaker(*args, **kwargs):
+        q._lock.release()
+        raise InterruptedError
+
+    with pytest.raises(InterruptedError):
+        with mock.patch('asyncio.sleep', breaker):
             await q.get()
 
     await q.put((time.time() + 4, 'c'))
@@ -103,8 +108,8 @@ async def test_ts_zqueue(loop, mocker):
     assert 1 == await q.length()
     assert ['c'] == await q.list()
 
-    with pytest.raises(TypeError):
-        with mocker.patch('asyncio.sleep'):
+    with pytest.raises(InterruptedError):
+        with mock.patch('asyncio.sleep', breaker):
             await q.get()
 
 
