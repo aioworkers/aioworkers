@@ -37,7 +37,7 @@ class Worker(AbstractWorker):
     """
     async def init(self):
         self._started_at = None
-        self._stoped_at = None
+        self._stopped_at = None
         self._future = None
         self.counter = collections.Counter()
         if self.config.get('run'):
@@ -89,7 +89,7 @@ class Worker(AbstractWorker):
                 if self._sleep:
                     await asyncio.sleep(self._sleep, loop=self.loop)
         finally:
-            self._stoped_at = datetime.datetime.now()
+            self._stopped_at = datetime.datetime.now()
 
     async def run(self, value=None):
         raise NotImplementedError()
@@ -99,8 +99,8 @@ class Worker(AbstractWorker):
         return getattr(self, '_started_at', None)
 
     @property
-    def stoped_at(self):
-        return getattr(self, '_stoped_at', None)
+    def stopped_at(self):
+        return getattr(self, '_stopped_at', None)
 
     def running(self):
         if not hasattr(self, '_future'):
@@ -113,7 +113,7 @@ class Worker(AbstractWorker):
     async def start(self):
         if not self.running():
             self._started_at = datetime.datetime.now()
-            self._stoped_at = None
+            self._stopped_at = None
             self._future = self.loop.create_task(self.runner())
 
     async def stop(self, force=True):
@@ -121,7 +121,7 @@ class Worker(AbstractWorker):
             pass
         elif force:
             self._future.cancel()
-            self._stoped_at = datetime.datetime.now()
+            self._stopped_at = datetime.datetime.now()
             try:
                 await self._future
             except asyncio.CancelledError:
@@ -133,7 +133,7 @@ class Worker(AbstractWorker):
     async def status(self):
         return {
             'started_at': self.started_at,
-            'stoped_at': self.stoped_at,
+            'stopped_at': self.stopped_at,
             'running': self.running(),
             **self.counter,
         }
