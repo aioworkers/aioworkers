@@ -36,7 +36,7 @@ async def test_coro_run(loop, mocker):
     await context.start()
     assert worker._started_at
     await worker._future
-    assert worker._stoped_at
+    assert worker._stopped_at
     assert f.result() == 10
 
 
