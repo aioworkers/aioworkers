@@ -31,6 +31,7 @@ Easy configurable workers based on asyncio
   `aiohttp <https://pypi.python.org/pypi/aiohttp>`_,
   `yarl <https://pypi.python.org/pypi/yarl>`_,
   `aiohttp_apiset <https://pypi.python.org/pypi/aiohttp_apiset>`_,
+  `asynqp <https://pypi.python.org/pypi/asynqp>`_,
   `aioredis <https://pypi.python.org/pypi/aioredis>`_.
 * Documentation: https://aioworkers.readthedocs.io.
 
