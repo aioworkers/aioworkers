@@ -32,8 +32,8 @@ class AmqpQueue(AbstractQueue):
         self._started = False
         self._lock = asyncio.Lock(loop=self.loop)
         await self._lock.acquire()
-        self.context.on_start.append(self.start())
-        self.context.on_stop.append(self.stop())
+        self.context.on_start.append(self.start)
+        self.context.on_stop.append(self.stop)
 
     async def start(self):
         if self._started:
