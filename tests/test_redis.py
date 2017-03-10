@@ -58,10 +58,10 @@ async def test_zqueue(loop, mocker):
     context = config
     q = RedisZQueue(config, context=context, loop=loop)
     await q.init()
-    await q.put((4, 'a'))
-    await q.put((3, 'c'))
-    await q.put((2, 'b'))
-    await q.put((1, 'a'))
+    await q.put('a', 4)
+    await q.put('c', 3)
+    await q.put('b', 2)
+    await q.put('a', 1)
     assert 3 == await q.length()
     assert ['a', 'b', 'c'] == await q.list()
     assert 3 == await q.length()
@@ -100,8 +100,8 @@ async def test_ts_zqueue(loop, mocker):
         with mock.patch('asyncio.sleep', breaker):
             await q.get()
 
-    await q.put((time.time() + 4, 'c'))
-    await q.put((4, 'a'))
+    await q.put('c', time.time() + 4)
+    await q.put('a', 4)
     assert 2 == await q.length()
     assert ['a', 'c'] == await q.list()
     assert 'a' == await q.get()

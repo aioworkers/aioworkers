@@ -10,7 +10,7 @@ import aioredis
 
 from .core.formatter import FormattedEntity
 from .storage.base import AbstractListedStorage
-from .queue.base import AbstractQueue
+from .queue.base import AbstractQueue, score_queue
 
 
 class RedisPool(FormattedEntity):
@@ -57,14 +57,15 @@ class RedisQueue(RedisPool, AbstractQueue):
             return await conn.delete(self._key)
 
 
+@score_queue('time.time')
 class RedisZQueue(RedisQueue):
     async def init(self):
         await super().init()
         self._timeout = self.config.timeout
         self._script = """
-            local val = redis.call('zrange', KEYS[1], 0, 0)
+            local val = redis.call('zrange', KEYS[1], 0, 0, 'WITHSCORES')
             if val[1] then redis.call('zrem', KEYS[1], val[1]) end
-            return val[1]
+            return val
             """
 
     async def put(self, value):
@@ -82,8 +83,9 @@ class RedisZQueue(RedisQueue):
             except aioredis.errors.PoolClosedError:
                 await self._lock.acquire()
             if lv:
+                value, score = lv
                 self._lock.release()
-                return self.decode(lv)
+                return float(score), self.decode(value)
             await asyncio.sleep(self._timeout, loop=self.loop)
 
     async def length(self):
@@ -96,7 +98,8 @@ class RedisZQueue(RedisQueue):
                     for i in await conn.zrange(self._key)]
 
 
-class TimestampZQueue(RedisZQueue):
+@score_queue('time.time')
+class TimestampZQueue(RedisZQueue.super):
     async def init(self):
         await super().init()
         self._script = """
@@ -108,7 +111,7 @@ class TimestampZQueue(RedisZQueue):
                     return nil
                 end
             end
-            return val[1]
+            return val
             """
 
     async def get(self):
@@ -121,8 +124,9 @@ class TimestampZQueue(RedisZQueue):
             except aioredis.errors.PoolClosedError:
                 await self._lock.acquire()
             if lv:
+                value, score = lv
                 self._lock.release()
-                return self.decode(lv)
+                return float(score), self.decode(value)
             await asyncio.sleep(self._timeout, loop=self.loop)
 
 
