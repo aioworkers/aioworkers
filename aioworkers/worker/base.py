@@ -51,7 +51,8 @@ class Worker(AbstractWorker):
         self._sleep_start = self.config.get('sleep_start')
         self.logger = logging.getLogger(self.config.get('logger', __name__))
         if self.config.get('autorun'):
-            self.context.on_start.append(self.start())
+            self.context.on_start.append(self.start)
+        self.context.on_stop.append(self.stop)
 
     @property
     def input(self):

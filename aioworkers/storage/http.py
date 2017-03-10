@@ -32,6 +32,7 @@ class RoStorage(base.AbstractStorageReadOnly):
         self._return_status = self.config.get('return_status', False)
         self.session = client.ClientSession(
             headers=self.config.get('headers'), loop=self.loop)
+        self.context.on_stop.append(self.stop)
 
     async def stop(self):
         self.session.close()

@@ -14,6 +14,7 @@ class Supervisor(Worker):
         child: Mapping - config for child worker
     """
     async def init(self):
+        self.context.on_stop.append(self.stop)
         self._children = [
             self.create_child() for _ in range(self.config.children)
         ]
