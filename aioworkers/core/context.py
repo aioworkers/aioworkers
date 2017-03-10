@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 from collections import Mapping
 
@@ -23,8 +24,6 @@ class Context(AbstractEntity, Mapping):
         inits = []
         for i in self._entities.values():
             inits.append(i.init())
-            if hasattr(i, 'stop'):
-                self.on_stop.append(i.stop())
         await self.wait_all(inits)
 
     async def wait_all(self, coros):
@@ -36,11 +35,29 @@ class Context(AbstractEntity, Mapping):
             if f.exception():
                 self.logger.exception('ERROR', exc_info=f.exception())
 
+    def send_signals(self, l):
+        coros = []
+        for i in l:
+            if asyncio.iscoroutinefunction(i):
+                params = inspect.signature(i).parameters
+                if 'app' in params:
+                    coro = i(self.app)
+                elif 'context' in params:
+                    coro = i(self)
+                else:
+                    coro = i()
+            elif asyncio.iscoroutine(i):
+                coro = i
+            else:
+                continue
+            coros.append(coro)
+        return self.wait_all(coros)
+
     async def start(self):
-        await self.wait_all(self.on_start)
+        await self.send_signals(self.on_start)
 
     async def stop(self):
-        await self.wait_all(self.on_stop)
+        await self.send_signals(self.on_stop)
 
     def __getitem__(self, item):
         if item is None:
