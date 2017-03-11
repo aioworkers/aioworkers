@@ -39,6 +39,7 @@ class Worker(AbstractWorker):
     async def init(self):
         self._started_at = None
         self._stopped_at = None
+        self._is_sleep = None
         self._future = None
         self.counter = collections.Counter()
 
@@ -75,13 +76,15 @@ class Worker(AbstractWorker):
         return self.context[self.config.get('output')]
 
     async def runner(self):
+        self._is_sleep = True
         try:
             if self._sleep_start:
                 await asyncio.sleep(self._sleep_start, loop=self.loop)
-            if self._crontab is not None:
-                await asyncio.sleep(self._crontab.next(), loop=self.loop)
             while True:
+                if self._crontab is not None:
+                    await asyncio.sleep(self._crontab.next(), loop=self.loop)
                 try:
+                    self._is_sleep = False
                     if self.input is not None:
                         args = (await self.input.get(),)
                     else:
@@ -99,14 +102,11 @@ class Worker(AbstractWorker):
                         self.name,
                         self.config.get('run', type(self)),
                     ))
+                self._is_sleep = True
                 if not self._persist:
                     return
                 if self._sleep:
                     await asyncio.sleep(self._sleep, loop=self.loop)
-                if self._crontab is not None:
-                    await asyncio.sleep(self._crontab.next(), loop=self.loop)
-                if not self._persist:  # not forced stop
-                    return
         finally:
             self._stopped_at = datetime.datetime.now()
 
@@ -138,7 +138,7 @@ class Worker(AbstractWorker):
     async def stop(self, force=True):
         if not self.running():
             pass
-        elif force:
+        elif force or self._is_sleep:
             self._future.cancel()
             self._stopped_at = datetime.datetime.now()
             try:
@@ -148,11 +148,13 @@ class Worker(AbstractWorker):
         else:
             self._persist = False
             await self._future
+        self._is_sleep = None
 
     async def status(self):
         return {
             'started_at': self.started_at,
             'stopped_at': self.stopped_at,
             'running': self.running(),
+            'is_sleep': self._is_sleep,
             **self.counter,
         }
