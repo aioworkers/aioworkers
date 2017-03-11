@@ -33,7 +33,8 @@ Easy configurable workers based on asyncio
   `aiohttp_apiset <https://pypi.python.org/pypi/aiohttp_apiset>`_,
   `crontab <https://pypi.python.org/pypi/crontab>`_,
   `asynqp <https://pypi.python.org/pypi/asynqp>`_,
-  `aioredis <https://pypi.python.org/pypi/aioredis>`_.
+  `aioredis <https://pypi.python.org/pypi/aioredis>`_,
+  `ipython <https://pypi.python.org/pypi/ipython>`_.
 * Documentation: https://aioworkers.readthedocs.io.
 
 
