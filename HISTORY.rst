@@ -2,6 +2,20 @@
 History
 =======
 
+0.4.0 (2017-03-12)
+------------------
+
+* Added ScoreQueue interface
+* Implements ScoreQueue in TimestampQueue and RedisZQueue
+* Lock refactor with catch aioredis.PoolClosedError
+* Added interact mode in cli power by ipython
+* Added amqp queue power by asynqp
+* Explicity setup signals to stop
+* Crontab rule in worker
+* Fix stopped mistake in worker
+* Fix merge MergeDict and subclass dict
+
+
 0.3.3 (2017-02-22)
 ------------------
 
