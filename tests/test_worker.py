@@ -57,3 +57,18 @@ async def test_stop(loop, mocker):
     assert not worker.running()
     assert isinstance(await worker.status(), dict)
 
+
+async def test_crontab(loop, mocker):
+    config = MergeDict(
+        name='',
+        autorun=True,
+        persist=True,
+        crontab='*/1 * * * *',
+    )
+    context = Context(config, loop=loop)
+    worker = Worker(config, context=context, loop=loop)
+    await worker.init()
+    await context.start()
+    await asyncio.sleep(0.1, loop=loop)
+    await worker.stop()
+    assert not worker.running()

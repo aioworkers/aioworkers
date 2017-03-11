@@ -32,6 +32,7 @@ class Worker(AbstractWorker):
             logger: str
             sleep: int time in seconds for sleep between rerun
             sleep_start: int time in seconds for sleep before run
+            crontab: str rule as cron. Every 5 minutes "*/5 * * * *"
             input: str.path to instance of AbstractReader
             output: str.path to instance of AbstractWriter
     """
@@ -40,16 +41,27 @@ class Worker(AbstractWorker):
         self._stopped_at = None
         self._future = None
         self.counter = collections.Counter()
+
         if self.config.get('run'):
             run = import_name(self.config.run)
             self.run = lambda value=None: run(self, value)
+
         if self.config.get('input') or self.config.get('output'):
             self._persist = True
         else:
             self._persist = self.config.get('persist')
+
         self._sleep = self.config.get('sleep')
         self._sleep_start = self.config.get('sleep_start')
+
+        self._crontab = self.config.get('crontab')
+        if self._crontab:
+            CronTab = import_name('crontab.CronTab')
+            self._crontab = CronTab(self._crontab)
+            self._persist = True
+
         self.logger = logging.getLogger(self.config.get('logger', __name__))
+
         if self.config.get('autorun'):
             self.context.on_start.append(self.start)
         self.context.on_stop.append(self.stop)
@@ -66,6 +78,8 @@ class Worker(AbstractWorker):
         try:
             if self._sleep_start:
                 await asyncio.sleep(self._sleep_start, loop=self.loop)
+            if self._crontab is not None:
+                await asyncio.sleep(self._crontab.next(), loop=self.loop)
             while True:
                 try:
                     if self.input is not None:
@@ -89,6 +103,10 @@ class Worker(AbstractWorker):
                     return
                 if self._sleep:
                     await asyncio.sleep(self._sleep, loop=self.loop)
+                if self._crontab is not None:
+                    await asyncio.sleep(self._crontab.next(), loop=self.loop)
+                if not self._persist:  # not forced stop
+                    return
         finally:
             self._stopped_at = datetime.datetime.now()
 
