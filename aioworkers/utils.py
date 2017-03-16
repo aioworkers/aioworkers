@@ -1,11 +1,16 @@
 import functools
 import importlib
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def import_name(stref: str):
     package, name = stref.rsplit('.', maxsplit=1)
     module = importlib.import_module(package)
-    return getattr(module, name)
+    cls = getattr(module, name)
+    logger.debug('Imported "{}" as {}'.format(stref, cls))
+    return cls
 
 
 def method_replicate_result(key):
