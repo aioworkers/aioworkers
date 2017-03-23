@@ -50,11 +50,16 @@ def main(*config_files, args=None, config_dirs=()):
         from .core.interact import shell
         shell(context)
 
+    if isinstance(conf.http.port, str):
+        conf.http.port = int(conf.http.port)
+
     context.app.run_forever(host=conf.http.host, port=conf.http.port)
 
 
 def main_with_conf():
-    parser.add_argument('-c', '--config', nargs='+')
+    parser.add_argument(
+        '-c', '--config', nargs='+',
+        type=argparse.FileType('r', encoding='utf-8'))
     main()
 
 

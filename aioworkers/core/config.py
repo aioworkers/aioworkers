@@ -104,23 +104,38 @@ class MergeDict(dict):
         return r
 
 
-def yaml_loader(filename: Path, search_dirs=(), encoding='utf-8'):
+def yaml_loader(fd=None, filename=None, search_dirs=(), encoding='utf-8'):
     import yaml
-    with filename.open(encoding=encoding) as f:
-        return yaml.load(f)
+    if fd is not None:
+        return yaml.load(fd)
 
 
-def json_loader(filename: Path, search_dirs=(), encoding='utf-8'):
+def json_loader(fd=None, filename=None, search_dirs=(), encoding='utf-8'):
     import json
-    with filename.open(encoding=encoding) as f:
-        return json.load(f)
+    if fd is not None:
+        return json.load(fd)
+
+
+def ini_loader(fd=None, filename=None, search_dirs=(), encoding='utf-8'):
+    import configparser
+    config = configparser.ConfigParser(allow_no_value=True)
+    if fd is not None:
+        config.read_file(fd)
+    else:
+        return
+    c = {}
+    for i in config.sections():
+        c[i] = dict(config[i])
+    return c
 
 
 class Config:
     def __init__(self, search_dirs=()):
         self.loaders = {
             '.yaml': yaml_loader,
+            '.yml': yaml_loader,
             '.json': json_loader,
+            '.ini': ini_loader,
         }
         self.search_dirs = [Path(i) for i in search_dirs]
 
@@ -133,11 +148,19 @@ class Config:
         for fn in filenames:
             if isinstance(fn, str):
                 fn = Path(fn)
-            if not fn.is_absolute():
-                fns.append(fn)
-                continue
-            loader = self.loaders[fn.suffix]
-            c = loader(fn, search_dirs=self.search_dirs)
+            if isinstance(fn, Path):
+                if not fn.is_absolute():
+                    fns.append(fn)
+                    continue
+                loader = self.loaders[fn.suffix]
+                with fn.open(encoding='utf-8') as f:
+                    c = loader(f, search_dirs=self.search_dirs)
+            elif hasattr(fn, 'read') and hasattr(fn, 'name'):
+                loader = self.loaders[Path(fn.name).suffix]
+                with fn:
+                    c = loader(fn, search_dirs=self.search_dirs)
+            else:
+                raise ValueError(fn)
             if c:
                 config(c)
         for d in self.search_dirs:
