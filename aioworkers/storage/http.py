@@ -3,7 +3,7 @@ import json
 import logging
 from collections import Mapping, Sequence
 
-from aiohttp import client, errors
+from aiohttp import client, ClientOSError
 from yarl import URL
 
 from . import base, StorageError
@@ -68,7 +68,7 @@ class RoStorage(base.AbstractStorageReadOnly):
     async def request(self, url, **kwargs):
         try:
             status, data = await self._request(url, **kwargs)
-        except errors.ClientOSError as e:
+        except ClientOSError as e:
             raise StorageError('URL %s: %s' % (url, e)) from e
 
         if status == 404:
