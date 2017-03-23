@@ -175,6 +175,7 @@ class Config:
                 loader = self.loaders[fn.suffix]
                 with f.open(encoding='utf-8') as f:
                     c = loader(f, search_dirs=self.search_dirs)
+                    logging.info('Config found: {}'.format(fn.absolute()))
                 if c:
                     config(c)
         return config
