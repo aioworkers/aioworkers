@@ -169,7 +169,8 @@ class Config:
                 if not f.exists():
                     continue
                 loader = self.loaders[fn.suffix]
-                c = loader(f, search_dirs=self.search_dirs)
+                with f.open(encoding='utf-8') as f:
+                    c = loader(f, search_dirs=self.search_dirs)
                 if c:
                     config(c)
         return config
