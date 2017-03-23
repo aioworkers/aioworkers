@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--host')
 parser.add_argument('-p', '--port', type=int)
 parser.add_argument('-i', '--interact', action='store_true')
+parser.add_argument('-l', '--logging', help='Root logger level')
 
 
 try:
@@ -25,6 +26,8 @@ def main(*config_files, args=None, config_dirs=()):
         args = parser.parse_args()
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
+        if args.logging:
+            logging.getLogger().setLevel(args.logging.upper())
     conf = config.load_conf(*config_files, search_dirs=config_dirs)
 
     if 'logging' in conf:

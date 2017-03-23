@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 
 
 class MergeDict(dict):
@@ -155,10 +156,13 @@ class Config:
                 loader = self.loaders[fn.suffix]
                 with fn.open(encoding='utf-8') as f:
                     c = loader(f, search_dirs=self.search_dirs)
+                    logging.info('Config found: {}'.format(fn.absolute()))
             elif hasattr(fn, 'read') and hasattr(fn, 'name'):
-                loader = self.loaders[Path(fn.name).suffix]
+                p = Path(fn.name)
+                loader = self.loaders[p.suffix]
                 with fn:
                     c = loader(fn, search_dirs=self.search_dirs)
+                    logging.info('Config found: {}'.format(p.absolute()))
             else:
                 raise ValueError(fn)
             if c:
@@ -171,6 +175,7 @@ class Config:
                 loader = self.loaders[fn.suffix]
                 with f.open(encoding='utf-8') as f:
                     c = loader(f, search_dirs=self.search_dirs)
+                    logging.info('Config found: {}'.format(fn.absolute()))
                 if c:
                     config(c)
         return config
