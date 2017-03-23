@@ -25,6 +25,8 @@ def main(*config_files, args=None, config_dirs=()):
         args = parser.parse_args()
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
+        if getattr(args, 'verbose', None):
+            logging.getLogger().setLevel(logging.INFO)
     conf = config.load_conf(*config_files, search_dirs=config_dirs)
 
     if 'logging' in conf:
@@ -60,6 +62,7 @@ def main_with_conf():
     parser.add_argument(
         '-c', '--config', nargs='+',
         type=argparse.FileType('r', encoding='utf-8'))
+    parser.add_argument('-v', '--verbose', action='store_true')
     main()
 
 
