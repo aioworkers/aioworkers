@@ -17,7 +17,7 @@ test_requirements = [
 
 setup(
     name='aioworkers',
-    version='0.4.0',
+    version='0.4.1',
     description="Easy configurable workers based on asyncio",
     long_description=readme + '\n\n' + history,
     author="Alexander Malev",

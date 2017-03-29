@@ -2,6 +2,16 @@
 History
 =======
 
+0.4.1 (2017-03-23)
+------------------
+
+* Context access optimization
+* Logging cli parameter to specify log level for root logger
+* Validate config param and load from io object
+* Interact await function
+* Fix aiohttp 2.0 import
+
+
 0.4.0 (2017-03-12)
 ------------------
 

@@ -1,24 +1,26 @@
-==========
 aioworkers
 ==========
 
 
 .. image:: https://img.shields.io/pypi/v/aioworkers.svg
-        :target: https://pypi.python.org/pypi/aioworkers
+  :target: https://pypi.python.org/pypi/aioworkers
 
 .. image:: https://img.shields.io/travis/aioworkers/aioworkers.svg
-        :target: https://travis-ci.org/aioworkers/aioworkers
+  :target: https://travis-ci.org/aioworkers/aioworkers
 
 .. image:: https://codecov.io/gh/aioworkers/aioworkers/branch/master/graph/badge.svg
-        :target: https://codecov.io/gh/aioworkers/aioworkers
+  :target: https://codecov.io/gh/aioworkers/aioworkers
 
 .. image:: https://readthedocs.org/projects/aioworkers/badge/?version=latest
-        :target: https://aioworkers.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
+  :target: https://aioworkers.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
 
 .. image:: https://pyup.io/repos/github/aioworkers/aioworkers/shield.svg
-     :target: https://pyup.io/repos/github/aioworkers/aioworkers/
-     :alt: Updates
+  :target: https://pyup.io/repos/github/aioworkers/aioworkers/
+  :alt: Updates
+
+.. image:: https://img.shields.io/pypi/pyversions/aioworkers.svg
+  :target: https://pypi.python.org/pypi/aioworkers
 
 
 Easy configurable workers based on asyncio
