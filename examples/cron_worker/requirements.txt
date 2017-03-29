@@ -1,0 +1,3 @@
+crontab==0.21.3
+pyyaml==3.12
+aioworkers==0.4.1
