@@ -1,67 +1,142 @@
 import hashlib
 import os
 import shutil
+from pathlib import Path, PurePath
 
-from ..core.formatter import FormattedEntity
 from . import base
 from .. import utils
+from ..core.formatter import FormattedEntity
 
 
 class FileSystemStorage(FormattedEntity, base.AbstractStorage):
+    PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
+    PARAM_EXECUTOR = 'executor'
+
+    def init(self):
+        self._space_waiters = []
+        return super().init()
+
     @property
     def executor(self):
-        return self._context[self._config.get('executor')]
+        return self._context[self._config.get(self.PARAM_EXECUTOR)]
 
-    def _write(self, key, value):
-        d = os.path.dirname(key)
-        if os.path.exists(d):
+    async def get_free_space(self):
+        statvfs = await self.loop.run_in_executor(
+            self.executor, os.statvfs, self._config.path)
+        return statvfs.f_frsize * statvfs.f_bavail
+
+    async def _wait_free_space(self, size=None):
+        limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
+        if limit:
+            limit <<= 20
+        else:
+            return
+        free = await self.get_free_space()
+        if size is None or free < size + limit:
+            f = self.loop.create_future()
+            self._space_waiters.append((f, size))
+            await f
+
+    async def _next_space_waiter(self):
+        limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
+        if limit:
+            limit <<= 20
+        else:
+            return
+        free = await self.get_free_space()
+        for fsize in self._space_waiters:
+            f, size = fsize
+            if free > (size or 0) + limit:
+                f.set_result(None)
+                to_del = fsize
+                break
+        else:
+            return
+        self._space_waiters.remove(to_del)
+
+    def _write(self, key: Path, value):
+        d = key.parent
+        if d.exists():
             pass
         elif value is None:
             return
         else:
-            os.makedirs(d)
-        if value is None:
-            os.remove(key)
-        else:
-            with open(key, 'wb') as f:
-                f.write(self.encode(value))
+            d.mkdir(parents=True)
+        if value is not None:
+            with key.open('wb') as f:
+                f.write(value)
+        elif key.exists():
+            key.unlink()
 
     def _write_chunk(self, f, data):
         return self.loop.run_in_executor(
             self.executor, f.write, data)
 
-    def _open(self, key, mode='rb'):
+    async def _open(self, key, mode='rb'):
         path = self.raw_key(key)
+        await self._wait_free_space()
 
-        def file_open(path, mode):
+        def file_open(path: Path, mode):
             if 'w' in mode or '+' in mode:
-                d = os.path.dirname(path)
-                if not os.path.exists(d):
-                    os.makedirs(d)
-            return open(path, mode)
+                d = path.parent
+                d.mkdir(parents=True, exist_ok=True)
+            return path.open(mode)
 
-        return self.loop.run_in_executor(
+        return await self.loop.run_in_executor(
             self.executor, file_open, path, mode)
 
-    def _close(self, f):
-        return self.loop.run_in_executor(
+    async def _close(self, f):
+        await self.loop.run_in_executor(
             self.executor, f.close)
+        await self._next_space_waiter()
 
     def _read(self, key):
-        if not os.path.exists(key):
+        if not key.exists():
             return
-        with open(key, 'rb') as f:
+        with key.open('rb') as f:
             return self.decode(f.read())
 
-    def raw_key(self, key):
-        if os.path.isabs(key):
-            raise ValueError(key)
-        return os.path.join(self._config.path, key)
+    def path_transform(self, rel_path: str):
+        return rel_path
+
+    def raw_key(self, *key):
+        def flat(parts):
+            if isinstance(parts, str):
+                if os.path.isabs(parts):
+                    raise ValueError('Path must be relative. '
+                                     '[{}]'.format(parts))
+                yield parts
+            elif isinstance(parts, PurePath):
+                if parts.is_absolute():
+                    raise ValueError('Path must be relative. '
+                                     '[{}]'.format(parts))
+                yield parts
+            elif isinstance(parts, (list, tuple)):
+                for p in parts:
+                    yield from flat(p)
+            else:
+                raise TypeError(
+                    'Key must be relative path [str or Path]. '
+                    'But {}'.format(parts))
+        rel = os.path.normpath(str(PurePath(*flat(key))))
+
+        base = self._config.path
+        path = os.path.normpath(
+            os.path.join(
+                base, self.path_transform(rel)))
+
+        if len(path) < len(base) or not path.startswith(base):
+            raise ValueError('Access denied: ' + path)
+        return Path(path)
 
     async def set(self, key, value):
+        if value is not None:
+            value = self.encode(value)
+            await self._wait_free_space(len(value))
         k = self.raw_key(key)
         await self.loop.run_in_executor(
             self.executor, self._write, k, value)
+        await self._next_space_waiter()
 
     @utils.method_replicate_result(key=lambda self, k: k)
     async def get(self, key):
@@ -72,15 +147,14 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
     def _copy(self, key_source, storage_dest, key_dest, copy_func):
         s = self.raw_key(key_source)
         d = storage_dest.raw_key(key_dest)
-        target_dir = os.path.dirname(d)
-        if not os.path.exists(target_dir):
-            os.makedirs(target_dir)
-        if os.path.exists(s):
-            copy_func(s, d)
-        elif not os.path.exists(d):
+        target_dir = d.parent
+        target_dir.mkdir(parents=True, exist_ok=True)
+        if s.exists():
+            copy_func(str(s), str(d))
+        elif not d.exists():
             return False
         else:
-            os.remove(d)
+            d.unlink()
             return True
 
     def copy(self, key_source, storage_dest, key_dest):
@@ -99,17 +173,14 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
 
 
 class NestedFileSystemStorage(FileSystemStorage):
-    def _nested(self, key):
-        return os.path.join(key[:2], key[2:4], key)
-
-    def raw_key(self, key):
-        return super().raw_key(self._nested(key))
+    def path_transform(self, rel_path: str):
+        return os.path.join(rel_path[:2], rel_path[2:4], rel_path)
 
 
 class HashFileSystemStorage(NestedFileSystemStorage):
-    def raw_key(self, key):
-        ext = os.path.splitext(key)[-1]
+    def path_transform(self, rel_path: str):
+        ext = os.path.splitext(rel_path)[-1]
         hash = hashlib.md5()
-        hash.update(key.encode())
+        hash.update(rel_path.encode())
         d = hash.hexdigest() + ext
-        return super().raw_key(d)
+        return super().path_transform(d)
