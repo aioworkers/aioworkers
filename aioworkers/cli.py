@@ -1,6 +1,10 @@
 import argparse
 import asyncio
 import logging.config
+import multiprocessing
+import os
+import signal
+import time
 
 from . import config
 from .core.context import Context
@@ -56,7 +60,16 @@ def main(*config_files, args=None, config_dirs=()):
     if isinstance(conf.http.port, str):
         conf.http.port = int(conf.http.port)
 
-    context.app.run_forever(host=conf.http.host, port=conf.http.port)
+    try:
+        context.app.run_forever(host=conf.http.host, port=conf.http.port)
+    finally:
+        sig = signal.SIGTERM
+        while multiprocessing.active_children():
+            for p in multiprocessing.active_children():
+                os.kill(p.pid, sig)
+            time.sleep(0.3)
+            print('killall children')
+            sig = signal.SIGKILL
 
 
 def main_with_conf():
