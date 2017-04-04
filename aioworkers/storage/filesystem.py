@@ -20,9 +20,12 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
     def executor(self):
         return self._context[self._config.get(self.PARAM_EXECUTOR)]
 
-    async def get_free_space(self):
-        statvfs = await self.loop.run_in_executor(
+    def get_statvfs(self):
+        return self.loop.run_in_executor(
             self.executor, os.statvfs, self._config.path)
+
+    async def get_free_space(self):
+        statvfs = await self.get_statvfs()
         return statvfs.f_frsize * statvfs.f_bavail
 
     async def _wait_free_space(self, size=None):
