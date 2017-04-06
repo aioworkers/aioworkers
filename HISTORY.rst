@@ -2,6 +2,13 @@
 History
 =======
 
+0.4.2 (2017-04-05)
+------------------
+
+* FileSystemStorage method wait free space
+* Module humanize
+* Example of a cron worker
+
 0.4.1 (2017-03-23)
 ------------------
 
