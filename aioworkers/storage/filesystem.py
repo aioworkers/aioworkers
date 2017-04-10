@@ -124,13 +124,13 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         rel = os.path.normpath(str(PurePath(*flat(key))))
 
         base = self._config.path
-        path = os.path.normpath(
+        path = Path(os.path.normpath(
             os.path.join(
-                base, self.path_transform(rel)))
+                base, self.path_transform(rel))))
 
-        if len(path) < len(base) or not path.startswith(base):
-            raise ValueError('Access denied: ' + path)
-        return Path(path)
+        if path.relative_to(PurePath(base)) == '.':
+            raise ValueError('Access denied: %s' % path)
+        return path
 
     async def set(self, key, value):
         if value is not None:
