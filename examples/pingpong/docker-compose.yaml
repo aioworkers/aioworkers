@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  redis:
+    image: redis
+
+  ping:
+    build: ping
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+
+  pong:
+    build: pong
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
