@@ -1,2 +1,7 @@
+import asyncio
+
+
 async def run(worker, *args, **kwargs):
-    worker.logger.info('Ping')
+    await asyncio.sleep(1)
+    worker.logger.info(args)
+    return 'ping'
