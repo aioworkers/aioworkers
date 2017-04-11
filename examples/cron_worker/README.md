@@ -2,6 +2,16 @@
 
 A simple worker that prints "Done" to the console each minute.
 
+## Run worker
+
+Install requirements into venv and activate it. Run worker with command:
+
+```bash
+python -m aioworkers.cli -c config.yaml -l info
+```
+
+
+## Docker
 
 Build it:
 
