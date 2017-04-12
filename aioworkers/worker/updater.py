@@ -68,8 +68,3 @@ class PipUpdater(BaseUpdater):
         package = self.config.package
         val = package.get('link', package.name)
         await self.run_cmd(val)
-
-    async def can_restart(self):
-        if not await super().can_restart():
-            return False
-        return self.v != self.version(self.config.package.name)
