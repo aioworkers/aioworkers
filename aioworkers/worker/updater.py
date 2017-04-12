@@ -44,13 +44,13 @@ class BaseUpdater(Subprocess):
 
 
 class PipUpdater(BaseUpdater):
+    pip = [sys.executable, '-m', 'pip']
+
     def init(self):
         c = self.config
-        c.cmd = c.get('cmd', [
-            sys.executable,
-            '-m', 'pip', 'install', '-U',
-        ])
-        self.v = self.version(c.package.name)
+        c.cmd = c.get('cmd', self.pip + ['install', '-U'])
+        self.current_version = self.version(c.package.name)
+        self.new_version = self.current_version
         return super().init()
 
     async def can_update(self):
@@ -68,3 +68,5 @@ class PipUpdater(BaseUpdater):
         package = self.config.package
         val = package.get('link', package.name)
         await self.run_cmd(val)
+        if not self._process.returncode:
+            self.current_version = self.new_version
