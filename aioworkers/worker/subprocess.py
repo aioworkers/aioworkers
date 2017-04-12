@@ -39,7 +39,9 @@ class Subprocess(FormattedEntity, Worker):
 
     def make_command(self, value):
         cmd = self.config.get('cmd')
-        if not cmd and isinstance(value, Sequence):
+        if value is None:
+            return cmd,
+        elif not cmd and isinstance(value, Sequence):
             return value
         elif not cmd and isinstance(value, str):
             return value,
