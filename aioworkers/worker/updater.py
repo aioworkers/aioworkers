@@ -13,7 +13,8 @@ class BaseUpdater(Subprocess):
         c.persist = c.get('persist', True)
         c.stderr = c.get('stderr', None)
         c.stdout = c.get('stdout', None)
-        c.crontab = c.get('crontab', '0 * * * *')
+        if not c.get('sleep') and not c.get('crontab'):
+            c.crontab = c.get('crontab', '0 * * * *')
         return super().init()
 
     async def can_restart(self):
