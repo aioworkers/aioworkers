@@ -2,6 +2,12 @@
 History
 =======
 
+0.4.5 (2017-04-13)
+------------------
+
+* Atomic set in FileSystemStorage
+* Correct default crontab in updater
+
 0.4.4 (2017-04-12)
 ------------------
 
