@@ -1,6 +1,7 @@
 import hashlib
 import os
 import shutil
+import tempfile
 from pathlib import Path, PurePath
 
 from . import base
@@ -66,8 +67,11 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         else:
             d.mkdir(parents=True)
         if value is not None:
-            with key.open('wb') as f:
+            with tempfile.NamedTemporaryFile(
+                    dir=self.config.path, delete=False) as f:
+                source = f.name
                 f.write(value)
+            shutil.move(source, str(key))
         elif key.exists():
             key.unlink()
 
