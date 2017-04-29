@@ -7,6 +7,7 @@ import pytest
 
 from aioworkers.core.config import MergeDict
 from aioworkers.core.context import Context
+from aioworkers.storage.base import FieldStorageMixin
 from aioworkers.storage.filesystem import \
     HashFileSystemStorage, FileSystemStorage
 from aioworkers.storage.meta import FutureStorage
@@ -151,3 +152,31 @@ async def test_chunk(loop):
         await storage._write_chunk(f, data)
         await storage._close(f)
         assert data == await storage.get(key4)
+
+
+class Store(FieldStorageMixin, FileSystemStorage):
+    pass
+
+
+async def test_field_storage(loop):
+    key = ('5', '6')
+    data = {'f': 3, 'g': 4, 'h': 5}
+    fields = ['f', 'g']
+    with tempfile.TemporaryDirectory() as d:
+        config = MergeDict(
+            name='',
+            path=d,
+            format='json',
+            executor=None,
+        )
+        context = Context({}, loop=loop)
+        storage = Store(config, context=context, loop=loop)
+        await storage.init()
+        await storage.set(key, data)
+        assert data == await storage.get(key)
+        assert 5 == await storage.get(key, field='h')
+        await storage.set(key, 6, field='h')
+        assert {'f': 3, 'g': 4} == await storage.get(key, fields=fields)
+        await storage.set(key, {'z': 1, 'y': 6}, fields=['z'])
+        assert {'f': 3, 'g': 4, 'h': 6, 'z': 1} == await storage.get(key)
+        await storage.set(key, None)
