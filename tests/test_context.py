@@ -1,7 +1,7 @@
 import pytest
 
 from aioworkers.core.config import MergeDict
-from aioworkers.core.context import Octopus, Context
+from aioworkers.core.context import Octopus, Context, GroupResolver, Signal
 
 
 def test_octopus():
@@ -67,3 +67,35 @@ async def test_context_create(loop):
     c.on_stop.append(1)
 
     await c.stop()
+
+
+def test_group_resolver():
+    gr = GroupResolver()
+    assert gr.is_skip(['1'])
+    assert not gr.is_skip(None)
+
+    gr = GroupResolver(all_groups=True)
+    assert not gr.is_skip(['1'])
+    assert not gr.is_skip(None)
+
+    gr = GroupResolver(default=False)
+    assert gr.is_skip(['1'])
+    assert gr.is_skip(None)
+
+    gr = GroupResolver(exclude=['1'])
+    assert gr.is_skip(['1'])
+    assert not gr.is_skip(None)
+
+    gr = GroupResolver(include=['1'])
+    assert not gr.is_skip(['1'])
+    assert not gr.is_skip(None)
+
+
+async def test_signal(loop):
+    gr = GroupResolver()
+    context = Context({}, loop=loop, group_resolver=gr)
+    s = Signal(context)
+    s.append(1, ('1',))
+    s.append(1)
+    await s.send(gr)
+    await s.send(GroupResolver(all_groups=True))

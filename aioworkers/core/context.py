@@ -74,11 +74,72 @@ class Octopus(MutableMapping):
         return ''.join(result)
 
 
+class Signal:
+    def __init__(self, context, name=None):
+        self._signals = []
+        self._context = context
+        self._name = name
+
+    def append(self, signal, groups=None):
+        if groups:
+            groups = {str(g) for g in groups}
+        self._signals.append((signal, groups))
+
+    async def send(self, group_resolver):
+        coros = []
+        for i, g in self._signals:
+            if group_resolver.is_skip(g):
+                continue
+            if asyncio.iscoroutinefunction(i):
+                params = inspect.signature(i).parameters
+                if 'app' in params:
+                    coro = i(self._context.app)
+                elif 'context' in params:
+                    coro = i(self)
+                else:
+                    coro = i()
+            elif asyncio.iscoroutine(i):
+                coro = i
+            else:
+                continue
+            coros.append(coro)
+        await self._context.wait_all(coros)
+
+
+class GroupResolver:
+    def __init__(
+        self,
+        include=None,
+        exclude=None,
+        all_groups=False,
+        default=True,
+    ):
+        self._include = frozenset(include or ())
+        self._exclude = frozenset(exclude or ())
+        self._all = all_groups
+        self._default = default
+
+    def is_skip(self, groups):
+        if not groups:
+            return not self._default
+        groups = {str(e) for e in groups}
+        if self._exclude:
+            groups -= self._exclude
+        if self._all:
+            pass
+        elif self._include:
+            groups = groups.intersection(self._include)
+        else:
+            groups = ()
+        return not groups
+
+
 class Context(AbstractEntity, Octopus):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, group_resolver=None, **kwargs):
         self._entities = {}
-        self._on_start = []
-        self._on_stop = []
+        self._group_resolver = group_resolver or GroupResolver()
+        self._on_start = Signal(self, name='start')
+        self._on_stop = Signal(self, name='stop')
         self.logger = logging.getLogger('aioworkers')
         super().__init__(*args, **kwargs)
 
@@ -93,7 +154,9 @@ class Context(AbstractEntity, Octopus):
     async def init(self):
         await load_entities(
             self.config, context=self, loop=self.loop,
-            entities=self._entities)
+            entities=self._entities,
+            group_resolver=self._group_resolver,
+        )
 
         inits = []
         for i in self._entities.values():
@@ -109,29 +172,11 @@ class Context(AbstractEntity, Octopus):
             if f.exception():
                 self.logger.exception('ERROR', exc_info=f.exception())
 
-    def send_signals(self, l):
-        coros = []
-        for i in l:
-            if asyncio.iscoroutinefunction(i):
-                params = inspect.signature(i).parameters
-                if 'app' in params:
-                    coro = i(self.app)
-                elif 'context' in params:
-                    coro = i(self)
-                else:
-                    coro = i()
-            elif asyncio.iscoroutine(i):
-                coro = i
-            else:
-                continue
-            coros.append(coro)
-        return self.wait_all(coros)
-
     async def start(self):
-        await self.send_signals(self.on_start)
+        await self.on_start.send(self._group_resolver)
 
     async def stop(self):
-        await self.send_signals(self.on_stop)
+        await self.on_stop.send(self._group_resolver)
 
     def __getitem__(self, item):
         if item is None:

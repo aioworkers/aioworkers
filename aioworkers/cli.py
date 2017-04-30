@@ -7,12 +7,17 @@ import signal
 import time
 
 from . import config
-from .core.context import Context
+from .core.context import Context, GroupResolver
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--host')
 parser.add_argument('-p', '--port', type=int)
+
+parser.add_argument('-g', '--groups', nargs='+')
+parser.add_argument('-e', '--exclude-groups', nargs='+')
+parser.add_argument('--all-groups', action='store_true')
+
 parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-l', '--logging', help='Root logger level')
 
@@ -49,7 +54,15 @@ def main(*config_files, args=None, config_dirs=()):
             conf['app.cls'] = 'aioworkers.app.Application'
 
     loop = asyncio.get_event_loop()
-    context = Context(conf, loop=loop)
+    context = Context(
+        conf, loop=loop,
+        group_resolver=GroupResolver(
+            include=args.groups,
+            exclude=args.exclude_groups,
+            all_groups=args.all_groups,
+            default=True,
+        ),
+    )
 
     loop.run_until_complete(context.init())
 

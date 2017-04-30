@@ -6,7 +6,8 @@ from .. import utils
 logger = logging.getLogger(__name__)
 
 
-async def load_entities(conf, context=None, loop=None, entities=None, path=()):
+async def load_entities(conf, context=None, loop=None, entities=None, path=(),
+                        group_resolver=None):
     from .context import Context
 
     ents = {}
@@ -24,7 +25,7 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=()):
             app.on_shutdown.append(lambda x: context.stop())
 
     elif context is None:
-        context = Context(conf, loop=loop)
+        context = Context(conf, loop=loop, group_resolver=group_resolver)
 
     for k, v in conf.items():
         if not isinstance(v, Mapping):
@@ -32,6 +33,9 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=()):
         elif k in ('logging', 'app'):
             pass
         elif 'cls' in v:
+            groups = v.get('groups')
+            if group_resolver.is_skip(groups):
+                continue
             p = path + (k,)
             str_path = '.'.join(p)
             if 'name' not in v:
@@ -45,7 +49,9 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=()):
                 context=context,
                 loop=loop,
                 entities=entities,
-                path=path + (k,))
+                path=path + (k,),
+                group_resolver=group_resolver,
+            )
 
     for i in ents.values():
         await i.init()
