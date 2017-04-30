@@ -19,7 +19,7 @@ parser.add_argument('-e', '--exclude-groups', nargs='+')
 parser.add_argument('--all-groups', action='store_true')
 
 parser.add_argument('-i', '--interact', action='store_true')
-parser.add_argument('-l', '--logging', help='Root logger level')
+parser.add_argument('-l', '--logging', help='logging level')
 
 
 try:
@@ -36,7 +36,7 @@ def main(*config_files, args=None, config_dirs=()):
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
         if args.logging:
-            logging.getLogger().setLevel(args.logging.upper())
+            logging.basicConfig(level=args.logging.upper())
     conf = config.load_conf(*config_files, search_dirs=config_dirs)
 
     if 'logging' in conf:
