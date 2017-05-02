@@ -63,9 +63,10 @@ class Worker(AbstractWorker):
 
         self.logger = logging.getLogger(self.config.get('logger', __name__))
 
+        groups = self.config.get('groups')
         if self.config.get('autorun'):
-            self.context.on_start.append(self.start)
-        self.context.on_stop.append(self.stop)
+            self.context.on_start.append(self.start, groups)
+        self.context.on_stop.append(self.stop, groups)
 
     @property
     def input(self):
