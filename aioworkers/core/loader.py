@@ -34,7 +34,7 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=(),
             pass
         elif 'cls' in v:
             groups = v.get('groups')
-            if group_resolver.is_skip(groups):
+            if not group_resolver.match(groups):
                 continue
             p = path + (k,)
             str_path = '.'.join(p)

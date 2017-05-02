@@ -88,7 +88,7 @@ class Signal:
     async def send(self, group_resolver):
         coros = []
         for i, g in self._signals:
-            if group_resolver.is_skip(g):
+            if not group_resolver.match(g):
                 continue
             if asyncio.iscoroutinefunction(i):
                 params = inspect.signature(i).parameters
@@ -119,9 +119,9 @@ class GroupResolver:
         self._all = all_groups
         self._default = default
 
-    def is_skip(self, groups):
+    def match(self, groups):
         if not groups:
-            return not self._default
+            return self._default
         groups = {str(e) for e in groups}
         if self._exclude:
             groups -= self._exclude
@@ -131,7 +131,7 @@ class GroupResolver:
             groups = groups.intersection(self._include)
         else:
             groups = ()
-        return not groups
+        return groups
 
 
 class Context(AbstractEntity, Octopus):

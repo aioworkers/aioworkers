@@ -71,24 +71,24 @@ async def test_context_create(loop):
 
 def test_group_resolver():
     gr = GroupResolver()
-    assert gr.is_skip(['1'])
-    assert not gr.is_skip(None)
+    assert not gr.match(['1'])
+    assert gr.match(None)
 
     gr = GroupResolver(all_groups=True)
-    assert not gr.is_skip(['1'])
-    assert not gr.is_skip(None)
+    assert gr.match(['1'])
+    assert gr.match(None)
 
     gr = GroupResolver(default=False)
-    assert gr.is_skip(['1'])
-    assert gr.is_skip(None)
+    assert not gr.match(['1'])
+    assert not gr.match(None)
 
     gr = GroupResolver(exclude=['1'])
-    assert gr.is_skip(['1'])
-    assert not gr.is_skip(None)
+    assert not gr.match(['1'])
+    assert gr.match(None)
 
     gr = GroupResolver(include=['1'])
-    assert not gr.is_skip(['1'])
-    assert not gr.is_skip(None)
+    assert gr.match(['1'])
+    assert gr.match(None)
 
 
 async def test_signal(loop):
