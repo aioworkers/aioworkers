@@ -2,6 +2,16 @@
 History
 =======
 
+0.5.0 (2017-05-17)
+------------------
+
+* Grouping
+* FieldStorageMixin
+* Logging level instead root logger level in params cli
+* find-links param in PipUpdater
+* Open csv in init coro DictReader queue
+
+
 0.4.5 (2017-04-13)
 ------------------
 
