@@ -5,9 +5,8 @@ from .base import AbstractReader
 
 
 class DictReader(AbstractReader):
-    def __init__(self, config, *, context=None, loop=None):
-        AbstractReader.__init__(self, config, context=context, loop=loop)
-        self._reader = csv.DictReader(open(config.file))
+    async def init(self):
+        self._reader = csv.DictReader(open(self.config.file))
         self._executor = None  # TODO
         self._lock = asyncio.Lock(loop=self.loop)
 

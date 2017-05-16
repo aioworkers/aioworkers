@@ -19,5 +19,6 @@ async def test_dictreader(loop, csv_file):
         file = csv_file.name
 
     reader = csv.DictReader(config, loop=loop)
+    await reader.init()
     assert {'name': 'x', 'uid': '3'} == await reader.get()
     assert {'name': 'f', 'uid': '4'} == await reader.get()
