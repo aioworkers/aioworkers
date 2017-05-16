@@ -49,7 +49,13 @@ class PipUpdater(BaseUpdater):
 
     def init(self):
         c = self.config
-        c.cmd = c.get('cmd', self.pip + ['install', '-U'])
+        params = ['install']
+        if c.get('upgrade', True):
+            params.append('-U')
+        if 'find-links' in c:
+            params.append('--find-links')
+            params.append(c.get('find-links'))
+        c.cmd = c.get('cmd', self.pip + params)
         self.current_version = self.version(c.package.name)
         self.new_version = self.current_version
         return super().init()
