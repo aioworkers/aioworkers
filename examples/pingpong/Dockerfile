@@ -7,6 +7,7 @@ RUN apk add --no-cache gcc musl-dev
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY config.yaml worker.py app.py /worker/
+COPY config.yaml app.py docker-entrypoint.sh /worker/
 
-CMD python -m aioworkers.cli -c config.yaml -l info
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["--help"]

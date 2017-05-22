@@ -7,13 +7,7 @@ This example shows communication between two workers via Redis queries.
 To run this example you need to install Redis.
 
 ```bash
-cd ping/
-python -m aioworkers.cli -c config.yaml -l info
-```
-
-```bash
-cd pong/
-python -m aioworkers.cli -c config.yaml -l info
+python -m aioworkers.cli -c config.yaml -l info --all-groups
 ```
 
 ## Docker

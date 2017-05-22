@@ -1,0 +1,32 @@
+app:
+  cls: app.Application
+
+groups:
+  ping:
+    cls: aioworkers.worker.base.Worker
+    run: app.run
+    autorun: true
+    input: queues.pong
+    output: queues.ping
+    groups: ['ping']
+  pong:
+    cls: aioworkers.worker.base.Worker
+    run: app.run
+    autorun: true
+    input: queues.ping
+    output: queues.pong
+    groups: ['pong']
+  start:
+    cls: aioworkers.worker.base.Worker
+    run: app.start
+    autorun: true
+    sleep_start: 2
+    groups: ['start']
+
+queues:
+  ping:
+    cls: aioworkers.redis.RedisQueue
+    key: ping-queue
+  pong:
+    cls: aioworkers.redis.RedisQueue
+    key: pong-queue

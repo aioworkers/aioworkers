@@ -5,14 +5,16 @@ services:
     image: redis
 
   ping:
-    build: ping
+    build: .
+    command: ping
     depends_on:
       - redis
     environment:
       REDIS_HOST: redis
 
   pong:
-    build: pong
+    build: .
+    command: pong
     depends_on:
       - redis
     environment:
