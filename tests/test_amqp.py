@@ -9,8 +9,13 @@ class MockedAsynqp:
     def __getattr__(self, item):
         return self
 
-    async def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         return self
+
+    def __await__(self):
+        async def coro():
+            return self
+        return coro().__await__()
 
 
 async def test_queue(loop, mocker):
