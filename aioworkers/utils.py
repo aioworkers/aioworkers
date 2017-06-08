@@ -1,6 +1,8 @@
 import functools
 import importlib
 import logging
+import sys
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +13,17 @@ def import_name(stref: str):
     cls = getattr(module, name)
     logger.debug('Imported "{}" as {}'.format(stref, cls))
     return cls
+
+
+def module_path(str_module, return_str=False):
+    if str_module in sys.modules:
+        m = sys.modules[str_module]
+    else:
+        m = import_name(str_module)
+    p = Path(m.__file__).parent
+    if return_str:
+        return str(p)
+    return p
 
 
 def method_replicate_result(key):
