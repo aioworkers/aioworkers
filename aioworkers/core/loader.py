@@ -29,21 +29,10 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=(),
 
     for k, v in conf.items():
         if not isinstance(v, Mapping):
-            pass
+            continue
         elif k in ('logging', 'app'):
-            pass
-        elif 'cls' in v:
-            groups = v.get('groups')
-            if not group_resolver.match(groups):
-                continue
-            p = path + (k,)
-            str_path = '.'.join(p)
-            if 'name' not in v:
-                v['name'] = str_path
-            entity = context[v]
-            context[str_path] = entity
-            entities[p] = entity
-        else:
+            continue
+        elif 'cls' not in v and 'func' not in v:
             conf[k] = await load_entities(
                 conf[k],
                 context=context,
@@ -52,6 +41,19 @@ async def load_entities(conf, context=None, loop=None, entities=None, path=(),
                 path=path + (k,),
                 group_resolver=group_resolver,
             )
+        p = path + (k,)
+        str_path = '.'.join(p)
+        groups = v.get('groups')
+        if not group_resolver.match(groups):
+            continue
+        if 'cls' in v:
+            if 'name' not in v:
+                v['name'] = str_path
+            entity = context[v]
+            context[str_path] = entity
+            entities[p] = entity
+        elif 'func' in v:
+            context[str_path] = context[v]
 
     for i in ents.values():
         await i.init()
