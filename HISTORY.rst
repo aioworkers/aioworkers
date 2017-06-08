@@ -2,6 +2,14 @@
 History
 =======
 
+0.5.1 (2017-06-09)
+------------------
+
+* Change grouping cli params (no backward compatibility)
+* Add cwd in sys.path with cli
+* Auto execution `func` & add utils.module_path
+
+
 0.5.0 (2017-05-17)
 ------------------
 
