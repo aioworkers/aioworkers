@@ -37,6 +37,10 @@ else:
 
 
 def main(*config_files, args=None, config_dirs=()):
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
+
     if args is None:
         args = parser.parse_args()
         if getattr(args, 'config', None):
@@ -103,7 +107,4 @@ def main_with_conf():
 
 
 if __name__ == '__main__':
-    cwd = os.getcwd()
-    if cwd not in sys.path:
-        sys.path.insert(0, cwd)
     main_with_conf()
