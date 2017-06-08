@@ -1,6 +1,8 @@
 from pathlib import Path
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class MergeDict(dict):
     def __init__(self, iterable=None, **kwargs):
@@ -104,6 +106,10 @@ class MergeDict(dict):
         r.extend(super().__dir__())
         return r
 
+    def copy(self):
+        cls = type(self)
+        return cls(self)
+
 
 def yaml_loader(fd=None, filename=None, search_dirs=(), encoding='utf-8'):
     import yaml
@@ -138,7 +144,23 @@ class Config:
             '.json': json_loader,
             '.ini': ini_loader,
         }
-        self.search_dirs = [Path(i) for i in search_dirs]
+        self.search_dirs = []
+        for i in search_dirs:
+            if not isinstance(i, Path):
+                i = Path(i)
+            self.search_dirs.append(i)
+        self.files = []
+
+    def load_conf(self, path, fd, config):
+        loader = self.loaders[path.suffix]
+        with fd:
+            c = loader(fd, search_dirs=self.search_dirs)
+        l = 'Config found: {}'.format(path.absolute())
+        self.files.append(path)
+        logger.info(l)
+        if c:
+            config(c)
+        return config
 
     def load(self, *filenames, base=None):
         if base is None:
@@ -153,29 +175,15 @@ class Config:
                 if not fn.is_absolute():
                     fns.append(fn)
                     continue
-                loader = self.loaders[fn.suffix]
-                with fn.open(encoding='utf-8') as f:
-                    c = loader(f, search_dirs=self.search_dirs)
-                    logging.info('Config found: {}'.format(fn.absolute()))
+                self.load_conf(fn, fn.open(encoding='utf-8'), config)
             elif hasattr(fn, 'read') and hasattr(fn, 'name'):
-                p = Path(fn.name)
-                loader = self.loaders[p.suffix]
-                with fn:
-                    c = loader(fn, search_dirs=self.search_dirs)
-                    logging.info('Config found: {}'.format(p.absolute()))
+                self.load_conf(Path(fn.name), fn, config)
             else:
                 raise ValueError(fn)
-            if c:
-                config(c)
         for d in self.search_dirs:
             for fn in fns:
-                f = d / fn
-                if not f.exists():
+                if not Path(d, fn).exists():
                     continue
-                loader = self.loaders[fn.suffix]
-                with f.open(encoding='utf-8') as f:
-                    c = loader(f, search_dirs=self.search_dirs)
-                    logging.info('Config found: {}'.format(fn.absolute()))
-                if c:
-                    config(c)
+                f = Path(d, fn)
+                self.load_conf(f, f.open(encoding='utf-8'), config)
         return config
