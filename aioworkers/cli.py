@@ -2,21 +2,26 @@ import argparse
 import asyncio
 import logging.config
 import multiprocessing
+import operator
 import os
 import signal
 import time
+from functools import reduce
 
 from . import config
 from .core.context import Context, GroupResolver
 
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(prefix_chars='-+')
 parser.add_argument('--host')
 parser.add_argument('-p', '--port', type=int)
 
-parser.add_argument('-g', '--groups', nargs='+')
-parser.add_argument('-e', '--exclude-groups', nargs='+')
-parser.add_argument('--all-groups', action='store_true')
+group = parser.add_mutually_exclusive_group(required=False)
+group.add_argument('+g', '++groups', nargs='+', action='append',
+                   metavar='GROUP', help='Run groups')
+group.add_argument('-g', '--groups', nargs='*', action='append',
+                   dest='exclude_groups',
+                   metavar='GROUP', help='Run all exclude groups')
 
 parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
@@ -53,13 +58,17 @@ def main(*config_files, args=None, config_dirs=()):
         else:
             conf['app.cls'] = 'aioworkers.app.Application'
 
+    def sum_g(list_groups):
+        if list_groups:
+            return set(reduce(operator.add, list_groups))
+
     loop = asyncio.get_event_loop()
     context = Context(
         conf, loop=loop,
         group_resolver=GroupResolver(
-            include=args.groups,
-            exclude=args.exclude_groups,
-            all_groups=args.all_groups,
+            include=sum_g(args.groups),
+            exclude=sum_g(args.exclude_groups),
+            all_groups=args.exclude_groups is not None,
             default=True,
         ),
     )
