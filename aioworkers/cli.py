@@ -5,6 +5,7 @@ import multiprocessing
 import operator
 import os
 import signal
+import sys
 import time
 from functools import reduce
 
@@ -102,4 +103,7 @@ def main_with_conf():
 
 
 if __name__ == '__main__':
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
     main_with_conf()
