@@ -1,5 +1,8 @@
-from pathlib import Path
+import importlib
 import logging
+import re
+from pathlib import Path
+
 
 logger = logging.getLogger(__name__)
 
@@ -111,39 +114,144 @@ class MergeDict(dict):
         return cls(self)
 
 
-def yaml_loader(fd=None, filename=None, search_dirs=(), encoding='utf-8'):
-    import yaml
-    if fd is not None:
-        return yaml.load(fd)
+class ConfigFileLoader:
+    extensions = ()
+
+    def load_fd(self, fd):
+        raise NotImplementedError
+
+    def load_path(self, path):
+        raise NotImplementedError
 
 
-def json_loader(fd=None, filename=None, search_dirs=(), encoding='utf-8'):
-    import json
-    if fd is not None:
-        return json.load(fd)
+class YamlLoader(ConfigFileLoader):
+    extensions = ('.yaml', '.yml')
+
+    def __init__(self, *args, **kwargs):
+        self._yaml = importlib.import_module('yaml')
+
+    def load_fd(self, fd):
+        return self._yaml.load(fd)
 
 
-def ini_loader(fd=None, filename=None, search_dirs=(), encoding='utf-8'):
-    import configparser
-    config = configparser.ConfigParser(allow_no_value=True)
-    if fd is not None:
+class JsonLoader(ConfigFileLoader):
+    extensions = ('.json',)
+
+    def __init__(self, *args, **kwargs):
+        self._json = importlib.import_module('json')
+
+    def load_fd(self, fd):
+        return self._json.load(fd)
+
+
+class ValueMatcher:
+    def __init__(self, value):
+        self._value = value
+
+    @classmethod
+    def match(cls, value):
+        raise NotImplementedError
+
+    def get_value(self):
+        raise NotImplementedError
+
+
+class IntValueMatcher(ValueMatcher):
+    re = re.compile(r'\d+$')
+    fn = int
+
+    @classmethod
+    def match(cls, value):
+        if cls.re.match(value):
+            return cls(value)
+
+    def get_value(self):
+        return self.fn(self._value)
+
+
+class FloatValueMatcher(IntValueMatcher):
+    re = re.compile(r'\d+\.\d+$')
+    fn = float
+
+
+class MultilineValueMatcher(ValueMatcher):
+    re = re.compile(r'(\r\n)|(\n\r)|\r|\n')
+
+    @classmethod
+    def match(cls, value):
+        result = cls.re.split(value)
+        if len(result) > 1:
+            return cls(result)
+
+    def get_value(self):
+        return [i for i in self._value if i]
+
+
+class ListValueMatcher(ValueMatcher):
+    @classmethod
+    def match(cls, value):
+        if value.startswith('[') and value.endswith(']'):
+            return cls(value[1:-1])
+
+    def get_value(self):
+        return self._value.split(',')
+
+
+class IniLoader(ConfigFileLoader):
+    extensions = ('.ini',)
+    matchers = (
+        IntValueMatcher, FloatValueMatcher,
+        MultilineValueMatcher, ListValueMatcher,
+    )
+
+    def __init__(self, *args, **kwargs):
+        self._configparser = importlib.import_module('configparser')
+
+    def new_configparser(self, **kwargs) -> 'configparser.ConfigParser':
+        kwargs.setdefault('allow_no_value', True)
+        return self._configparser.ConfigParser(**kwargs)
+
+    def load_fd(self, fd):
+        config = self.new_configparser()
         config.read_file(fd)
-    else:
-        return
-    c = {}
-    for i in config.sections():
-        c[i] = dict(config[i])
-    return c
+        return self._convert(config)
+
+    def load_path(self, path):
+        config = self.new_configparser()
+        config.read(path)
+        return self._convert(config)
+
+    def load_str(self, string):
+        config = self.new_configparser()
+        config.read_string(string)
+        return self._convert(config)
+
+    def _convert(self, config):
+        c = {}
+        for i in config.sections():
+            d = dict(config[i])
+            for k, v in d.items():
+                for matcher in self.matchers:
+                    m = matcher.match(v)
+                    if m is not None:
+                        d[k] = m.get_value()
+                        break
+            c[i] = d
+        return c
 
 
 class Config:
+    loaders = (
+        YamlLoader, JsonLoader, IniLoader,
+    )
+
     def __init__(self, search_dirs=()):
-        self.loaders = {
-            '.yaml': yaml_loader,
-            '.yml': yaml_loader,
-            '.json': json_loader,
-            '.ini': ini_loader,
-        }
+        loaders = {}
+        for l in self.loaders:
+            ins = l()
+            for ext in l.extensions:
+                loaders[ext] = ins
+        self._loaders = loaders
         self.search_dirs = []
         for i in search_dirs:
             if not isinstance(i, Path):
@@ -152,9 +260,9 @@ class Config:
         self.files = []
 
     def load_conf(self, path, fd, config):
-        loader = self.loaders[path.suffix]
+        loader = self._loaders[path.suffix]
         with fd:
-            c = loader(fd, search_dirs=self.search_dirs)
+            c = loader.load_fd(fd)
         l = 'Config found: {}'.format(path.absolute())
         self.files.append(path)
         logger.info(l)

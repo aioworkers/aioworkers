@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from aioworkers.core.config import MergeDict, Config
+from aioworkers.core.config import MergeDict, Config, IniLoader
 
 
 def test_dict_create():
@@ -87,3 +87,32 @@ def test_load_config():
     conf = Config(search_dirs=[p])
     config = conf.load(p / 'conf1.json', 'conf2.json')
     assert config
+
+
+def test_ini():
+    loader = IniLoader()
+    d = loader.load_str("""
+        [sec]
+        int1: 1
+        int2 = 2
+        int3:3
+        int4=4
+        float:1.1
+        list_multiline=
+            a
+            b
+        list1: [a,b]
+        list2:[a,b]
+        list3=[a,b]
+        list4 = [a,b]
+        """)
+    for k, v in d['sec'].items():
+        if k.startswith('int'):
+            assert isinstance(v, int)
+        elif k.startswith('float'):
+            assert isinstance(v, float)
+        elif k.startswith('list'):
+            assert isinstance(v, list)
+            assert v == ['a', 'b']
+        else:
+            assert False
