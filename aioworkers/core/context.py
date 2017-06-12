@@ -134,36 +134,27 @@ class GroupResolver:
 
 
 class ContextProcessor:
-    def __init__(self, context, path, config):
+    def __init__(self, context, path, value):
         self.context = context
         self.path = path
-        self.config = config
+        self.value = value
 
     @classmethod
-    def match(cls, context, path, config):
+    def match(cls, context, path, value):
         raise NotImplementedError
 
     async def process(self):
         raise NotImplementedError
 
 
-class NotMappingContextProcessor(ContextProcessor):
-    process = None
-
-    @classmethod
-    def match(cls, context, path, config):
-        if not isinstance(config, Mapping):
-            return cls(context, path, config)
-
-
 class LoggingContextProcessor(ContextProcessor):
     process = None
 
     @classmethod
-    def match(cls, context, path, config):
-        if path.split('.')[-1] == 'logging':
-            logging.config.dictConfig(config)
-            return cls(context, path, config)
+    def match(cls, context, path, value):
+        if isinstance(value, Mapping) and path.split('.')[-1] == 'logging':
+            logging.config.dictConfig(value)
+            return cls(context, path, value)
 
 
 class GroupsContextProcessor(ContextProcessor):
@@ -171,27 +162,29 @@ class GroupsContextProcessor(ContextProcessor):
     process = None
 
     @classmethod
-    def match(cls, context, path, config):
-        groups = config.get(cls.key)
+    def match(cls, context, path, value):
+        if not isinstance(value, Mapping):
+            return
+        groups = value.get(cls.key)
         if not context._group_resolver.match(groups):
-            return cls(context, path, config)
+            return cls(context, path, value)
 
 
 class EntityContextProcessor(ContextProcessor):
     key = 'cls'
 
-    def __init__(self, context, path, config):
-        super().__init__(context, path, config)
-        cls = import_name(config[self.key])
-        config.setdefault('name', path)
-        entity = cls(config, context=context, loop=context.loop)
+    def __init__(self, context, path, value):
+        super().__init__(context, path, value)
+        cls = import_name(value[self.key])
+        value.setdefault('name', path)
+        entity = cls(value, context=context, loop=context.loop)
         context[path] = entity
         self.entity = entity
 
     @classmethod
-    def match(cls, context, path, config):
-        if cls.key in config:
-            return cls(context, path, config)
+    def match(cls, context, path, value):
+        if isinstance(value, Mapping) and cls.key in value:
+            return cls(context, path, value)
 
     async def process(self):
         await self.entity.init()
@@ -201,40 +194,43 @@ class FuncContextProcessor(ContextProcessor):
     key = 'func'
     process = None
 
-    def __init__(self, context, path, config):
-        super().__init__(context, path, config)
-        func = import_name(config[self.key])
-        args = config.get('args', ())
-        kwargs = config.get('kwargs', {})
+    def __init__(self, context, path, value):
+        super().__init__(context, path, value)
+        func = import_name(value[self.key])
+        args = value.get('args', ())
+        kwargs = value.get('kwargs', {})
         context[path] = func(*args, **kwargs)
 
     @classmethod
-    def match(cls, context, path, config):
-        if cls.key in config:
-            return cls(context, path, config)
+    def match(cls, context, path, value):
+        if isinstance(value, Mapping) and cls.key in value:
+            return cls(context, path, value)
 
 
 class RootContextProcessor(ContextProcessor):
-    mapping_processors = (
+    key = 'app'
+    key_class = 'app.cls'
+    processors = (
         LoggingContextProcessor,
         GroupsContextProcessor,
         EntityContextProcessor,
         FuncContextProcessor,
     )
 
-    def __init__(self, context, path=None, config=None):
-        super().__init__(context, path, config)
-        self.processors = \
-            (NotMappingContextProcessor, type(self)) + \
-            self.mapping_processors
+    def __init__(self, context, path=None, value=None):
+        super().__init__(context, path, value)
         self.on_ready = Signal(context, name='ready')
 
+    def __iter__(self):
+        yield type(self)
+        yield from self.processors
+
     @classmethod
-    def match(cls, context, path, config):
-        if config.get('app.cls'):
-            nested_context = Context(config, loop=context.loop)
+    def match(cls, context, path, value):
+        if isinstance(value, Mapping) and value.get(cls.key_class):
+            nested_context = Context(value, loop=context.loop)
             context[path] = nested_context
-            return cls(nested_context, config=config)
+            return cls(nested_context, config=value)
 
     def _path(self, base, key):
         if not base:
@@ -243,10 +239,10 @@ class RootContextProcessor(ContextProcessor):
 
     def processing(self, config, path=None):
         for k, v in config.items():
-            if k == 'app' and not path:
+            if k == self.key and not path:
                 continue
             p = self._path(path, k)
-            for processor in self.processors:
+            for processor in self:
                 m = processor.match(self.context, p, v)
                 if m is None:
                     continue
@@ -254,20 +250,21 @@ class RootContextProcessor(ContextProcessor):
                     self.on_ready.append(m.process)
                 break
             else:
-                self.processing(v, p)
+                if isinstance(v, Mapping):
+                    self.processing(v, p)
 
     async def process(self):
-        strcls = self.config.get('app.cls')
+        strcls = self.value.get(self.key_class)
         if strcls:
             cls = import_name(strcls)
             app = await cls.factory(
-                config=self.config,
+                config=self.value,
                 context=self.context,
                 loop=self.context.loop)
             self.context.app = app
             app.on_startup.append(lambda x: self.context.start())
             app.on_shutdown.append(lambda x: self.context.stop())
-        self.processing(self.config)
+        self.processing(self.value)
         await self.on_ready.send(self.context._group_resolver)
 
 
@@ -288,7 +285,7 @@ class Context(AbstractEntity, Octopus):
         return self._on_stop
 
     async def init(self):
-        await RootContextProcessor(self, config=self.config).process()
+        await RootContextProcessor(self, value=self.config).process()
 
     async def wait_all(self, coros):
         if not coros:
