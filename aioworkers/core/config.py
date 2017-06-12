@@ -226,16 +226,22 @@ class IniLoader(ConfigFileLoader):
         config.read_string(string)
         return self._convert(config)
 
+    def _replace(self, d, iterfunc=lambda d: d.items()):
+        for k, v in iterfunc(d):
+            for matcher in self.matchers:
+                m = matcher.match(v)
+                if m is not None:
+                    v = m.get_value()
+                    if isinstance(v, list):
+                        self._replace(v, enumerate)
+                    d[k] = v
+                    break
+
     def _convert(self, config):
         c = {}
         for i in config.sections():
             d = dict(config[i])
-            for k, v in d.items():
-                for matcher in self.matchers:
-                    m = matcher.match(v)
-                    if m is not None:
-                        d[k] = m.get_value()
-                        break
+            self._replace(d)
             c[i] = d
         return c
 

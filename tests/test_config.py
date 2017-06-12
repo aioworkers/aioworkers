@@ -99,12 +99,12 @@ def test_ini():
         int4=4
         float:1.1
         list_multiline=
-            a
-            b
-        list1: [a,b]
-        list2:[a,b]
-        list3=[a,b]
-        list4 = [a,b]
+            1
+            2
+        list1: [1,2]
+        list2:[1,2]
+        list3=[1,2]
+        list4 = [1,2]
         """)
     for k, v in d['sec'].items():
         if k.startswith('int'):
@@ -113,6 +113,6 @@ def test_ini():
             assert isinstance(v, float)
         elif k.startswith('list'):
             assert isinstance(v, list)
-            assert v == ['a', 'b']
+            assert v == [1, 2]
         else:
             assert False
