@@ -228,6 +228,8 @@ class IniLoader(ConfigFileLoader):
 
     def _replace(self, d, iterfunc=lambda d: d.items()):
         for k, v in iterfunc(d):
+            if not v:
+                continue
             for matcher in self.matchers:
                 m = matcher.match(v)
                 if m is not None:
