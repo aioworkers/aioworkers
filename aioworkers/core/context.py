@@ -152,7 +152,7 @@ class LoggingContextProcessor(ContextProcessor):
 
     @classmethod
     def match(cls, context, path, value):
-        if isinstance(value, Mapping) and path.split('.')[-1] == 'logging':
+        if path == 'logging':
             logging.config.dictConfig(value)
             return cls(context, path, value)
 
