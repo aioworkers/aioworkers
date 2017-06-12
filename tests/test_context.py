@@ -49,7 +49,6 @@ async def test_context_create(loop):
         c.r
     with pytest.raises(KeyError):
         c['r']
-    c[{'func': 'time.time'}]
 
     async def handler(app):
         pass

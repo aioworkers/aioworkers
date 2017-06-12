@@ -49,9 +49,6 @@ def main(*config_files, args=None, config_dirs=()):
             logging.basicConfig(level=args.logging.upper())
     conf = config.load_conf(*config_files, search_dirs=config_dirs)
 
-    if 'logging' in conf:
-        logging.config.dictConfig(conf.logging)
-
     if args.host:
         conf['http.host'] = args.host
     if args.port is not None:

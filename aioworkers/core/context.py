@@ -1,10 +1,9 @@
 import asyncio
 import inspect
-import logging
+import logging.config
 from collections import Mapping, MutableMapping
 
 from .base import AbstractEntity
-from ..core.loader import load_entities
 from ..utils import import_name
 
 
@@ -134,9 +133,146 @@ class GroupResolver:
         return groups
 
 
+class ContextProcessor:
+    def __init__(self, context, path, config):
+        self.context = context
+        self.path = path
+        self.config = config
+
+    @classmethod
+    def match(cls, context, path, config):
+        raise NotImplementedError
+
+    async def process(self):
+        raise NotImplementedError
+
+
+class NotMappingContextProcessor(ContextProcessor):
+    process = None
+
+    @classmethod
+    def match(cls, context, path, config):
+        if not isinstance(config, Mapping):
+            return cls(context, path, config)
+
+
+class LoggingContextProcessor(ContextProcessor):
+    process = None
+
+    @classmethod
+    def match(cls, context, path, config):
+        if path.split('.')[-1] == 'logging':
+            logging.config.dictConfig(config)
+            return cls(context, path, config)
+
+
+class GroupsContextProcessor(ContextProcessor):
+    key = 'groups'
+    process = None
+
+    @classmethod
+    def match(cls, context, path, config):
+        groups = config.get(cls.key)
+        if not context._group_resolver.match(groups):
+            return cls(context, path, config)
+
+
+class EntityContextProcessor(ContextProcessor):
+    key = 'cls'
+
+    def __init__(self, context, path, config):
+        super().__init__(context, path, config)
+        cls = import_name(config[self.key])
+        config.setdefault('name', path)
+        entity = cls(config, context=context, loop=context.loop)
+        context[path] = entity
+        self.entity = entity
+
+    @classmethod
+    def match(cls, context, path, config):
+        if cls.key in config:
+            return cls(context, path, config)
+
+    async def process(self):
+        await self.entity.init()
+
+
+class FuncContextProcessor(ContextProcessor):
+    key = 'func'
+    process = None
+
+    def __init__(self, context, path, config):
+        super().__init__(context, path, config)
+        func = import_name(config[self.key])
+        args = config.get('args', ())
+        kwargs = config.get('kwargs', {})
+        context[path] = func(*args, **kwargs)
+
+    @classmethod
+    def match(cls, context, path, config):
+        if cls.key in config:
+            return cls(context, path, config)
+
+
+class RootContextProcessor(ContextProcessor):
+    mapping_processors = (
+        LoggingContextProcessor,
+        GroupsContextProcessor,
+        EntityContextProcessor,
+        FuncContextProcessor,
+    )
+
+    def __init__(self, context, path=None, config=None):
+        super().__init__(context, path, config)
+        self.processors = \
+            (NotMappingContextProcessor, type(self)) + \
+            self.mapping_processors
+        self.on_ready = Signal(context, name='ready')
+
+    @classmethod
+    def match(cls, context, path, config):
+        if config.get('app.cls'):
+            nested_context = Context(config, loop=context.loop)
+            context[path] = nested_context
+            return cls(nested_context, config=config)
+
+    def _path(self, base, key):
+        if not base:
+            return key
+        return '.'.join((base, key))
+
+    def processing(self, config, path=None):
+        for k, v in config.items():
+            if k == 'app' and not path:
+                continue
+            p = self._path(path, k)
+            for processor in self.processors:
+                m = processor.match(self.context, p, v)
+                if m is None:
+                    continue
+                if m.process:
+                    self.on_ready.append(m.process)
+                break
+            else:
+                self.processing(v, p)
+
+    async def process(self):
+        strcls = self.config.get('app.cls')
+        if strcls:
+            cls = import_name(strcls)
+            app = await cls.factory(
+                config=self.config,
+                context=self.context,
+                loop=self.context.loop)
+            self.context.app = app
+            app.on_startup.append(lambda x: self.context.start())
+            app.on_shutdown.append(lambda x: self.context.stop())
+        self.processing(self.config)
+        await self.on_ready.send(self.context._group_resolver)
+
+
 class Context(AbstractEntity, Octopus):
     def __init__(self, *args, group_resolver=None, **kwargs):
-        self._entities = {}
         self._group_resolver = group_resolver or GroupResolver()
         self._on_start = Signal(self, name='start')
         self._on_stop = Signal(self, name='stop')
@@ -152,16 +288,7 @@ class Context(AbstractEntity, Octopus):
         return self._on_stop
 
     async def init(self):
-        await load_entities(
-            self.config, context=self, loop=self.loop,
-            entities=self._entities,
-            group_resolver=self._group_resolver,
-        )
-
-        inits = []
-        for i in self._entities.values():
-            inits.append(i.init())
-        await self.wait_all(inits)
+        await RootContextProcessor(self, config=self.config).process()
 
     async def wait_all(self, coros):
         if not coros:
@@ -194,15 +321,6 @@ class Context(AbstractEntity, Octopus):
                 return import_name(item)
             except:
                 pass
-        elif isinstance(item, Mapping):
-            if 'func' in item:
-                func = import_name(item['func'])
-                args = item.get('args', ())
-                kwargs = item.get('kwargs', {})
-                return func(*args, **kwargs)
-            elif 'cls' in item:
-                cls = import_name(item['cls'])
-                return cls(item, context=self, loop=self.loop)
         raise KeyError(item)
 
     def __dir__(self):
