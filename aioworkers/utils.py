@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import importlib
 import logging
@@ -43,3 +44,18 @@ def method_replicate_result(key):
             return result
         return wrapper
     return wrapped
+
+
+@contextlib.contextmanager
+def monkey_close(loop):
+    close = loop.close
+    closed = False
+
+    def patched_close():
+        nonlocal closed
+        closed = True
+
+    loop.close = patched_close
+    yield
+    if closed:
+        close()
