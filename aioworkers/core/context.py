@@ -229,6 +229,8 @@ class RootContextProcessor(ContextProcessor):
     def match(cls, context, path, value):
         if isinstance(value, Mapping) and value.get(cls.key_class):
             nested_context = Context(value, loop=context.loop)
+            context.on_start.append(nested_context.start)
+            context.on_stop.append(nested_context.stop)
             context[path] = nested_context
             return cls(nested_context, config=value)
 
@@ -262,8 +264,6 @@ class RootContextProcessor(ContextProcessor):
                 context=self.context,
                 loop=self.context.loop)
             self.context.app = app
-            app.on_startup.append(lambda x: self.context.start())
-            app.on_shutdown.append(lambda x: self.context.stop())
         self.processing(self.value)
         await self.on_ready.send(self.context._group_resolver)
 
@@ -330,3 +330,19 @@ class Context(AbstractEntity, Octopus):
             return self._config[item]
         except KeyError:
             raise AttributeError(item)
+
+    def __enter__(self):
+        self.loop.run_until_complete(self.init())
+        self.loop.run_until_complete(self.start())
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.loop.run_until_complete(self.stop())
+
+    async def __aenter__(self):
+        await self.init()
+        await self.start()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.stop()
