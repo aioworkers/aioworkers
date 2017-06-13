@@ -9,7 +9,7 @@ import sys
 import time
 from functools import reduce
 
-from . import config
+from . import config, utils
 from .core.context import Context, GroupResolver
 
 
@@ -75,17 +75,15 @@ def main(*config_files, args=None, config_dirs=()):
         ),
     )
 
-    loop.run_until_complete(context.init())
-
     if args.interact:
         from .core.interact import shell
         shell(context)
 
-    if isinstance(conf.http.port, str):
-        conf.http.port = int(conf.http.port)
-
     try:
-        context.app.run_forever(host=conf.http.host, port=conf.http.port)
+        with utils.monkey_close(loop), context:
+            context.app.run_forever(
+                host=conf.http.host,
+                port=conf.http.port)
     finally:
         sig = signal.SIGTERM
         while multiprocessing.active_children():
