@@ -13,5 +13,11 @@ class Application(BaseApplication, web.Application):
         BaseApplication.__init__(
             self, config=config, context=context, **kwargs)
 
-    def run_forever(self, **kwargs):
+    def run_forever(self, host=None, port: int=None, **kwargs):
+        if host:
+            self.config['http.host'] = host
+        if port:
+            self.config['http.port'] = port
+        kwargs['host'] = self.config.http.host
+        kwargs['port'] = self.config.http.port
         web.run_app(self, **kwargs)

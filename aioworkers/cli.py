@@ -10,13 +10,11 @@ import time
 from functools import reduce
 
 from . import config, utils
+from .core import command
 from .core.context import Context, GroupResolver
 
 
 parser = argparse.ArgumentParser(prefix_chars='-+')
-parser.add_argument('--host')
-parser.add_argument('-p', '--port', type=int)
-
 group = parser.add_mutually_exclusive_group(required=False)
 group.add_argument('+g', '++groups', nargs='+', action='append',
                    metavar='GROUP', help='Run groups')
@@ -40,25 +38,24 @@ def main(*config_files, args=None, config_dirs=()):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
+    conf = {}
 
     if args is None:
-        args = parser.parse_args()
+        args, argv = parser.parse_known_args()
+        if '--port' in argv or '-p' in argv:
+            conf['app.cls'] = 'aioworkers.http.Application'
+        else:
+            conf['app.cls'] = 'aioworkers.app.Application'
+        cmds = []
+        while argv and not argv[0].startswith('-'):
+            cmds.append(argv.pop(0))
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
         if args.logging:
             logging.basicConfig(level=args.logging.upper())
-    conf = config.load_conf(*config_files, search_dirs=config_dirs)
-
-    if args.host:
-        conf['http.host'] = args.host
-    if args.port is not None:
-        conf['http.port'] = args.port
-
-    if not conf.get('app.cls'):
-        if conf.get('http.port'):
-            conf['app.cls'] = 'aioworkers.http.Application'
-        else:
-            conf['app.cls'] = 'aioworkers.app.Application'
+    else:
+        cmds, argv = (), None
+    conf = config.load_conf(*config_files, search_dirs=config_dirs, **conf)
 
     def sum_g(list_groups):
         if list_groups:
@@ -79,11 +76,17 @@ def main(*config_files, args=None, config_dirs=()):
         from .core.interact import shell
         shell(context)
 
+    cmds = cmds or ['app.run_forever']
     try:
         with utils.monkey_close(loop), context:
-            context.app.run_forever(
-                host=conf.http.host,
-                port=conf.http.port)
+            for cmd in cmds:
+                try:
+                    result = command.run(cmd, context, argv=argv)
+                except command.CommandNotFound:
+                    print('Command {} not found'.format(cmd))
+                    continue
+                if result is not None:
+                    print('{} => {}'.format(cmd, result))
     finally:
         sig = signal.SIGTERM
         while multiprocessing.active_children():
