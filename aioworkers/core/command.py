@@ -35,8 +35,6 @@ def run(cmd, context, loop=None, argv=None):
             kwargs['context'] = context
         if asyncio.iscoroutinefunction(cmd):
             return loop.run_until_complete(cmd(**kwargs))
-        elif asyncio.iscoroutine(cmd):
-            return loop.run_until_complete(cmd)
         elif callable(cmd):
             return cmd(**kwargs)
         else:
