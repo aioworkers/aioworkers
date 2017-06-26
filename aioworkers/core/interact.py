@@ -1,6 +1,9 @@
+import asyncio
 import concurrent.futures
 from functools import partial
 from threading import Thread
+
+from IPython import embed
 
 
 def _await(coro, context):
@@ -18,16 +21,22 @@ def _await(coro, context):
     return f.result()
 
 
-class Shell(Thread):
-    def run(self):
-        from IPython import embed
-
-        context, = self._args
-        await = partial(_await, context=context)
-        embed()
+def _shell(context):
+    await = partial(_await, context=context)
+    embed()
 
 
-def shell(context):
-    thread = Shell(args=(context,))
+def shell(run):
+    f = concurrent.futures.Future()
+
+    def _thread():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        run(loop=loop, future=f)
+
+    thread = Thread(target=_thread)
     thread.start()
-    return thread
+    context = f.result()
+    _shell(context)
+    context.loop.stop()
+    thread.join()

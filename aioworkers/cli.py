@@ -7,7 +7,7 @@ import os
 import signal
 import sys
 import time
-from functools import reduce
+from functools import reduce, partial
 
 from . import config, utils
 from .core import command
@@ -61,32 +61,21 @@ def main(*config_files, args=None, config_dirs=()):
         if list_groups:
             return set(reduce(operator.add, list_groups))
 
-    loop = asyncio.get_event_loop()
-    context = Context(
-        conf, loop=loop,
+    run = partial(
+        loop_run, conf,
         group_resolver=GroupResolver(
             include=sum_g(args.groups),
             exclude=sum_g(args.exclude_groups),
             all_groups=args.exclude_groups is not None,
             default=True,
-        ),
-    )
+        ), cmds=cmds, argv=argv)
 
-    if args.interact:
-        from .core.interact import shell
-        shell(context)
-
-    cmds = cmds or ['app.run_forever']
     try:
-        with utils.monkey_close(loop), context:
-            for cmd in cmds:
-                try:
-                    result = command.run(cmd, context, argv=argv)
-                except command.CommandNotFound:
-                    print('Command {} not found'.format(cmd))
-                    continue
-                if result is not None:
-                    print('{} => {}'.format(cmd, result))
+        if args.interact:
+            from .core.interact import shell
+            shell(run)
+        else:
+            run()
     finally:
         sig = signal.SIGTERM
         while multiprocessing.active_children():
@@ -95,6 +84,27 @@ def main(*config_files, args=None, config_dirs=()):
             time.sleep(0.3)
             print('killall children')
             sig = signal.SIGKILL
+
+
+def loop_run(conf, future=None, group_resolver=None, cmds=None, argv=None, loop=None):
+    loop = loop or asyncio.get_event_loop()
+    context = Context(
+        conf, loop=loop,
+        group_resolver=group_resolver,
+    )
+
+    cmds = cmds or ['app.run_forever']
+    with utils.monkey_close(loop), context:
+        if future is not None:
+            future.set_result(context)
+        for cmd in cmds:
+            try:
+                result = command.run(cmd, context, argv=argv)
+            except command.CommandNotFound:
+                print('Command {} not found'.format(cmd))
+                continue
+            if result is not None:
+                print('{} => {}'.format(cmd, result))
 
 
 def main_with_conf():
