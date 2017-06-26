@@ -54,7 +54,7 @@ def run(cmd, context, loop=None, ns=None, argv=None):
     else:
         if isinstance(obj, str):
             try:
-                return run(obj, context, argv=argv)
+                return run(obj, context, argv=argv, ns=ns)
             except CommandNotFound:
                 return obj
         return runner(obj)
