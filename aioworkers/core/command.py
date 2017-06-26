@@ -8,7 +8,7 @@ class CommandNotFound(RuntimeError):
     pass
 
 
-def kwargs_from_argv(params, argv=None):
+def kwargs_from_argv(params, ns, argv=None):
     parser = argparse.ArgumentParser()
     for i in params:
         p = params[i]
@@ -16,11 +16,12 @@ def kwargs_from_argv(params, argv=None):
             parser.add_argument('--' + i)
         else:
             parser.add_argument('--' + i, type=p.annotation)
-    n, argv = parser.parse_known_args(argv)
-    return {k: v for k, v in n.__dict__.items() if v is not None}
+    parser.parse_known_args(argv, namespace=ns)
+    return {k: v for k, v in ns.__dict__.items()
+            if v is not None and k in params}
 
 
-def run(cmd, context, loop=None, argv=None):
+def run(cmd, context, loop=None, ns=None, argv=None):
     loop = loop or context.loop or asyncio.get_event_loop()
 
     def runner(cmd):
@@ -30,7 +31,7 @@ def run(cmd, context, loop=None, argv=None):
 
         except (ValueError, TypeError):
             params = ()
-        kwargs = kwargs_from_argv(params, argv)
+        kwargs = kwargs_from_argv(params, ns, argv)
         if 'context' in params:
             kwargs['context'] = context
         if asyncio.iscoroutinefunction(cmd):

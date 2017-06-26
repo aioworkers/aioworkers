@@ -78,11 +78,12 @@ def main(*config_files, args=None, config_dirs=()):
             exclude=sum_g(args.exclude_groups),
             all_groups=args.exclude_groups is not None,
             default=True,
-        ), cmds=cmds, argv=argv)
+        ), cmds=cmds, argv=argv, ns=args)
 
     try:
         if args.interact:
             from .core.interact import shell
+            args.print = lambda *args: None
             shell(run)
         else:
             run()
@@ -96,7 +97,7 @@ def main(*config_files, args=None, config_dirs=()):
             sig = signal.SIGKILL
 
 
-def loop_run(conf, future=None, group_resolver=None, cmds=None, argv=None, loop=None):
+def loop_run(conf, future=None, group_resolver=None, ns=None, cmds=None, argv=None, loop=None):
     loop = loop or asyncio.get_event_loop()
     context = Context(
         conf, loop=loop,
@@ -109,7 +110,7 @@ def loop_run(conf, future=None, group_resolver=None, cmds=None, argv=None, loop=
             future.set_result(context)
         for cmd in cmds:
             try:
-                result = command.run(cmd, context, argv=argv)
+                result = command.run(cmd, context, argv=argv, ns=ns)
             except command.CommandNotFound:
                 print('Command {} not found'.format(cmd))
                 continue
