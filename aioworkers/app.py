@@ -30,7 +30,7 @@ class Application(BaseApplication, dict):
         self.on_shutdown = []
         super().__init__(config=config, context=context)
 
-    def run_forever(self, **kwargs):
+    def run_forever(self, print=print, **kwargs):
         loop = self.loop
 
         print("======== Running aioworkers ========\n"

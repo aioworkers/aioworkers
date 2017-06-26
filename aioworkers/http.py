@@ -13,7 +13,8 @@ class Application(BaseApplication, web.Application):
         BaseApplication.__init__(
             self, config=config, context=context, **kwargs)
 
-    def run_forever(self, **kwargs):
+    def run_forever(self, print=print, **kwargs):
         kwargs['host'] = self.config.http.host
         kwargs['port'] = self.config.http.port
+        kwargs['print'] = print
         web.run_app(self, **kwargs)
