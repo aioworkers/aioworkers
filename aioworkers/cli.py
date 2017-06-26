@@ -15,6 +15,9 @@ from .core.context import Context, GroupResolver
 
 
 parser = argparse.ArgumentParser(prefix_chars='-+')
+parser.add_argument('--host')
+parser.add_argument('-p', '--port', type=int)
+
 group = parser.add_mutually_exclusive_group(required=False)
 group.add_argument('+g', '++groups', nargs='+', action='append',
                    metavar='GROUP', help='Run groups')
@@ -42,10 +45,6 @@ def main(*config_files, args=None, config_dirs=()):
 
     if args is None:
         args, argv = parser.parse_known_args()
-        if '--port' in argv or '-p' in argv:
-            conf['app.cls'] = 'aioworkers.http.Application'
-        else:
-            conf['app.cls'] = 'aioworkers.app.Application'
         cmds = []
         while argv and not argv[0].startswith('-'):
             cmds.append(argv.pop(0))
@@ -56,6 +55,17 @@ def main(*config_files, args=None, config_dirs=()):
     else:
         cmds, argv = (), None
     conf = config.load_conf(*config_files, search_dirs=config_dirs, **conf)
+
+    if args.host:
+        conf['http.host'] = args.host
+    if args.port is not None:
+        conf['http.port'] = args.port
+
+    if not conf.get('app.cls'):
+        if conf.get('http.port'):
+            conf['app.cls'] = 'aioworkers.http.Application'
+        else:
+            conf['app.cls'] = 'aioworkers.app.Application'
 
     def sum_g(list_groups):
         if list_groups:
