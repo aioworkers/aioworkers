@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from pathlib import Path, PurePath
 
-from . import base
+from . import base, StorageError
 from .. import utils
 from ..core.formatter import FormattedEntity
 
@@ -141,8 +141,11 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             value = self.encode(value)
             await self._wait_free_space(len(value))
         k = self.raw_key(key)
-        await self.loop.run_in_executor(
-            self.executor, self._write, k, value)
+        try:
+            await self.loop.run_in_executor(
+                self.executor, self._write, k, value)
+        except OSError as e:
+            raise StorageError(str(e)) from e
         await self._next_space_waiter()
 
     @utils.method_replicate_result(key=lambda self, k: k)
