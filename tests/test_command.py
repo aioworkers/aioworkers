@@ -18,12 +18,12 @@ def test_run(loop):
     config['c'] = 'a.b'
     config['d'] = 's'
     with Context(config, loop=loop) as ctx:
-        run('time.time', ctx, ns=ns)
-        assert run('a.b', ctx, ns=ns) == 2
-        assert run('c', ctx, ns=ns) == 2
-        assert run('tests.test_command.coro', ctx, ns=ns) == 2
-        assert run('d', ctx, ns=ns) == 's'
+        run('time.time', ctx, ns=ns, argv=[])
+        assert run('a.b', ctx, ns=ns, argv=[]) == 2
+        assert run('c', ctx, ns=ns, argv=[]) == 2
+        assert run('tests.test_command.coro', ctx, ns=ns, argv=[]) == 2
+        assert run('d', ctx, ns=ns, argv=[]) == 's'
         with pytest.raises(CommandNotFound):
-            run('not found', ctx, ns=ns)
+            run('not found', ctx, ns=ns, argv=[])
         with pytest.raises(CommandNotFound):
-            run('time.time2', ctx, ns=ns)
+            run('time.time2', ctx, ns=ns, argv=[])

@@ -8,7 +8,7 @@ class CommandNotFound(RuntimeError):
     pass
 
 
-def kwargs_from_argv(params, ns, argv=None):
+def kwargs_from_argv(params, ns, argv):
     parser = argparse.ArgumentParser()
     for i in params:
         p = params[i]
@@ -16,7 +16,7 @@ def kwargs_from_argv(params, ns, argv=None):
             parser.add_argument('--' + i)
         else:
             parser.add_argument('--' + i, type=p.annotation)
-    parser.parse_known_args(argv, namespace=ns)
+    argv[:] = parser.parse_known_args(argv, namespace=ns)[1]
     return {k: v for k, v in ns.__dict__.items()
             if v is not None and k in params}
 
