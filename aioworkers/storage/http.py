@@ -58,7 +58,7 @@ class RoStorage(base.AbstractStorageReadOnly):
         async with self._semaphore:
             coro = getattr(self.session, method)
             async with coro(url, **kwargs) as response:
-                if self._format == 'json':
+                if self._format == 'json' and 'json' in response.content_type:
                     return response.status, await response.json()
                 elif self._format == 'str':
                     return response.status, await response.text()
