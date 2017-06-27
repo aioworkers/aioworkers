@@ -2,6 +2,14 @@
 History
 =======
 
+0.6.0 (2017-06-27)
+------------------
+
+* Added commands param in cli
+* Added classes for ContextProcessor and FileLoader family
+* Context now contextmanager
+
+
 0.5.1 (2017-06-09)
 ------------------
 
