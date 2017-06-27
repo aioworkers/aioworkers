@@ -8,7 +8,7 @@ python:
 install:
   - pip install -U pip setuptools
   - pip install -U pytest-runner pytest-aiohttp pytest-pep8 pytest-mock pytest-cov
-  - pip install -U uvloop aiohttp==1.3.5 aiohttp_apiset aioredis asynqp crontab ipython
+  - pip install -U uvloop aiohttp aiohttp_apiset aioredis asynqp crontab ipython
   - pip install codecov
   - python setup.py install
 script: py.test --cov=aioworkers
