@@ -1,4 +1,5 @@
 import pytest
+from aiohttp import web
 from yarl import URL
 
 from aioworkers.core.config import MergeDict
@@ -7,22 +8,28 @@ from aioworkers.storage import StorageError
 from aioworkers.storage.http import Storage
 
 
-async def test_set_get(loop):
+async def test_set_get(loop, test_client):
+    app = web.Application()
+    app.router.add_get(
+        '/test/1',
+        lambda x: web.json_response(["Python"]))
+    client = await test_client(app)
+    url = client.make_url('/')
+
     data = 'Python'
     config = MergeDict(
-        name='',
-        prefix='https://api.github.com/',
-        semaphore=1,
-        format='json',
+        storage=MergeDict(
+            cls='aioworkers.storage.http.Storage',
+            prefix=str(url),
+            semaphore=1,
+            format='json',
+        ),
     )
-    context = Context(config=config, loop=loop)
-    await context.init()
-    storage = Storage(config, context=context, loop=loop)
-    await storage.init()
-    assert data in await storage.get('repos/aamalev/aioworkers/languages')
-    with pytest.raises(StorageError):
-        await storage.set('user/repos', data)
-    await storage.stop()
+    async with Context(config=config, loop=loop) as context:
+        storage = context.storage
+        assert data in await storage.get('test/1')
+        with pytest.raises(StorageError):
+            await storage.set('test/1', data)
 
 
 async def test_format(loop):
