@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  graphite:
+    image: sitespeedio/graphite
+    ports:
+      - "8080:80"
+      - "2003:2003"
+    volumes:
+      - ./graphite:/opt/graphite/conf
+
+  worker:
+    build: .
+    depends_on:
+      - graphite
+    environment:
+      GRAPHITE_HOST: graphite

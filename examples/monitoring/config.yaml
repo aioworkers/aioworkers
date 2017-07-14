@@ -1,0 +1,7 @@
+worker:
+  cls: aioworkers.worker.base.Worker
+  run: worker.run
+  autorun: true
+  persist: true
+  sleep: 1
+
