@@ -2,6 +2,8 @@
 
 from setuptools import setup, find_packages
 
+version = __import__('aioworkers').__version__
+
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
@@ -17,7 +19,7 @@ test_requirements = [
 
 setup(
     name='aioworkers',
-    version='0.6.0',
+    version=version,
     description="Easy configurable workers based on asyncio",
     long_description=readme + '\n\n' + history,
     author="Alexander Malev",
