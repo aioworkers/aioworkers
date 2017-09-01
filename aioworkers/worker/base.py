@@ -1,9 +1,9 @@
 import asyncio
+import collections
 import datetime
 import logging
 from abc import abstractmethod
-
-import collections
+from functools import partial
 
 from ..core.base import AbstractNamedEntity
 from ..utils import import_name
@@ -45,7 +45,7 @@ class Worker(AbstractWorker):
 
         if self.config.get('run'):
             run = import_name(self.config.run)
-            self.run = lambda value=None: run(self, value)
+            self.run = partial(run, self)
 
         if self.config.get('input') or self.config.get('output'):
             self._persist = True
@@ -113,6 +113,9 @@ class Worker(AbstractWorker):
 
     async def run(self, value=None):
         raise NotImplementedError()
+
+    def __call__(self, *args, **kwargs):
+        return self.run(*args, **kwargs)
 
     @property
     def started_at(self):
