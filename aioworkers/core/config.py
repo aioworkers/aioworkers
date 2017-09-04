@@ -157,20 +157,20 @@ class ValueMatcher:
 
 
 class IntValueMatcher(ValueMatcher):
-    re = re.compile(r'[-+]?\d+$')
     fn = int
 
     @classmethod
     def match(cls, value):
-        if cls.re.match(value):
-            return cls(value)
+        try:
+            return cls(cls.fn(value))
+        except ValueError:
+            pass
 
     def get_value(self):
-        return self.fn(self._value)
+        return self._value
 
 
 class FloatValueMatcher(IntValueMatcher):
-    re = re.compile(r'[-+]?\d+\.\d+$')
     fn = float
 
 
