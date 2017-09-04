@@ -97,7 +97,11 @@ def test_ini():
         int2 = 2
         int3:3
         int4=4
-        float:1.1
+        int5=-4
+        int6=+4
+        float1:1.1
+        float2:-1.1
+        float3:+1.1
         list_multiline=
             1
             2

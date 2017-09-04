@@ -157,7 +157,7 @@ class ValueMatcher:
 
 
 class IntValueMatcher(ValueMatcher):
-    re = re.compile(r'\d+$')
+    re = re.compile(r'[-+]?\d+$')
     fn = int
 
     @classmethod
@@ -170,7 +170,7 @@ class IntValueMatcher(ValueMatcher):
 
 
 class FloatValueMatcher(IntValueMatcher):
-    re = re.compile(r'\d+\.\d+$')
+    re = re.compile(r'[-+]?\d+\.\d+$')
     fn = float
 
 
