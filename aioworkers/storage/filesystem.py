@@ -68,12 +68,19 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             d.mkdir(parents=True)
         if value is not None:
             with tempfile.NamedTemporaryFile(
-                    dir=self.config.path, delete=False) as f:
+                    dir=self.config.get('tmp') or self.config.path,
+                    delete=False) as f:
                 source = f.name
                 f.write(value)
             shutil.move(source, str(key))
-        elif key.exists():
-            key.unlink()
+        elif not key.exists():
+            pass
+        elif key.is_dir():
+            shutil.rmtree(str(key))
+        else:
+            with tempfile.NamedTemporaryFile(
+                    dir=self.config.get('tmp') or self.config.path) as f:
+                shutil.move(str(key), f.name)
 
     def _write_chunk(self, f, data):
         return self.loop.run_in_executor(
