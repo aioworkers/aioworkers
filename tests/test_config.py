@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from aioworkers.core.config import MergeDict, Config, IniLoader
+from aioworkers.core.config import \
+    MergeDict, Config, IniLoader, StringReplaceLoader
 
 
 def test_dict_create():
@@ -120,3 +121,10 @@ def test_ini():
             assert v == [1, 2]
         else:
             assert False
+
+
+def test_string_replacer():
+    c = StringReplaceLoader()
+    conf = {'a': '1', 'b': ['2'], 'c': {'d': '3'}}
+    c._replace(conf)
+    assert conf == {'a': 1, 'b': [2], 'c': {'d': 3}}

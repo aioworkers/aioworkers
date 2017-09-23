@@ -197,12 +197,31 @@ class ListValueMatcher(ValueMatcher):
         return self._value.split(',')
 
 
-class IniLoader(ConfigFileLoader):
-    extensions = ('.ini',)
+class StringReplaceLoader(ConfigFileLoader):
     matchers = (
         IntValueMatcher, FloatValueMatcher,
         MultilineValueMatcher, ListValueMatcher,
     )
+
+    def _replace(self, d, iterfunc=lambda d: d.items()):
+        for k, v in iterfunc(d):
+            if isinstance(v, dict):
+                self._replace(v)
+            elif isinstance(v, list):
+                self._replace(v, enumerate)
+            elif isinstance(v, str):
+                for matcher in self.matchers:
+                    m = matcher.match(v)
+                    if m is not None:
+                        v = m.get_value()
+                        if isinstance(v, list):
+                            self._replace(v, enumerate)
+                        d[k] = v
+                        break
+
+
+class IniLoader(StringReplaceLoader):
+    extensions = ('.ini',)
 
     def __init__(self, *args, **kwargs):
         self._configparser = importlib.import_module('configparser')
@@ -225,19 +244,6 @@ class IniLoader(ConfigFileLoader):
         config = self.new_configparser()
         config.read_string(string)
         return self._convert(config)
-
-    def _replace(self, d, iterfunc=lambda d: d.items()):
-        for k, v in iterfunc(d):
-            if not v:
-                continue
-            for matcher in self.matchers:
-                m = matcher.match(v)
-                if m is not None:
-                    v = m.get_value()
-                    if isinstance(v, list):
-                        self._replace(v, enumerate)
-                    d[k] = v
-                    break
 
     def _convert(self, config):
         c = {}
