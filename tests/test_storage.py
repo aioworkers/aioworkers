@@ -31,8 +31,10 @@ async def test_set_get(loop):
 
         await storage.set(key, data)
         await storage.set(key, None)  # del file
-        await storage.set(key[0], None)  # del dir
         assert not await storage.get(key)
+
+        await storage.set(key[0], None)  # del dir
+
         await storage.set(key, data)
         d = await asyncio.gather(storage.get(key), storage.get(key), loop=loop)
         for j in d:
