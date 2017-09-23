@@ -2,6 +2,15 @@
 History
 =======
 
+0.6.1 (2017-09-24)
+------------------
+
+* Improved HttpStorage and FileSystemStorage
+* Added example `monitoring<examples/monitoring>`_ with graphite
+* Fix match negative number in ini config
+* Calling a worker launches a coro
+
+
 0.6.0 (2017-06-27)
 ------------------
 
