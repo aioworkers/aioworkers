@@ -6,7 +6,7 @@ History
 ------------------
 
 * Improved HttpStorage and FileSystemStorage
-* Added example `monitoring<examples/monitoring>`_ with graphite
+* Added example `monitoring <examples/monitoring>`_ with graphite
 * Fix match negative number in ini config
 * Calling a worker launches a coro
 
