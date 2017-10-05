@@ -10,7 +10,8 @@ import time
 from functools import reduce, partial
 
 from . import config, utils
-from .core import command
+from .core import command, plugin
+from .core.config import MergeDict
 from .core.context import Context, GroupResolver
 
 
@@ -41,7 +42,7 @@ def main(*config_files, args=None, config_dirs=()):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
-    conf = {}
+    conf = MergeDict()
 
     if args is None:
         args, argv = parser.parse_known_args()
@@ -54,6 +55,12 @@ def main(*config_files, args=None, config_dirs=()):
             logging.basicConfig(level=args.logging.upper())
     else:
         cmds, argv = (), None
+
+    plugins = plugin.search_plugins(*cmds)
+    for p in plugins:
+        conf(p.get_config())
+    cmds = [cmd for cmd in cmds if cmd not in sys.modules]
+
     conf = config.load_conf(*config_files, search_dirs=config_dirs, **conf)
 
     if args.host:
