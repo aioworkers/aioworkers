@@ -12,7 +12,7 @@ def load_plugin(module: str):
         return
     try:
         m = __import__(module, fromlist=['plugin'])
-    except ModuleNotFoundError:
+    except ImportError:
         return
     if not hasattr(m, 'plugin'):
         return
