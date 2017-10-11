@@ -8,6 +8,7 @@ Contents:
 
    config
    context
+   cli
    queue
    worker
 
