@@ -14,9 +14,10 @@ def load_plugin(module: str):
         m = __import__(module, fromlist=['plugin'])
     except ImportError:
         return
-    if not hasattr(m, 'plugin'):
-        return
-    plugin = m.plugin
+    if hasattr(m, 'plugin'):
+        plugin = m.plugin
+    else:
+        plugin = m
     if callable(plugin):
         plugin = plugin()
     if isinstance(plugin, Plugin):
