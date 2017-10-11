@@ -2,6 +2,15 @@
 History
 =======
 
+0.6.2 (2017-10-12)
+------------------
+
+* Added support plugins
+* HttpStorage support timeout and not checks status with return_status
+* Method HttpStorage.reset_session to session_params
+* Fixed interactive mode
+* Added docs articles
+
 0.6.1 (2017-09-24)
 ------------------
 
