@@ -88,13 +88,13 @@ class RoStorage(base.AbstractStorageReadOnly):
         except ClientOSError as e:
             raise StorageError('URL %s: %s' % (url, e)) from e
 
+        if self._return_status:
+            return status, data
+
         if status == 404:
             data = None
         elif status >= 400:
             raise StorageError('URL %s: %s' % (url, status))
-
-        if self._return_status:
-            return status, data
         return data
 
     def get(self, key):
