@@ -30,9 +30,26 @@ class RoStorage(base.AbstractStorageReadOnly):
         self._allow_hosts = self.config.get('allow_hosts')
         self._format = self.config.get('format', 'json')
         self._return_status = self.config.get('return_status', False)
-        self.session = client.ClientSession(
-            headers=self.config.get('headers'), loop=self.loop)
+
+        headers = self.config.get('headers')
+        self.session_params = {}
+        if headers:
+            self.session_params['headers'] = dict(headers)
+        for param in ('conn_timeout', 'read_timeout'):
+            if param in self.config:
+                self.session_params[param] = self.config[param]
+        self.reset_session()
         self.context.on_stop.append(self.stop)
+
+    def reset_session(self, **kwargs):
+        session = getattr(self, 'session', None)
+        if session:
+            session.close()
+        if kwargs:
+            kwargs = {**self.session_params, **kwargs}
+        else:
+            kwargs = self.session_params
+        self.session = client.ClientSession(loop=self.loop, **kwargs)
 
     async def stop(self):
         self.session.close()
