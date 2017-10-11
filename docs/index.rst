@@ -11,6 +11,7 @@ Contents:
    cli
    queue
    worker
+   plugin
 
 Indices and tables
 ==================
