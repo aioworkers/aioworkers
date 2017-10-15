@@ -51,7 +51,7 @@ class Registry(dict):
         self[name] = cls
 
     def get(self, name):
-        if not name:
+        if not name or name == 'bytes':
             formatter = AsIsFormatter
         elif isinstance(name, list):
             return ChainFormatter([self.get(i) for i in name])
