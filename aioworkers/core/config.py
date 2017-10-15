@@ -1,6 +1,7 @@
 import importlib
 import logging
 import re
+from abc import abstractmethod
 from pathlib import Path
 
 
@@ -117,9 +118,11 @@ class MergeDict(dict):
 class ConfigFileLoader:
     extensions = ()
 
+    @abstractmethod  # pragma: no cover
     def load_fd(self, fd):
         raise NotImplementedError
 
+    @abstractmethod  # pragma: no cover
     def load_path(self, path):
         raise NotImplementedError
 
@@ -148,10 +151,11 @@ class ValueMatcher:
     def __init__(self, value):
         self._value = value
 
-    @classmethod
+    @abstractmethod  # pragma: no cover
     def match(cls, value):
         raise NotImplementedError
 
+    @abstractmethod  # pragma: no cover
     def get_value(self):
         raise NotImplementedError
 
@@ -254,18 +258,30 @@ class IniLoader(StringReplaceLoader):
         return c
 
 
-class Config:
-    loaders = (
-        YamlLoader, JsonLoader, IniLoader,
-    )
+class Registry(dict):
+    def __call__(self, cls):
+        for ext in cls.extensions:
+            if not isinstance(ext, str):
+                raise ValueError('Extension must be string')
+            elif ext in self:
+                raise ValueError('Duplicate extension')
+            self[ext] = cls
 
+    def get(self, ext):
+        if ext not in self:
+            raise KeyError(ext)
+        loader = self[ext]
+        return loader()
+
+
+registry = Registry()
+registry(YamlLoader)
+registry(JsonLoader)
+registry(IniLoader)
+
+
+class Config:
     def __init__(self, search_dirs=()):
-        loaders = {}
-        for l in self.loaders:
-            ins = l()
-            for ext in l.extensions:
-                loaders[ext] = ins
-        self._loaders = loaders
         self.search_dirs = []
         for i in search_dirs:
             if not isinstance(i, Path):
@@ -274,7 +290,7 @@ class Config:
         self.files = []
 
     def load_conf(self, path, fd, config):
-        loader = self._loaders[path.suffix]
+        loader = registry.get(path.suffix)
         with fd:
             c = loader.load_fd(fd)
         l = 'Config found: {}'.format(path.absolute())

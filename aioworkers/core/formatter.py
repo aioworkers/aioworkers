@@ -1,7 +1,70 @@
+from abc import abstractmethod
+
 from .base import AbstractEntity
 
 
-class StringFormatter:
+class BaseFormatter:
+    name = NotImplemented
+
+    @abstractmethod  # pragma: no cover
+    def decode(self, value):
+        raise NotImplementedError
+
+    @abstractmethod  # pragma: no cover
+    def encode(self, value):
+        raise NotImplementedError
+
+
+class AsIsFormatter(BaseFormatter):
+    @staticmethod
+    def decode(b):
+        return b
+
+    @staticmethod
+    def encode(b):
+        return b
+
+
+class ChainFormatter(BaseFormatter):
+    def __init__(self, formatters):
+        self._f = formatters
+        self._r = reversed(formatters)
+
+    def decode(self, b):
+        for f in self._r:
+            b = f.decode(b)
+        return b
+
+    def encode(self, b):
+        for f in self._f:
+            b = f.encode(b)
+        return b
+
+
+class Registry(dict):
+    def __call__(self, cls):
+        name = cls.name
+        if not isinstance(name, str):
+            raise ValueError('Expected type string instead %r' % name)
+        elif name in self:
+            raise ValueError('Duplicate name: %s' % name)
+        self[name] = cls
+
+    def get(self, name):
+        if not name:
+            formatter = AsIsFormatter
+        elif isinstance(name, list):
+            return ChainFormatter([self.get(i) for i in name])
+        elif name in self:
+            formatter = self[name]
+        else:
+            raise KeyError(name)
+        return formatter()
+
+
+class StringFormatter(BaseFormatter):
+    name = 'str'
+
     @staticmethod
     def decode(b):
         return b.decode()
@@ -11,7 +74,9 @@ class StringFormatter:
         return b.encode()
 
 
-class PickleFormatter:
+class PickleFormatter(BaseFormatter):
+    name = 'pickle'
+
     def __init__(self):
         import pickle
         self._loads = pickle.loads
@@ -24,7 +89,9 @@ class PickleFormatter:
         return self._dumps(b)
 
 
-class JsonFormatter:
+class JsonFormatter(BaseFormatter):
+    name = 'json'
+
     def __init__(self):
         import json
         self._loads = json.loads
@@ -38,39 +105,25 @@ class JsonFormatter:
 
 
 class YamlFormatter(JsonFormatter):
+    name = 'yaml'
+
     def __init__(self):
         import yaml
         self._loads = yaml.load
         self._dumps = yaml.dump
 
 
-class AsIsFormatter:
-    @staticmethod
-    def decode(b):
-        return b
-
-    @staticmethod
-    def encode(b):
-        return b
-
-
-def get_formatter(name):
-    if name == 'str':
-        return StringFormatter
-    elif name == 'pickle':
-        return PickleFormatter()
-    elif name == 'json':
-        return JsonFormatter()
-    elif name == 'yaml':
-        return YamlFormatter()
-    else:
-        return AsIsFormatter
+registry = Registry()
+registry(StringFormatter)
+registry(PickleFormatter)
+registry(JsonFormatter)
+registry(YamlFormatter)
 
 
 class FormattedEntity(AbstractEntity):
     async def init(self):
         await super().init()
-        self._formatter = get_formatter(self.config.get('format'))
+        self._formatter = registry.get(self.config.get('format'))
 
     def decode(self, b):
         return self._formatter.decode(b)

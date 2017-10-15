@@ -3,6 +3,8 @@ import sys
 from itertools import chain
 from pathlib import Path
 
+from . import formatter, config
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,15 @@ def search_plugins(*modules):
 
 
 class Plugin:
+    formatters = ()
+    config_loaders = ()
+
+    def __init__(self):
+        for f in self.formatters:
+            formatter.registry(f)
+        for cl in self.config_loaders:
+            config.registry(cl)
+
     def get_config(self):
         return {}
 
@@ -52,6 +63,9 @@ class Plugin:
 class ProxyPlugin(Plugin):
     def __init__(self, original):
         self._original = original
+        for i in ('formatters', 'config_loaders'):
+            setattr(self, i, getattr(original, i, ()))
+        super().__init__()
 
     def get_config(self):
         if hasattr(self._original, 'get_config'):

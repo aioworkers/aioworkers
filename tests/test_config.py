@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from aioworkers.core.config import \
     MergeDict, Config, IniLoader, StringReplaceLoader
 
@@ -128,3 +130,14 @@ def test_string_replacer():
     conf = {'a': '1', 'b': ['2'], 'c': {'d': '3'}}
     c._replace(conf)
     assert conf == {'a': 1, 'b': [2], 'c': {'d': 3}}
+
+
+def test_md_magic():
+    d = MergeDict()
+    repr(d)
+    dir(d)
+    d.copy()
+    with pytest.raises(AttributeError):
+        d.a
+    d(a=1)
+    assert d.a == 1
