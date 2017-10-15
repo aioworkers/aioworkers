@@ -38,7 +38,9 @@ def get_names():
 
 def search_plugins(*modules):
     result = []
-    for name in chain(get_names(), modules):
+    if not modules:
+        modules = get_names()
+    for name in modules:
         plugin = load_plugin(name)
         if plugin:
             logger.info('Loaded plugin {} from {}'.format(plugin, name))
@@ -59,15 +61,18 @@ class Plugin:
     def get_config(self):
         return {}
 
+    def add_arguments(self, parser):
+        pass
+
 
 class ProxyPlugin(Plugin):
     def __init__(self, original):
         self._original = original
-        for i in ('formatters', 'config_loaders'):
-            setattr(self, i, getattr(original, i, ()))
+        for i in (
+                'formatters', 'config_loaders',
+                'get_config', 'add_arguments',
+        ):
+            v = getattr(original, i, None)
+            if v:
+                setattr(self, i, v)
         super().__init__()
-
-    def get_config(self):
-        if hasattr(self._original, 'get_config'):
-            return self._original.get_config()
-        return {}

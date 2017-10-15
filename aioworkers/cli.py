@@ -44,6 +44,10 @@ def main(*config_files, args=None, config_dirs=()):
         sys.path.insert(0, cwd)
     conf = MergeDict()
 
+    plugins = plugin.search_plugins()
+    for i in plugins:
+        i.add_arguments(parser)
+
     if args is None:
         args, argv = parser.parse_known_args()
         cmds = []
@@ -56,7 +60,7 @@ def main(*config_files, args=None, config_dirs=()):
     else:
         cmds, argv = (), None
 
-    plugins = plugin.search_plugins(*cmds)
+    plugins.extend(plugin.search_plugins(*cmds))
     for p in plugins:
         conf(p.get_config())
     cmds = [cmd for cmd in cmds if cmd not in sys.modules]
