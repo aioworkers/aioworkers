@@ -52,14 +52,20 @@ class Registry(dict):
 
     def get(self, name):
         if not name or name == 'bytes':
-            formatter = AsIsFormatter
-        elif isinstance(name, list):
-            return ChainFormatter([self.get(i) for i in name])
+            return AsIsFormatter
+        elif not isinstance(name, str):
+            pass
         elif name in self:
-            formatter = self[name]
+            return self[name]()
+        elif ':' in name:
+            name = name.split(':')
+        elif '|' in name:
+            name = name.split('|')
+
+        if isinstance(name, list):
+            return ChainFormatter([self.get(i.strip()) for i in name])
         else:
             raise KeyError(name)
-        return formatter()
 
 
 class StringFormatter(BaseFormatter):
