@@ -29,8 +29,13 @@ def test_formatters(formatter, data):
     assert f.decode(enc) == data
 
 
-def test_chain():
-    f = registry.get(['str', 'rts'])
+@pytest.mark.parametrize('f', [
+    ['str', 'rts'],
+    'str:rts',
+    'str|rts',
+])
+def test_chain(f):
+    f = registry.get(f)
     a = '1'
     assert f.encode(a) == a
     assert f.decode(a) == a
