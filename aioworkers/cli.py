@@ -8,6 +8,8 @@ import signal
 import sys
 import time
 from functools import reduce, partial
+from urllib.parse import splittype
+from urllib.request import urlopen
 
 from . import config, utils
 from .core import command, plugin
@@ -129,10 +131,18 @@ def loop_run(conf, future=None, group_resolver=None, ns=None, cmds=None, argv=No
                 print('{} => {}'.format(cmd, result))
 
 
+class UriType(argparse.FileType):
+    def __call__(self, string):
+        t, path = splittype(string)
+        if not t:
+            return super().__call__(string)
+        return urlopen(string)
+
+
 def main_with_conf():
     parser.add_argument(
         '-c', '--config', nargs='+',
-        type=argparse.FileType('r', encoding='utf-8'))
+        type=UriType('r', encoding='utf-8'))
     main()
 
 
