@@ -1,8 +1,15 @@
-import importlib
+import http.client
+import io
 import logging
+import mimetypes
 import re
 from abc import abstractmethod
 from pathlib import Path
+
+try:
+    from yarl import URL
+except ImportError:
+    URL = type('URL', (str,), {})
 
 
 logger = logging.getLogger(__name__)
@@ -117,6 +124,7 @@ class MergeDict(dict):
 
 class ConfigFileLoader:
     extensions = ()
+    mime_types = ()
 
     @abstractmethod  # pragma: no cover
     def load_fd(self, fd):
@@ -131,7 +139,7 @@ class YamlLoader(ConfigFileLoader):
     extensions = ('.yaml', '.yml')
 
     def __init__(self, *args, **kwargs):
-        self._yaml = importlib.import_module('yaml')
+        self._yaml = __import__('yaml')
 
     def load_fd(self, fd):
         return self._yaml.load(fd)
@@ -139,9 +147,10 @@ class YamlLoader(ConfigFileLoader):
 
 class JsonLoader(ConfigFileLoader):
     extensions = ('.json',)
+    mime_types = ('application/json',)
 
     def __init__(self, *args, **kwargs):
-        self._json = importlib.import_module('json')
+        self._json = __import__('json')
 
     def load_fd(self, fd):
         return self._json.load(fd)
@@ -228,7 +237,7 @@ class IniLoader(StringReplaceLoader):
     extensions = ('.ini',)
 
     def __init__(self, *args, **kwargs):
-        self._configparser = importlib.import_module('configparser')
+        self._configparser = __import__('configparser')
 
     def new_configparser(self, **kwargs) -> 'configparser.ConfigParser':
         kwargs.setdefault('allow_no_value', True)
@@ -262,15 +271,21 @@ class Registry(dict):
     def __call__(self, cls):
         for ext in cls.extensions:
             if not isinstance(ext, str):
-                raise ValueError('Extension must be string')
+                raise ValueError('Extension expect string, given {!r}'.format(ext))
             elif ext in self:
-                raise ValueError('Duplicate extension')
+                raise ValueError('Duplicate extension {}'.format(ext))
             self[ext] = cls
+        for mime in cls.mime_types:
+            if not isinstance(mime, str):
+                raise ValueError('MimeType expect string, given {!r}'.format(mime))
+            elif mime in self:
+                raise ValueError('Duplicate MimeType {}'.format(mime))
+            self[mime] = cls
 
-    def get(self, ext):
-        if ext not in self:
-            raise KeyError(ext)
-        loader = self[ext]
+    def get(self, key):
+        if key not in self:
+            raise LookupError(key)
+        loader = self[key]
         return loader()
 
 
@@ -287,18 +302,31 @@ class Config:
             if not isinstance(i, Path):
                 i = Path(i)
             self.search_dirs.append(i)
-        self.files = []
+        self.uris = []
 
-    def load_conf(self, path, fd, config):
-        loader = registry.get(path.suffix)
+    def load_conf(self, fd, *, path=None, mime_type=None, response=None):
+        if isinstance(response, http.client.HTTPResponse):
+            url = URL(response.geturl())
+            self.uris.append(url)
+            mime_type = response.headers.get('Content-Type')
+            if mime_type:
+                mime_type = mime_type.split(';')[0].strip()
+            logger.info('Config found: {} [{}]'.format(url, mime_type))
+        if path:
+            loader = registry.get(path.suffix)
+            path = path.absolute()
+            self.uris.append(path)
+            logger.info('Config found: {}'.format(path))
+        elif mime_type in registry:
+            loader = registry.get(mime_type)
+        elif mimetypes.guess_extension(mime_type) in registry:
+            loader = registry.get(mimetypes.guess_extension(mime_type))
+        elif not mime_type:
+            raise LookupError('Not found mime_type %s' % mime_type)
+        else:
+            raise NotImplemented
         with fd:
-            c = loader.load_fd(fd)
-        l = 'Config found: {}'.format(path.absolute())
-        self.files.append(path)
-        logger.info(l)
-        if c:
-            config(c)
-        return config
+            return loader.load_fd(fd)
 
     def load(self, *filenames, base=None):
         if base is None:
@@ -313,15 +341,21 @@ class Config:
                 if not fn.is_absolute():
                     fns.append(fn)
                     continue
-                self.load_conf(fn, fn.open(encoding='utf-8'), config)
-            elif hasattr(fn, 'read') and hasattr(fn, 'name'):
-                self.load_conf(Path(fn.name), fn, config)
+                c = self.load_conf(fn.open(encoding='utf-8'), path=fn)
+            elif isinstance(fn, http.client.HTTPResponse):
+                c = self.load_conf(fn, response=fn)
+            elif isinstance(fn, (io.TextIOWrapper, io.BufferedReader)):
+                c = self.load_conf(fn, path=Path(fn.name))
             else:
                 raise ValueError(fn)
+            if c:
+                config(c)
         for d in self.search_dirs:
             for fn in fns:
                 if not Path(d, fn).exists():
                     continue
                 f = Path(d, fn)
-                self.load_conf(f, f.open(encoding='utf-8'), config)
+                c = self.load_conf(f.open(encoding='utf-8'), path=f)
+                if c:
+                    config(c)
         return config
