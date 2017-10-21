@@ -1,0 +1,23 @@
+autorun:
+  sv:
+    autorun: true
+    cls: aioworkers.worker.supervisor.Supervisor
+    children: 1
+    child:
+      cls: aioworkers.worker.base.Worker
+
+super.queue:
+  cls: aioworkers.core.context.Context
+  sv:
+    autorun: true
+    input: q1
+    output: q2
+    children: 1
+    cls: aioworkers.worker.supervisor.Supervisor
+    child:
+      cls: aioworkers.worker.base.Worker
+      run: tests.test_worker_supervisor.run
+  q1:
+    cls: aioworkers.queue.base.Queue
+  q2:
+    cls: aioworkers.queue.base.Queue
