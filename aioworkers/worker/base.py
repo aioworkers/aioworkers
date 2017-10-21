@@ -76,6 +76,18 @@ class Worker(AbstractWorker):
     def output(self):
         return self.context[self.config.get('output')]
 
+    async def work(self):
+        self._is_sleep = False
+        if self.input is not None:
+            args = (await self.input.get(),)
+        else:
+            args = ()
+        self.counter['run'] += 1
+        result = await self.run(*args)
+        self.counter['done'] += 1
+        if self.output is not None:
+            await self.output.put(result)
+
     async def runner(self):
         self._is_sleep = True
         try:
@@ -85,16 +97,7 @@ class Worker(AbstractWorker):
                 if self._crontab is not None:
                     await asyncio.sleep(self._crontab.next(), loop=self.loop)
                 try:
-                    self._is_sleep = False
-                    if self.input is not None:
-                        args = (await self.input.get(),)
-                    else:
-                        args = ()
-                    self.counter['run'] += 1
-                    result = await self.run(*args)
-                    self.counter['done'] += 1
-                    if self.output is not None:
-                        await self.output.put(result)
+                    await self.work()
                 except asyncio.CancelledError:
                     raise
                 except BaseException:
