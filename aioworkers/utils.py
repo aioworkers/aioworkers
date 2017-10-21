@@ -9,11 +9,24 @@ logger = logging.getLogger(__name__)
 
 
 def import_name(stref: str):
-    package, name = stref.rsplit('.', maxsplit=1)
-    module = importlib.import_module(package)
-    cls = getattr(module, name)
-    logger.debug('Imported "{}" as {}'.format(stref, cls))
-    return cls
+    h = stref
+    p = []
+    while isinstance(h, str):
+        try:
+            h = importlib.import_module(h)
+            break
+        except ImportError:
+            if '.' not in h:
+                raise ImportError(stref)
+            h, t = h.rsplit('.', 1)
+            p.append(t)
+            continue
+    for i in reversed(p):
+        h = getattr(h, i, None)
+        if h is None:
+            raise ImportError(stref)
+    logger.debug('Imported "{}" as {}'.format(stref, h))
+    return h
 
 
 def module_path(str_module, return_str=False):

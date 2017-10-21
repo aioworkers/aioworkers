@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import importlib
 import inspect
+from collections import Mapping
 
 
 class CommandNotFound(RuntimeError):
@@ -48,8 +49,11 @@ def run(cmd, context, loop=None, ns=None, argv=None):
         if r is not None:
             obj = r
             continue
-        obj = obj.get(l)
-        if obj is None:
+        if isinstance(obj, Mapping):
+            obj = obj.get(l)
+            if obj is None:
+                break
+        else:
             break
     else:
         if isinstance(obj, str):
