@@ -5,8 +5,6 @@ The package has a command interface.
 
 .. code-block:: shell
 
-    aioworkers
-
     aioworkers [command [command]] [--**options]
 
 Options:
@@ -30,3 +28,11 @@ Command:
 
 Dotted path to context member, module, function or coroutine.
 If command is module run it as plugin.
+
+
+Configs:
+
+You can specify several configuration files.
+The resulting configuration will be obtained by merging.
+The first configuration will be override with the second and so on.
+You can specify local files, as well as files available via http
