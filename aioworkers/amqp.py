@@ -1,4 +1,6 @@
 """
+DEPRECATED. Use aioworkers-amqp instead of this module
+
 Module support amqp
 Required: asynqp
 """

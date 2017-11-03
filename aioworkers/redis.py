@@ -1,4 +1,6 @@
 """
+DEPRECATED. Use aioworkers-redis instead of this module
+
 The module implements the interface queue and storage over redis.
 It depends on aioredis
 """
