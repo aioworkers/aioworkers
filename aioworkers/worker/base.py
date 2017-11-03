@@ -47,7 +47,7 @@ class Worker(AbstractWorker):
             run = import_name(self.config.run)
             self.run = partial(run, self)
 
-        if self.config.get('input') or self.config.get('output'):
+        if self.input or self.output:
             self._persist = True
         else:
             self._persist = self.config.get('persist')
