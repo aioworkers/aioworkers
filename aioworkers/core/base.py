@@ -1,5 +1,6 @@
 import asyncio
 from abc import ABC
+from copy import deepcopy
 
 
 class AbstractEntity(ABC):
@@ -32,3 +33,26 @@ class AbstractNamedEntity(AbstractEntity):
     @property
     def name(self):
         return self._name
+
+
+class AbstractNestedEntity(AbstractEntity):
+    def __init__(self, config, *, context=None, loop=None):
+        super().__init__(config, context=context, loop=loop)
+        self._children = {}
+
+    def factory(self, item, config=None):
+        if item in self._children:
+            return self._children[item]
+        cls = type(self)
+        if config is None:
+            config = deepcopy(self.config)
+        config.name += '.%s' % item
+        instance = cls(config, context=self.context, loop=self.loop)
+        self._children[item] = instance
+        return instance
+
+    def __getattr__(self, item):
+        return self.factory(item)
+
+    def __getitem__(self, item):
+        return self.factory(item)
