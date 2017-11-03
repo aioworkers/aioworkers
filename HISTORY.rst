@@ -2,6 +2,19 @@
 History
 =======
 
+0.7.0 (2017-11-04)
+------------------
+
+* Plug-in formatters and config_loaders
+* Added ChainFormatter for specify pipeline
+* cli support url for config
+* ZlibFormatter + LzmaFormatter
+* AbstractNestedEntity
+* Supervisor with queue for children
+* Identifying the problem at the start of a worker
+* Mark deprecated modules
+
+
 0.6.2 (2017-10-12)
 ------------------
 
@@ -10,6 +23,7 @@ History
 * Method HttpStorage.reset_session to session_params
 * Fixed interactive mode
 * Added docs articles
+
 
 0.6.1 (2017-09-24)
 ------------------
