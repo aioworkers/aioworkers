@@ -120,11 +120,36 @@ class YamlFormatter(JsonFormatter):
         self._dumps = yaml.dump
 
 
+class ZLibFormatter(BaseFormatter):
+    name = 'zlib'
+
+    def __init__(self):
+        zlib = __import__('zlib')
+        self.decode = zlib.decompress
+        self.encode = zlib.compress
+
+
+class LzmaFormatter(BaseFormatter):
+    name = 'lzma'
+
+    def __init__(self):
+        lzma = __import__('lzma')
+        FILTER_LZMA2 = lzma.FILTER_LZMA2
+        filters = [{'id': FILTER_LZMA2}]
+        FORMAT_RAW = lzma.FORMAT_RAW
+        self.encode = lambda v: lzma.compress(
+            v, format=FORMAT_RAW, filters=filters)
+        self.decode = lambda v: lzma.decompress(
+            v, format=FORMAT_RAW, filters=filters)
+
+
 registry = Registry()
 registry(StringFormatter)
 registry(PickleFormatter)
 registry(JsonFormatter)
 registry(YamlFormatter)
+registry(ZLibFormatter)
+registry(LzmaFormatter)
 
 
 class FormattedEntity(AbstractEntity):
