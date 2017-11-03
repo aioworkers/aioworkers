@@ -27,8 +27,9 @@ class AsIsFormatter(BaseFormatter):
 
 class ChainFormatter(BaseFormatter):
     def __init__(self, formatters):
-        self._f = formatters
-        self._r = reversed(formatters)
+        f = tuple(formatters)
+        self._f = f
+        self._r = tuple(reversed(f))
 
     def decode(self, b):
         for f in self._r:
@@ -63,7 +64,7 @@ class Registry(dict):
             name = name.split('|')
 
         if isinstance(name, list):
-            return ChainFormatter([self.get(i.strip()) for i in name])
+            return ChainFormatter(self.get(i.strip()) for i in name)
         else:
             raise KeyError(name)
 
