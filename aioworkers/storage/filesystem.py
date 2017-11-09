@@ -1,4 +1,3 @@
-import asyncio
 import hashlib
 import os
 import pathlib
@@ -18,16 +17,14 @@ def async_method(self, method: str, sync_obj=None):
     m = getattr(sync_obj, method)
 
     def wrap(*args, **kwargs):
-        func = partial(m, *args, **kwargs)
-        return self.loop.run_in_executor(self.executor, func)
+        return self.storage.run_in_executor(m, *args, **kwargs)
     return wrap
 
 
 class AsyncFile:
-    def __init__(self, fd, template=None):
+    def __init__(self, fd, storage=None):
         self.fd = fd
-        self.executor = getattr(template, 'executor', None)
-        self.loop = getattr(template, 'loop', None) or asyncio.get_event_loop()
+        self.storage = storage
         for i in ('write', 'read', 'close'):
             setattr(self, i, async_method(self, i, fd))
 
@@ -41,9 +38,9 @@ class AsyncFileContextManager:
     async def __aenter__(self):
         assert self.af is None, "File already opened"
         path = self.path
-        fd = await path.loop.run_in_executor(
-            path.executor, self._constructor)
-        self.af = AsyncFile(fd, path)
+        storage = path.storage
+        fd = await storage.run_in_executor(self._constructor)
+        self.af = AsyncFile(fd, storage)
         return self.af
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -52,27 +49,25 @@ class AsyncFileContextManager:
 
 
 class AsyncPath(PurePath):
-    def __new__(cls, *args, template=None):
+    def __new__(cls, *args, storage=None):
         if cls is AsyncPath:
             cls = AsyncWindowsPath if os.name == 'nt' else AsyncPosixPath
         self = cls._from_parts(args, init=False)
         if not self._flavour.is_supported:
             raise NotImplementedError("cannot instantiate %r on your system"
                                       % (cls.__name__,))
-        if template is None:
+        if storage is None:
             for i in args:
                 if isinstance(i, AsyncPath):
-                    template = i
+                    storage = i.storage
                     break
-        self._init(template=template)
+        self._init(storage=storage)
         return self
 
-    def _init(self, template=None):
-        if not template:
+    def _init(self, storage=None):
+        self.storage = storage
+        if not storage:
             return
-        self.executor = getattr(template, 'executor', None)
-        self.loop = getattr(template, 'loop', None) \
-            or asyncio.get_event_loop()
         self.path = Path(self)
         for i in (
             'write_bytes', 'read_bytes',
@@ -83,7 +78,7 @@ class AsyncPath(PurePath):
 
     def _make_child(self, args):
         k = super()._make_child(args)
-        k._init(self)
+        k._init(self.storage)
         return k
 
     @classmethod
@@ -94,12 +89,12 @@ class AsyncPath(PurePath):
         self._root = root
         self._parts = parts
         if init:
-            template = None
+            storage = None
             for t in args:
                 if isinstance(t, AsyncPath):
-                    template = t
+                    storage = t.storage
                     break
-            self._init(template=template)
+            self._init(storage=storage)
         return self
 
     def open(self, *args, **kwargs):
@@ -109,7 +104,7 @@ class AsyncPath(PurePath):
     @property
     def parent(self):
         p = super().parent
-        p._init(self)
+        p._init(self.storage)
         return p
 
 
@@ -132,6 +127,11 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
     @property
     def executor(self):
         return self._context[self._config.get(self.PARAM_EXECUTOR)]
+
+    def run_in_executor(self, f, *args, **kwargs):
+        if kwargs:
+            f = partial(f, **kwargs)
+        return self.loop.run_in_executor(self.executor, f, *args)
 
     def disk_usage(self):
         return self.loop.run_in_executor(
@@ -243,7 +243,7 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         base = self._config.path
         path = AsyncPath(os.path.normpath(
             os.path.join(
-                base, self.path_transform(rel))), template=self)
+                base, self.path_transform(rel))), storage=self)
 
         if path.relative_to(PurePath(base)) == '.':
             raise ValueError('Access denied: %s' % path)

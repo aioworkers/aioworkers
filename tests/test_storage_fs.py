@@ -198,6 +198,10 @@ async def test_fd(loop):
         await storage.init()
         k = storage.raw_key('1')
         assert isinstance(k / '2', AsyncPath)
+        assert isinstance('2' / k, AsyncPath)
+        assert isinstance(AsyncPath(k), AsyncPath)
+        assert isinstance(k.parent, AsyncPath)
+        assert k.parent.storage
 
         async with k.open('w') as f:
             await f.write('123')
