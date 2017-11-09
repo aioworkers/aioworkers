@@ -122,20 +122,28 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
 
     def init(self):
         self._space_waiters = []
+
+        ex = self._config.get(self.PARAM_EXECUTOR)
+        if isinstance(ex, int):
+            cls = utils.import_name('concurrent.futures.ThreadPoolExecutor')
+            ex = cls(max_workers=ex)
+        elif isinstance(ex, str):
+            ex = self._context[ex]
+        self._executor = ex
         return super().init()
 
     @property
     def executor(self):
-        return self._context[self._config.get(self.PARAM_EXECUTOR)]
+        return self._executor
 
     def run_in_executor(self, f, *args, **kwargs):
         if kwargs:
             f = partial(f, **kwargs)
-        return self.loop.run_in_executor(self.executor, f, *args)
+        return self.loop.run_in_executor(self._executor, f, *args)
 
     def disk_usage(self):
         return self.loop.run_in_executor(
-            self.executor, shutil.disk_usage, self._config.path)
+            self._executor, shutil.disk_usage, self._config.path)
 
     async def get_free_space(self):
         du = await self.disk_usage()
@@ -284,14 +292,14 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
     def copy(self, key_source, storage_dest, key_dest):
         if isinstance(storage_dest, FileSystemStorage):
             return self.loop.run_in_executor(
-                self.executor, self._copy, key_source,
+                self._executor, self._copy, key_source,
                 storage_dest, key_dest, shutil.copy)
         return super().copy(key_source, storage_dest, key_dest)
 
     def move(self, key_source, storage_dest, key_dest):
         if isinstance(storage_dest, FileSystemStorage):
             return self.loop.run_in_executor(
-                self.executor, self._copy, key_source,
+                self._executor, self._copy, key_source,
                 storage_dest, key_dest, shutil.move)
         return super().move(key_source, storage_dest, key_dest)
 
