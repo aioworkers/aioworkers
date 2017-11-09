@@ -9,7 +9,7 @@ from aioworkers.core.config import MergeDict
 from aioworkers.core.context import Context
 from aioworkers.storage.base import FieldStorageMixin
 from aioworkers.storage.filesystem import \
-    HashFileSystemStorage, FileSystemStorage
+    HashFileSystemStorage, FileSystemStorage, AsyncPath
 from aioworkers.storage.meta import FutureStorage
 
 
@@ -184,3 +184,23 @@ async def test_field_storage(loop):
         await storage.set(key, {'z': 1, 'y': 6}, fields=['z'])
         assert {'f': 3, 'g': 4, 'h': 6, 'z': 1} == await storage.get(key)
         await storage.set(key, None)
+
+
+async def test_fd(loop):
+    with tempfile.TemporaryDirectory() as d:
+        config = MergeDict(
+            name='',
+            path=d,
+            executor=None,
+        )
+        context = Context({}, loop=loop)
+        storage = FileSystemStorage(config, context=context, loop=loop)
+        await storage.init()
+        k = storage.raw_key('1')
+        assert isinstance(k / '2', AsyncPath)
+
+        async with k.open('w') as f:
+            await f.write('123')
+
+        assert b'123' == await storage.get('1')
+        await storage.set('1', None)

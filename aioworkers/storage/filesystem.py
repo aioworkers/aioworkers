@@ -1,12 +1,124 @@
+import asyncio
 import hashlib
 import os
+import pathlib
 import shutil
 import tempfile
+from functools import partial
 from pathlib import Path, PurePath
 
 from . import base, StorageError
 from .. import utils
 from ..core.formatter import FormattedEntity
+
+
+def async_method(self, method: str, sync_obj=None):
+    if sync_obj is None:
+        sync_obj = self
+    m = getattr(sync_obj, method)
+
+    def wrap(*args, **kwargs):
+        func = partial(m, *args, **kwargs)
+        return self.loop.run_in_executor(self.executor, func)
+    return wrap
+
+
+class AsyncFile:
+    def __init__(self, fd, template=None):
+        self.fd = fd
+        self.executor = getattr(template, 'executor', None)
+        self.loop = getattr(template, 'loop', None) or asyncio.get_event_loop()
+        for i in ('write', 'read', 'close'):
+            setattr(self, i, async_method(self, i, fd))
+
+
+class AsyncFileContextManager:
+    def __init__(self, path, *args, **kwargs):
+        self.path = path
+        self.af = None
+        self._constructor = partial(*args, **kwargs)
+
+    async def __aenter__(self):
+        assert self.af is None, "File already opened"
+        path = self.path
+        fd = await path.loop.run_in_executor(
+            path.executor, self._constructor)
+        self.af = AsyncFile(fd, path)
+        return self.af
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.af.close()
+        self.af = None
+
+
+class AsyncPath(PurePath):
+    def __new__(cls, *args, template=None):
+        if cls is AsyncPath:
+            cls = AsyncWindowsPath if os.name == 'nt' else AsyncPosixPath
+        self = cls._from_parts(args, init=False)
+        if not self._flavour.is_supported:
+            raise NotImplementedError("cannot instantiate %r on your system"
+                                      % (cls.__name__,))
+        if template is None:
+            for i in args:
+                if isinstance(i, AsyncPath):
+                    template = i
+                    break
+        self._init(template=template)
+        return self
+
+    def _init(self, template=None):
+        if not template:
+            return
+        self.executor = getattr(template, 'executor', None)
+        self.loop = getattr(template, 'loop', None) \
+            or asyncio.get_event_loop()
+        self.path = Path(self)
+        for i in (
+            'write_bytes', 'read_bytes',
+            'write_text', 'read_text',
+            'exists', 'mkdir',
+        ):
+            setattr(self, i, async_method(self, i, self.path))
+
+    def _make_child(self, args):
+        k = super()._make_child(args)
+        k._init(self)
+        return k
+
+    @classmethod
+    def _from_parts(cls, args, init=True):
+        self = object.__new__(cls)
+        drv, root, parts = self._parse_args(args)
+        self._drv = drv
+        self._root = root
+        self._parts = parts
+        if init:
+            template = None
+            for t in args:
+                if isinstance(t, AsyncPath):
+                    template = t
+                    break
+            self._init(template=template)
+        return self
+
+    def open(self, *args, **kwargs):
+        return AsyncFileContextManager(
+            self, self.path.open, *args, **kwargs)
+
+    @property
+    def parent(self):
+        p = super().parent
+        p._init(self)
+        return p
+
+
+class AsyncPosixPath(AsyncPath, pathlib.PurePosixPath):
+    pass
+
+
+class AsyncWindowsPath(AsyncPath, pathlib.PureWindowsPath):
+    pass
 
 
 class FileSystemStorage(FormattedEntity, base.AbstractStorage):
@@ -87,7 +199,7 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             self.executor, f.write, data)
 
     async def _open(self, key, mode='rb'):
-        path = self.raw_key(key)
+        path = self.raw_key(key).path
         await self._wait_free_space()
 
         def file_open(path: Path, mode):
@@ -103,12 +215,6 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         await self.loop.run_in_executor(
             self.executor, f.close)
         await self._next_space_waiter()
-
-    def _read(self, key):
-        if not key.exists():
-            return
-        with key.open('rb') as f:
-            return self.decode(f.read())
 
     def path_transform(self, rel_path: str):
         return rel_path
@@ -135,9 +241,9 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         rel = os.path.normpath(str(PurePath(*flat(key))))
 
         base = self._config.path
-        path = Path(os.path.normpath(
+        path = AsyncPath(os.path.normpath(
             os.path.join(
-                base, self.path_transform(rel))))
+                base, self.path_transform(rel))), template=self)
 
         if path.relative_to(PurePath(base)) == '.':
             raise ValueError('Access denied: %s' % path)
@@ -147,7 +253,7 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         if value is not None:
             value = self.encode(value)
             await self._wait_free_space(len(value))
-        k = self.raw_key(key)
+        k = self.raw_key(key).path
         try:
             await self.loop.run_in_executor(
                 self.executor, self._write, k, value)
@@ -158,12 +264,13 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
     @utils.method_replicate_result(key=lambda self, k: k)
     async def get(self, key):
         k = self.raw_key(key)
-        return await self.loop.run_in_executor(
-            self.executor, self._read, k)
+        if await k.exists():
+            v = await k.read_bytes()
+            return self.decode(v)
 
     def _copy(self, key_source, storage_dest, key_dest, copy_func):
-        s = self.raw_key(key_source)
-        d = storage_dest.raw_key(key_dest)
+        s = self.raw_key(key_source).path
+        d = storage_dest.raw_key(key_dest).path
         target_dir = d.parent
         target_dir.mkdir(parents=True, exist_ok=True)
         if s.exists():
