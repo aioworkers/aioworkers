@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path, PurePath
 
 from . import base, StorageError
-from .. import utils
+from .. import utils, humanize
 from ..core.formatter import FormattedEntity
 
 
@@ -33,12 +33,21 @@ class AsyncFileContextManager:
     def __init__(self, path, *args, **kwargs):
         self.path = path
         self.af = None
+        if 'mode' in kwargs:
+            self.mode = kwargs['mode']
+        elif len(args) > 1:
+            self.mode = args[1]
+        else:
+            self.mode = 'r'
         self._constructor = partial(*args, **kwargs)
 
     async def __aenter__(self):
         assert self.af is None, "File already opened"
         path = self.path
         storage = path.storage
+        await storage.wait_free_space()
+        if 'w' in self.mode or '+' in self.mode:
+            await path.parent.mkdir(parents=True, exist_ok=True)
         fd = await storage.run_in_executor(self._constructor)
         self.af = AsyncFile(fd, storage)
         return self.af
@@ -46,6 +55,7 @@ class AsyncFileContextManager:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.af.close()
         self.af = None
+        await self.path.storage.next_space_waiter()
 
 
 class AsyncPath(PurePath):
@@ -130,6 +140,13 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         elif isinstance(ex, str):
             ex = self._context[ex]
         self._executor = ex
+
+        self._limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
+        if isinstance(self._limit, int):
+            self._limit = self._limit << 20  # int in MB
+        elif isinstance(self._limit, str):
+            self._limit = humanize.parse_size(self._limit)
+
         return super().init()
 
     @property
@@ -149,28 +166,22 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         du = await self.disk_usage()
         return du.free
 
-    async def _wait_free_space(self, size=None):
-        limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
-        if limit:
-            limit <<= 20
-        else:
+    async def wait_free_space(self, size=None):
+        if not self._limit:
             return
         free = await self.get_free_space()
-        if size is None or free < size + limit:
+        if size is None or free < size + self._limit:
             f = self.loop.create_future()
             self._space_waiters.append((f, size))
             await f
 
-    async def _next_space_waiter(self):
-        limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
-        if limit:
-            limit <<= 20
-        else:
+    async def next_space_waiter(self):
+        if not self._limit:
             return
         free = await self.get_free_space()
         for fsize in self._space_waiters:
             f, size = fsize
-            if free > (size or 0) + limit:
+            if free > (size or 0) + self._limit:
                 f.set_result(None)
                 to_del = fsize
                 break
@@ -201,28 +212,6 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             with tempfile.NamedTemporaryFile(
                     dir=self.config.get('tmp') or self.config.path) as f:
                 shutil.move(str(key), f.name)
-
-    def _write_chunk(self, f, data):
-        return self.loop.run_in_executor(
-            self.executor, f.write, data)
-
-    async def _open(self, key, mode='rb'):
-        path = self.raw_key(key).path
-        await self._wait_free_space()
-
-        def file_open(path: Path, mode):
-            if 'w' in mode or '+' in mode:
-                d = path.parent
-                d.mkdir(parents=True, exist_ok=True)
-            return path.open(mode)
-
-        return await self.loop.run_in_executor(
-            self.executor, file_open, path, mode)
-
-    async def _close(self, f):
-        await self.loop.run_in_executor(
-            self.executor, f.close)
-        await self._next_space_waiter()
 
     def path_transform(self, rel_path: str):
         return rel_path
@@ -260,14 +249,14 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
     async def set(self, key, value):
         if value is not None:
             value = self.encode(value)
-            await self._wait_free_space(len(value))
+            await self.wait_free_space(len(value))
         k = self.raw_key(key).path
         try:
             await self.loop.run_in_executor(
                 self.executor, self._write, k, value)
         except OSError as e:
             raise StorageError(str(e)) from e
-        await self._next_space_waiter()
+        await self.next_space_waiter()
 
     @utils.method_replicate_result(key=lambda self, k: k)
     async def get(self, key):

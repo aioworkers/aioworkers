@@ -123,13 +123,10 @@ class RoStorage(base.AbstractStorageReadOnly):
                                 url, response.status,
                                 (await response.read()).decode()))
                     return
-                f = await storage_dest._open(key_dest, 'wb')
-                try:
+                async with storage_dest.raw_key(key_dest).open('wb') as f:
                     async for chunk in response.content.iter_any():
-                        await storage_dest._write_chunk(f, chunk)
+                        await f.write(chunk)
                     return True
-                finally:
-                    await storage_dest._close(f)
 
 
 class Storage(RoStorage, base.AbstractStorageWriteOnly):

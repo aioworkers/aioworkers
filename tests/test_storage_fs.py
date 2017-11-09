@@ -152,9 +152,8 @@ async def test_chunk(loop):
         storage = FileSystemStorage(config, context=context, loop=loop)
         await storage.init()
 
-        f = await storage._open(key4, 'wb')
-        await storage._write_chunk(f, data)
-        await storage._close(f)
+        async with storage.raw_key(key4).open('wb') as f:
+            await f.write(data)
         assert data == await storage.get(key4)
 
 
