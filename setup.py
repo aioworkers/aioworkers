@@ -24,7 +24,7 @@ setup(
     long_description=readme + '\n\n' + history,
     author="Alexander Malev",
     author_email='yttrium@somedev.ru',
-    url='https://github.com/aamalev/aioworkers',
+    url='https://github.com/aioworkers/aioworkers',
     packages=[i for i in find_packages() if i.startswith('aioworkers')],
     include_package_data=True,
     install_requires=requirements,
