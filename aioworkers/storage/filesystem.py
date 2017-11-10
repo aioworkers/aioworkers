@@ -117,6 +117,12 @@ class AsyncPath(PurePath):
         p._init(self.storage)
         return p
 
+    @property
+    def normpath(self):
+        return type(self)(
+            os.path.normpath(str(self)),
+            storage=self.storage)
+
 
 class AsyncPosixPath(AsyncPath, pathlib.PurePosixPath):
     pass
@@ -146,6 +152,9 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             self._limit = self._limit << 20  # int in MB
         elif isinstance(self._limit, str):
             self._limit = humanize.parse_size(self._limit)
+
+        self._path = AsyncPath(self.config.path, storage=self)
+        self._tmp = self.config.get('tmp') or self.config.path
 
         return super().init()
 
@@ -199,7 +208,7 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             d.mkdir(parents=True)
         if value is not None:
             with tempfile.NamedTemporaryFile(
-                    dir=self.config.get('tmp') or self.config.path,
+                    dir=self._tmp,
                     delete=False) as f:
                 source = f.name
                 f.write(value)
@@ -210,7 +219,7 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             shutil.rmtree(str(key))
         else:
             with tempfile.NamedTemporaryFile(
-                    dir=self.config.get('tmp') or self.config.path) as f:
+                    dir=self._tmp) as f:
                 shutil.move(str(key), f.name)
 
     def path_transform(self, rel_path: str):
@@ -236,13 +245,8 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
                     'Key must be relative path [str or Path]. '
                     'But {}'.format(parts))
         rel = os.path.normpath(str(PurePath(*flat(key))))
-
-        base = self._config.path
-        path = AsyncPath(os.path.normpath(
-            os.path.join(
-                base, self.path_transform(rel))), storage=self)
-
-        if path.relative_to(PurePath(base)) == '.':
+        path = self._path.joinpath(self.path_transform(rel)).normpath
+        if path.relative_to(self._path) == '.':
             raise ValueError('Access denied: %s' % path)
         return path
 
