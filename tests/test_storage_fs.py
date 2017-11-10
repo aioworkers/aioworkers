@@ -207,3 +207,18 @@ async def test_fd(loop):
 
         assert b'123' == await storage.get('1')
         await storage.set('1', None)
+
+
+async def test_nested(loop):
+    with tempfile.TemporaryDirectory() as d:
+        config = MergeDict(
+            name='',
+            path=d,
+            executor=None,
+        )
+        context = Context({}, loop=loop)
+        storage = FileSystemStorage(config, context=context, loop=loop)
+        await storage.init()
+        await storage.set('a/2', b'0')
+        assert b'0' == await storage.a.get('2')
+        assert b'0' == await storage['b', '../a'].get('2')

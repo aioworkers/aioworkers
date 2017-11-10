@@ -8,6 +8,7 @@ from pathlib import Path, PurePath
 
 from . import base, StorageError
 from .. import utils, humanize
+from ..core.base import AbstractNestedEntity
 from ..core.formatter import FormattedEntity
 
 
@@ -132,7 +133,11 @@ class AsyncWindowsPath(AsyncPath, pathlib.PureWindowsPath):
     pass
 
 
-class FileSystemStorage(FormattedEntity, base.AbstractStorage):
+class FileSystemStorage(
+        AbstractNestedEntity,
+        FormattedEntity,
+        base.AbstractStorage):
+
     PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
     PARAM_EXECUTOR = 'executor'
 
@@ -157,6 +162,21 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
         self._tmp = self.config.get('tmp') or self.config.path
 
         return super().init()
+
+    def factory(self, item, config=None):
+        path = self.raw_key(item)
+        simple_item = path.relative_to(self._path)
+        inst = super().factory(simple_item, config)
+        for i in (
+            '_formatter',
+            '_space_waiters',
+            '_executor',
+            '_tmp',
+            '_limit',
+        ):
+            setattr(inst, i, getattr(self, i))
+        inst._path = path
+        return inst
 
     @property
     def executor(self):
