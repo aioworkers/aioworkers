@@ -269,6 +269,9 @@ class FileSystemStorage(FormattedEntity, base.AbstractStorage):
             v = await k.read_bytes()
             return self.decode(v)
 
+    def open(self, key, *args, **kwargs):
+        return self.raw_key(key).open(*args, **kwargs)
+
     def _copy(self, key_source, storage_dest, key_dest, copy_func):
         s = self.raw_key(key_source).path
         d = storage_dest.raw_key(key_dest).path
