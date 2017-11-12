@@ -319,6 +319,15 @@ class FileSystemStorage(
                 storage_dest, key_dest, shutil.move)
         return super().move(key_source, storage_dest, key_dest)
 
+    def __repr__(self):
+        cls = type(self)
+        props = [('path', self._path)]
+        if self.config.get('executor'):
+            props.append(('c', self.config.executor))
+        return '<{}.{} {}>'.format(
+            cls.__module__, cls.__qualname__,
+            ' '.join(map('{0[0]}={0[1]}'.format, props)))
+
 
 class NestedFileSystemStorage(FileSystemStorage):
     def path_transform(self, rel_path: str):
