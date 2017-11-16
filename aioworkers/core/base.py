@@ -52,6 +52,8 @@ class AbstractNestedEntity(AbstractEntity):
         return instance
 
     def __getattr__(self, item):
+        if item.startswith('_'):
+            raise AttributeError(item)
         return self.factory(item)
 
     def __getitem__(self, item):
