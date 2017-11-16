@@ -103,7 +103,7 @@ class AsyncPath(PurePath):
         for i in (
             'write_bytes', 'read_bytes',
             'write_text', 'read_text',
-            'exists', 'mkdir',
+            'exists', 'mkdir', 'stat',
         ):
             setattr(self, i, async_method(self, i, self.path))
 
