@@ -22,6 +22,26 @@ def async_method(self, method: str, sync_obj=None):
     return wrap
 
 
+def flat(parts):
+    if isinstance(parts, str):
+        if os.path.isabs(parts):
+            raise ValueError('Path must be relative. '
+                             '[{}]'.format(parts))
+        yield parts
+    elif isinstance(parts, PurePath):
+        if parts.is_absolute():
+            raise ValueError('Path must be relative. '
+                             '[{}]'.format(parts))
+        yield parts
+    elif isinstance(parts, (list, tuple)):
+        for p in parts:
+            yield from flat(p)
+    else:
+        raise TypeError(
+            'Key must be relative path [str or Path]. '
+            'But {}'.format(parts))
+
+
 class AsyncFile:
     def __init__(self, fd, storage=None):
         self.fd = fd
@@ -164,7 +184,7 @@ class FileSystemStorage(
         return super().init()
 
     def factory(self, item, config=None):
-        path = self.raw_key(item)
+        path = self._path.joinpath(*flat(item)).normpath
         simple_item = path.relative_to(self._path)
         inst = super().factory(simple_item, config)
         for i in (
@@ -246,24 +266,6 @@ class FileSystemStorage(
         return rel_path
 
     def raw_key(self, *key):
-        def flat(parts):
-            if isinstance(parts, str):
-                if os.path.isabs(parts):
-                    raise ValueError('Path must be relative. '
-                                     '[{}]'.format(parts))
-                yield parts
-            elif isinstance(parts, PurePath):
-                if parts.is_absolute():
-                    raise ValueError('Path must be relative. '
-                                     '[{}]'.format(parts))
-                yield parts
-            elif isinstance(parts, (list, tuple)):
-                for p in parts:
-                    yield from flat(p)
-            else:
-                raise TypeError(
-                    'Key must be relative path [str or Path]. '
-                    'But {}'.format(parts))
         rel = os.path.normpath(str(PurePath(*flat(key))))
         path = self._path.joinpath(self.path_transform(rel)).normpath
         if path.relative_to(self._path) == '.':
