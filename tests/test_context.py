@@ -83,6 +83,12 @@ def test_group_resolver():
 
     gr = GroupResolver(exclude=['1'])
     assert not gr.match(['1'])
+    assert not gr.match(['1', '2'])
+    assert gr.match(None)
+
+    gr = GroupResolver(exclude=['1'], all_groups=True)
+    assert not gr.match(['1'])
+    assert not gr.match(['1', '2'])
     assert gr.match(None)
 
     gr = GroupResolver(include=['1'])

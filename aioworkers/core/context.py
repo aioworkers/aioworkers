@@ -122,14 +122,14 @@ class GroupResolver:
         if not groups:
             return self._default
         groups = {str(e) for e in groups}
-        if self._exclude:
-            groups -= self._exclude
+        exclude = groups.intersection(self._exclude)
+        include = groups.intersection(self._include)
         if self._all:
-            pass
-        elif self._include:
-            groups = groups.intersection(self._include)
+            if exclude:
+                return ()
         else:
-            groups = ()
+            if not include:
+                return ()
         return groups
 
 
