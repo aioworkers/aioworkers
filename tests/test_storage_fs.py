@@ -25,6 +25,7 @@ async def test_set_get(loop):
         context = Context({}, loop=loop)
         storage = FileSystemStorage(config, context=context, loop=loop)
         await storage.init()
+        assert repr(storage)
 
         await storage.set(('empty', 'value', '1'), None)
         assert not await storage.get('empty value 2')
