@@ -1,7 +1,7 @@
 import asyncio
 import csv
 
-from .base import AbstractReader
+from ..core.base import AbstractReader
 
 
 class DictReader(AbstractReader):

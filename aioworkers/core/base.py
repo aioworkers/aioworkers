@@ -1,5 +1,6 @@
 import asyncio
-from abc import ABC
+from abc import ABC, abstractmethod
+
 from copy import deepcopy
 
 
@@ -58,3 +59,15 @@ class AbstractNestedEntity(AbstractEntity):
 
     def __getitem__(self, item):
         return self.factory(item)
+
+
+class AbstractReader(AbstractEntity):
+    @abstractmethod  # pragma: no cover
+    async def get(self):
+        raise NotImplementedError()
+
+
+class AbstractWriter(AbstractEntity):
+    @abstractmethod  # pragma: no cover
+    async def put(self, value):
+        raise NotImplementedError()

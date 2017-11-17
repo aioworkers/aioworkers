@@ -1,20 +1,7 @@
 import asyncio
-from abc import abstractmethod
 
-from ..core.base import AbstractEntity
+from ..core.base import AbstractEntity, AbstractReader, AbstractWriter
 from ..utils import import_name
-
-
-class AbstractReader(AbstractEntity):
-    @abstractmethod  # pragma: no cover
-    async def get(self):
-        raise NotImplementedError()
-
-
-class AbstractWriter(AbstractEntity):
-    @abstractmethod  # pragma: no cover
-    async def put(self, value):
-        raise NotImplementedError()
 
 
 class AbstractQueue(AbstractReader, AbstractWriter):
