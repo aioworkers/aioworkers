@@ -2,6 +2,19 @@
 History
 =======
 
+0.8.0 (2017-11-17)
+------------------
+
+* Added AsyncPath based on PurePath
+* FileSystemStorage.raw_key -> AsyncPath (backward incompatible)
+* FileSystemStorage support nested interface
+* Fix Worker.init with uninitialized queue
+* Humanize func parse_size & parse_duration
+* Prevent branching when accessing private attributes for nested obj
+* Move AbstractReader & AbstractWriter to core
+* Fix GroupResolver to resolve exclude many groups
+
+
 0.7.0 (2017-11-04)
 ------------------
 
