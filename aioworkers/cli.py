@@ -74,12 +74,6 @@ def main(*config_files, args=None, config_dirs=()):
     if args.port is not None:
         conf['http.port'] = args.port
 
-    if not conf.get('app.cls'):
-        if conf.get('http.port'):
-            conf['app.cls'] = 'aioworkers.http.Application'
-        else:
-            conf['app.cls'] = 'aioworkers.app.Application'
-
     def sum_g(list_groups):
         if list_groups:
             return set(reduce(operator.add, list_groups))
@@ -117,7 +111,7 @@ def loop_run(conf, future=None, group_resolver=None, ns=None, cmds=None, argv=No
         group_resolver=group_resolver,
     )
 
-    cmds = cmds or ['app.run_forever']
+    cmds = cmds or ['run_forever']
     with utils.monkey_close(loop), context:
         if future is not None:
             future.set_result(context)

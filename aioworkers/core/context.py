@@ -91,9 +91,7 @@ class Signal:
                 continue
             if asyncio.iscoroutinefunction(i):
                 params = inspect.signature(i).parameters
-                if 'app' in params:
-                    coro = i(self._context.app)
-                elif 'context' in params:
+                if 'context' in params:
                     coro = i(self)
                 else:
                     coro = i()
@@ -208,8 +206,6 @@ class FuncContextProcessor(ContextProcessor):
 
 
 class RootContextProcessor(ContextProcessor):
-    key = 'app'
-    key_class = 'app.cls'
     processors = (
         LoggingContextProcessor,
         GroupsContextProcessor,
@@ -222,28 +218,11 @@ class RootContextProcessor(ContextProcessor):
         self.on_ready = Signal(context, name='ready')
 
     def __iter__(self):
-        yield type(self)
         yield from self.processors
-
-    @classmethod
-    def match(cls, context, path, value):
-        if isinstance(value, Mapping) and value.get(cls.key_class):
-            nested_context = Context(value, loop=context.loop)
-            context.on_start.append(nested_context.start)
-            context.on_stop.append(nested_context.stop)
-            context[path] = nested_context
-            return cls(nested_context, config=value)
-
-    def _path(self, base, key):
-        if not base:
-            return key
-        return '.'.join((base, key))
 
     def processing(self, config, path=None):
         for k, v in config.items():
-            if k == self.key and not path:
-                continue
-            p = self._path(path, k)
+            p = '.'.join(i for i in (path, k) if i)
             for processor in self:
                 m = processor.match(self.context, p, v)
                 if m is None:
@@ -256,14 +235,6 @@ class RootContextProcessor(ContextProcessor):
                     self.processing(v, p)
 
     async def process(self):
-        strcls = self.value.get(self.key_class)
-        if strcls:
-            cls = import_name(strcls)
-            app = await cls.factory(
-                config=self.value,
-                context=self.context,
-                loop=self.context.loop)
-            self.context.app = app
         self.processing(self.value)
         await self.on_ready.send(self.context._group_resolver)
 
@@ -301,6 +272,15 @@ class Context(AbstractEntity, Octopus):
 
     async def stop(self):
         await self.on_stop.send(self._group_resolver)
+
+    def run_forever(self, print=print):
+        print("======== Running aioworkers ========\n"
+              "(Press CTRL+C to quit)")
+        try:
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+        self.loop.close()
 
     def __getitem__(self, item):
         if item is None:

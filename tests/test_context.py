@@ -50,10 +50,6 @@ async def test_context_create(loop):
     with pytest.raises(KeyError):
         c['r']
 
-    async def handler(app):
-        pass
-    c.on_stop.append(handler)
-
     async def handler(context):
         pass
     c.on_stop.append(handler)
