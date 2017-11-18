@@ -1,8 +1,9 @@
+"""DEPRECATED module"""
 import asyncio
 
 
 class BaseApplication:
-    def __init__(self, *, config, context, **kwargs):
+    def __init__(self, config, *, context, **kwargs):
         self.config = config
         self.context = context
 
@@ -22,7 +23,7 @@ class BaseApplication:
 
 
 class Application(BaseApplication, dict):
-    def __init__(self, *, loop, config, context, **kwargs):
+    def __init__(self, config, *, loop, context, **kwargs):
         if loop is None:
             loop = asyncio.get_event_loop()
         self.loop = loop
