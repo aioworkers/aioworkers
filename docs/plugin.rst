@@ -20,3 +20,4 @@ Loading:
 
 The plugin is also considered to be a module whose functions are defined according
 to the interface of the base class Plugin.
+If in module not defined get_config search config files by mask plugin*.

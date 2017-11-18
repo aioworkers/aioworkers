@@ -1,8 +1,8 @@
 import logging
 import sys
-from itertools import chain
 from pathlib import Path
 
+from aioworkers.core.config import Config
 from . import formatter, config
 
 
@@ -76,3 +76,14 @@ class ProxyPlugin(Plugin):
             if v:
                 setattr(self, i, v)
         super().__init__()
+
+    def get_config(self):
+        if hasattr(self._original, '__file__'):
+            p = self._original.__file__
+        elif hasattr(self._original, '__module__'):
+            mod = sys.modules[self._original.__module__]
+            p = mod.__file__
+        else:
+            return {}
+        d = Path(p).parent
+        return Config().load(*d.glob('plugin*'))
