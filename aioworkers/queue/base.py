@@ -1,6 +1,6 @@
 import asyncio
 
-from ..core.base import AbstractEntity, AbstractReader, AbstractWriter
+from ..core.base import AbstractReader, AbstractWriter
 from ..utils import import_name
 
 
