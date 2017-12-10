@@ -15,9 +15,10 @@ def import_name(stref: str):
         try:
             h = importlib.import_module(h)
             break
-        except ImportError:
+        except ImportError as e:
             if '.' not in h:
-                raise ImportError(stref)
+                raise ImportError(
+                    '%s: %s' % (stref, e))
             h, t = h.rsplit('.', 1)
             p.append(t)
             continue
