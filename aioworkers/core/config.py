@@ -127,22 +127,41 @@ class ConfigFileLoader:
     mime_types = ()
 
     @abstractmethod  # pragma: no cover
-    def load_fd(self, fd):
+    def load_str(self, s):
         raise NotImplementedError
 
-    @abstractmethod  # pragma: no cover
+    def load_bytes(self, b):
+        return self.load_str(b.decode())
+
+    def load_fd(self, fd):
+        return self._load(fd)
+
     def load_path(self, path):
-        raise NotImplementedError
+        if isinstance(path, str):
+            path = Path(path)
+        with path.open('rt') as fd:
+            return self.load_fd(fd)
+
+    def load_url(self, url):
+        from urllib.request import urlopen
+        with urlopen(url) as r:
+            assert r.code == 200, r.read(255).decode()
+            ct = r.headers.get('Content-Type')
+            mt = ct and ct.split(';')[0]
+            assert not self.mime_types or mt in self.mime_types, \
+                'Unexpected mime_type {}'.format(mt)
+            return self.load_bytes(r.read())
 
 
 class YamlLoader(ConfigFileLoader):
     extensions = ('.yaml', '.yml')
 
     def __init__(self, *args, **kwargs):
-        self._yaml = __import__('yaml')
+        yaml = __import__('yaml')
+        self._load = yaml.load
 
-    def load_fd(self, fd):
-        return self._yaml.load(fd)
+    def load_str(self, s):
+        return self._load(s)
 
 
 class JsonLoader(ConfigFileLoader):
@@ -150,10 +169,12 @@ class JsonLoader(ConfigFileLoader):
     mime_types = ('application/json',)
 
     def __init__(self, *args, **kwargs):
-        self._json = __import__('json')
+        json = __import__('json')
+        self._load = json.load
+        self._loads = json.loads
 
-    def load_fd(self, fd):
-        return self._json.load(fd)
+    def load_str(self, s):
+        return self._loads(s)
 
 
 class ValueMatcher:
@@ -325,6 +346,10 @@ class Config:
             raise LookupError('Not found mime_type %s' % mime_type)
         else:
             raise NotImplemented
+        if response is not None:
+            return loader.load_bytes(response.read())
+        elif fd is None:
+            return loader.load_path(path)
         with fd:
             return loader.load_fd(fd)
 
@@ -341,7 +366,7 @@ class Config:
                 if not fn.is_absolute():
                     fns.append(fn)
                     continue
-                c = self.load_conf(fn.open(encoding='utf-8'), path=fn)
+                c = self.load_conf(None, path=fn)
             elif isinstance(fn, http.client.HTTPResponse):
                 c = self.load_conf(fn, response=fn)
             elif isinstance(fn, (io.TextIOWrapper, io.BufferedReader)):
@@ -355,7 +380,7 @@ class Config:
                 if not Path(d, fn).exists():
                     continue
                 f = Path(d, fn)
-                c = self.load_conf(f.open(encoding='utf-8'), path=f)
+                c = self.load_conf(None, path=f)
                 if c:
                     config(c)
         return config
