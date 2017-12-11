@@ -2,6 +2,15 @@
 History
 =======
 
+0.9.0 (2017-12-11)
+------------------
+
+* Application is a regular entity not required in context
+* Fix load config from http resource
+* Search config in plugin by mask plugin.*
+* Extends info about fail import in import_name
+
+
 0.8.0 (2017-11-17)
 ------------------
 
