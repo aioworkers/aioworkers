@@ -271,7 +271,7 @@ class IniLoader(StringReplaceLoader):
 
     def load_path(self, path):
         config = self.new_configparser()
-        config.read(path)
+        config.read(str(path))
         return self._convert(config)
 
     def load_str(self, string):
