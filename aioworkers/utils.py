@@ -1,6 +1,6 @@
 import contextlib
 import functools
-import importlib
+import importlib.util
 import logging
 import sys
 from pathlib import Path
@@ -11,21 +11,28 @@ logger = logging.getLogger(__name__)
 def import_name(stref: str):
     h = stref
     p = []
-    while isinstance(h, str):
+    while True:
         try:
-            h = importlib.import_module(h)
+            r = importlib.util.find_spec(h)
+        except AttributeError:
+            r = None
+
+        if r is not None:
             break
-        except ImportError as e:
-            if '.' not in h:
-                raise ImportError(
-                    '%s: %s' % (stref, e))
-            h, t = h.rsplit('.', 1)
-            p.append(t)
-            continue
-    for i in reversed(p):
-        h = getattr(h, i, None)
-        if h is None:
+        elif '.' not in h:
             raise ImportError(stref)
+
+        h, t = h.rsplit('.', 1)
+        p.append(t)
+
+    h = importlib.import_module(h)
+
+    for i in reversed(p):
+        if not hasattr(h, i):
+            raise ImportError(
+                '{}: Not found {} in {}'.format(stref, i, h))
+        h = getattr(h, i, None)
+
     logger.debug('Imported "{}" as {}'.format(stref, h))
     return h
 
