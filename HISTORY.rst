@@ -2,6 +2,13 @@
 History
 =======
 
+0.9.2 (2017-12-17)
+------------------
+
+* Fix access to nested element
+* Improve import_name
+
+
 0.9.1 (2017-12-11)
 ------------------
 
