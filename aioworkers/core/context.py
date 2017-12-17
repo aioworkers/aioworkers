@@ -20,10 +20,16 @@ class Octopus(MutableMapping):
             v = self._create_item()
             self[k] = v
         else:
-            raise KeyError(key)
+            try:
+                v = self[k]
+            except:
+                raise KeyError(key)
         if len(sp) == 1:
             return v
-        return v._get_item(sp[-1], create)
+        if isinstance(v, Octopus):
+            return v._get_item(sp[-1], create)
+        else:
+            return v[sp[-1]]
 
     def items(self):
         return self.__dict__.items()

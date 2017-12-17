@@ -219,7 +219,9 @@ async def test_nested(loop):
         )
         context = Context({}, loop=loop)
         storage = FileSystemStorage(config, context=context, loop=loop)
+        context.storage = storage
         await storage.init()
         await storage.set('a/2', b'0')
         assert b'0' == await storage.a.get('2')
         assert b'0' == await storage['b', '../a'].get('2')
+        assert b'0' == await context['storage.a'].get('2')
