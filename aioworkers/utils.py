@@ -9,12 +9,18 @@ logger = logging.getLogger(__name__)
 
 
 def import_name(stref: str):
+    """
+    >>> import_name('datetime.datetime.utcnow') is not None
+    True
+    >>> import_name('aioworkers.utils.import_name') is not None
+    True
+    """
     h = stref
     p = []
     while True:
         try:
             r = importlib.util.find_spec(h)
-        except AttributeError:
+        except (AttributeError, ImportError):
             r = None
 
         if r is not None:
