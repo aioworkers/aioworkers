@@ -8,6 +8,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
+@functools.lru_cache(None)
 def import_name(stref: str):
     """
     >>> import_name('datetime.datetime.utcnow') is not None
@@ -17,30 +18,36 @@ def import_name(stref: str):
     """
     h = stref
     p = []
+    m = None
+    try:
+        r = importlib.util.find_spec(stref)
+    except (AttributeError, ImportError):
+        r = None
+
+    if r is not None:
+        return importlib.import_module(stref)
+
     while True:
-        try:
-            r = importlib.util.find_spec(h)
-        except (AttributeError, ImportError):
-            r = None
-
-        if r is not None:
+        if '.' not in h:
             break
-        elif '.' not in h:
-            raise ImportError(stref)
-
         h, t = h.rsplit('.', 1)
         p.append(t)
+        if h in sys.modules:
+            m = sys.modules[h]
+            break
 
-    h = importlib.import_module(h)
+    if m is None:
+        m = importlib.import_module(h)
 
     for i in reversed(p):
-        if not hasattr(h, i):
-            raise ImportError(
-                '{}: Not found {} in {}'.format(stref, i, h))
-        h = getattr(h, i, None)
+        if hasattr(m, i):
+            m = getattr(m, i)
+        else:
+            h += '.' + i
+            m = importlib.import_module(h)
 
     logger.debug('Imported "{}" as {}'.format(stref, h))
-    return h
+    return m
 
 
 def module_path(str_module, return_str=False):
