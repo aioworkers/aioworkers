@@ -27,9 +27,7 @@ def import_name(stref: str):
     if r is not None:
         return importlib.import_module(stref)
 
-    while True:
-        if '.' not in h:
-            break
+    while '.' in h:
         h, t = h.rsplit('.', 1)
         p.append(t)
         if h in sys.modules:
