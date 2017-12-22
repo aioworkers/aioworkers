@@ -2,6 +2,13 @@
 History
 =======
 
+0.9.3 (2017-12-22)
+------------------
+
+* Fix FileSystemStorage.get_free_space
+* Improve import_name
+
+
 0.9.2 (2017-12-17)
 ------------------
 
