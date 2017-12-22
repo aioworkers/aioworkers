@@ -10,6 +10,7 @@ from aioworkers.redis import \
     RedisQueue, RedisZQueue, RedisStorage, TimestampZQueue
 
 
+@pytest.mark.skip('deprecated')
 async def test_queue(loop):
     config = MergeDict(key=str(uuid.uuid4()))
     config['app.redis_pool'] = await aioredis.create_pool(
@@ -27,6 +28,7 @@ async def test_queue(loop):
     assert not await q.length()
 
 
+@pytest.mark.skip('deprecated')
 async def test_queue_json(loop):
     config = MergeDict(
         key=str(uuid.uuid4()),
@@ -47,6 +49,7 @@ async def test_queue_json(loop):
     assert not await q.length()
 
 
+@pytest.mark.skip('deprecated')
 async def test_zqueue(loop, mocker):
     config = MergeDict(
         key=str(uuid.uuid4()),
@@ -80,6 +83,7 @@ async def test_zqueue(loop, mocker):
             await q.get()
 
 
+@pytest.mark.skip('deprecated')
 async def test_ts_zqueue(loop, mocker):
     config = MergeDict(
         key=str(uuid.uuid4()),
@@ -113,6 +117,7 @@ async def test_ts_zqueue(loop, mocker):
             await q.get()
 
 
+@pytest.mark.skip('deprecated')
 async def test_storage(loop):
     config = MergeDict(
         name='1',
