@@ -4,7 +4,7 @@ services: []
 python:
   - 3.5.2
   - 3.6
-  - pypy3
+  # - pypy3
 install:
   - pip install -U pip setuptools
   - pip install -U pytest-runner pytest-aiohttp pytest-pep8 pytest-mock pytest-cov
