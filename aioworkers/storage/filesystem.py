@@ -208,8 +208,15 @@ class FileSystemStorage(
         return self.loop.run_in_executor(self._executor, f, *args)
 
     def disk_usage(self):
+        def disk_usage(path):
+            try:
+                return shutil.disk_usage(path)
+            except FileNotFoundError:
+                os.makedirs(path, exist_ok=True)
+            return shutil.disk_usage(path)
+
         return self.loop.run_in_executor(
-            self._executor, shutil.disk_usage, self._config.path)
+            self._executor, disk_usage, self._config.path)
 
     async def get_free_space(self):
         du = await self.disk_usage()

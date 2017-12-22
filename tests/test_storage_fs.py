@@ -3,6 +3,7 @@ import tempfile
 from pathlib import PurePath
 from unittest import mock
 
+import os
 import pytest
 
 from aioworkers.core.config import MergeDict
@@ -105,12 +106,13 @@ async def test_freespace(loop):
     with tempfile.TemporaryDirectory() as d:
         config = MergeDict(
             name='',
-            path=d,
+            path=os.path.join(d, 'nested'),
             executor=None,
         )
         context = Context({}, loop=loop)
         storage = FileSystemStorage(config, context=context, loop=loop)
         await storage.init()
+        assert await storage.get_free_space()
 
         with mock.patch.object(storage, 'get_free_space', asyncio.coroutine(lambda: 1)):
             assert 1 == await storage.get_free_space()
