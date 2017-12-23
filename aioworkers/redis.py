@@ -15,14 +15,14 @@ from .storage.base import AbstractListedStorage
 from .queue.base import AbstractQueue, score_queue
 
 
-class RedisPool(FormattedEntity):
+class RedisPool(FormattedEntity):  # pragma: no cover
     @property
     def pool(self):
         key_pool = self.config.get('pool', 'redis_pool')
         return self.context.app[key_pool].get()
 
 
-class RedisQueue(RedisPool, AbstractQueue):
+class RedisQueue(RedisPool, AbstractQueue):  # pragma: no cover
     def init(self):
         self._lock = asyncio.Lock(loop=self.loop)
         self._key = self.config.key
@@ -60,7 +60,7 @@ class RedisQueue(RedisPool, AbstractQueue):
 
 
 @score_queue('time.time')
-class RedisZQueue(RedisQueue):
+class RedisZQueue(RedisQueue):  # pragma: no cover
     async def init(self):
         await super().init()
         self._timeout = self.config.timeout
@@ -101,7 +101,7 @@ class RedisZQueue(RedisQueue):
 
 
 @score_queue('time.time')
-class TimestampZQueue(RedisZQueue.super):
+class TimestampZQueue(RedisZQueue.super):  # pragma: no cover
     async def init(self):
         await super().init()
         self._script = """
@@ -132,7 +132,7 @@ class TimestampZQueue(RedisZQueue.super):
             await asyncio.sleep(self._timeout, loop=self.loop)
 
 
-class RedisStorage(RedisPool, AbstractListedStorage):
+class RedisStorage(RedisPool, AbstractListedStorage):  # pragma: no cover
     def init(self):
         self._prefix = self.config.get('prefix')
         return super().init()
