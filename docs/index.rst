@@ -7,6 +7,7 @@ Contents:
    :maxdepth: 2
 
    config
+   entity
    context
    cli
    queue
