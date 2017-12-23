@@ -14,8 +14,8 @@ class Application(BaseApplication, web.Application):
         BaseApplication.__init__(
             self, config=config, context=context, **kwargs)
 
-    def run_forever(self, print=print, **kwargs):
-        kwargs['host'] = self.config.http.host
-        kwargs['port'] = self.config.http.port
-        kwargs['print'] = print
+    def run_forever(self, port=None, host=None, **kwargs):
+        gconf = self.context.config.http
+        kwargs['host'] = host or gconf.host
+        kwargs['port'] = port or gconf.port
         web.run_app(self, **kwargs)

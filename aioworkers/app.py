@@ -6,6 +6,7 @@ class BaseApplication:
     def __init__(self, config, *, context, **kwargs):
         self.config = config
         self.context = context
+        context.run_forever = self.run_forever
 
     @classmethod
     async def prepare(cls, kwargs):
