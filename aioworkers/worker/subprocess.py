@@ -34,12 +34,13 @@ class Subprocess(FormattedEntity, Worker):
 
     @property
     def process(self):
-        if hasattr(self, '_process') and self._process is not None:
-            return self._process
+        return getattr(self, '_process', None)
 
     def make_command(self, value):
         cmd = self.config.get('cmd')
-        if value is None:
+        if isinstance(cmd, list) and not value:
+            return cmd
+        elif value is None:
             return cmd,
         elif not cmd and isinstance(value, Sequence):
             return value
@@ -86,3 +87,13 @@ class Subprocess(FormattedEntity, Worker):
             return self.decode(data)
 
     run = run_cmd
+
+    async def stop(self, force=True):
+        process = self.process
+        if process is None:
+            pass
+        elif force:
+            process.kill()
+        else:
+            process.terminate()
+        await super().stop(force=force)
