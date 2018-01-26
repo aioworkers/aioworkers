@@ -28,6 +28,8 @@ class Octopus(MutableMapping):
             return v
         if isinstance(v, Octopus):
             return v._get_item(sp[-1], create)
+        elif hasattr(v, sp[-1]):
+            return getattr(v, sp[-1])
         else:
             return v[sp[-1]]
 
