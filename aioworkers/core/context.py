@@ -266,11 +266,11 @@ class Context(AbstractEntity, Octopus):
     async def init(self):
         await RootContextProcessor(self, value=self.config).process()
 
-    async def wait_all(self, coros):
+    async def wait_all(self, coros, timeout=None):
         if not coros:
             return
-        d, p = await asyncio.wait(coros, loop=self.loop)
-        assert not p
+        d, p = await asyncio.wait(coros, loop=self.loop, timeout=timeout)
+        assert not p, '\n'.join(map(repr, p))
         for f in d:
             if f.exception():
                 self.logger.exception('ERROR', exc_info=f.exception())
