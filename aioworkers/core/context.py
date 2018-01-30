@@ -28,9 +28,9 @@ class Octopus(MutableMapping):
             return v
         if isinstance(v, Octopus):
             return v._get_item(sp[-1], create)
-        elif hasattr(v, sp[-1]):
+        try:
             return getattr(v, sp[-1])
-        else:
+        except AttributeError:
             return v[sp[-1]]
 
     def items(self):

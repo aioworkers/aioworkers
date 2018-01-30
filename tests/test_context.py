@@ -17,6 +17,9 @@ def test_octopus():
     assert repr(f)
     assert f.__repr__(header=True)
     assert f.items()
+    f.s = 'w'
+    assert callable(f['s.upper'])
+    assert f['s.upper']() == 'W'
 
     f[None] = True
     assert not f[None]
