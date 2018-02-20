@@ -2,9 +2,13 @@ import contextlib
 import functools
 import importlib.util
 import logging
+import pickle
+import struct
 import sys
+import time
 from pathlib import Path
 
+SIZE = struct.Struct('!I')
 logger = logging.getLogger(__name__)
 
 
@@ -48,6 +52,18 @@ def import_name(stref: str):
     return m
 
 
+def import_uri(obj):
+    """
+    >>> import_uri(import_uri)
+    'utils.import_uri'
+    >>> import_uri(Path)
+    'pathlib.Path'
+    >>> import_uri(Path.exists)
+    'pathlib.Path.exists'
+    """
+    return '.'.join((obj.__module__, obj.__qualname__))
+
+
 def module_path(str_module, return_str=False):
     if str_module in sys.modules:
         m = sys.modules[str_module]
@@ -74,7 +90,9 @@ def method_replicate_result(key):
             result = await fut
             del futures[k]
             return result
+
         return wrapper
+
     return wrapped
 
 
@@ -91,3 +109,31 @@ def monkey_close(loop):
     yield
     if closed:
         close()
+
+
+def try_read(n, fd, timeout=1):
+    result = None
+    while n:
+        b = fd.read(n)
+        if not b:
+            time.sleep(timeout)
+        elif len(b) == n:
+            return b
+        elif not result:
+            result = b
+        else:
+            result += b
+            n -= len(b)
+    return result
+
+
+def load_from_fd(fd):
+    size = SIZE.unpack(try_read(SIZE.size, fd=fd))[0]
+    d = try_read(size, fd=fd)
+    return pickle.loads(d)
+
+
+def dump_to_fd(fd, data):
+    buf = pickle.dumps(data)
+    fd.write(SIZE.pack(len(buf)))
+    fd.write(buf)

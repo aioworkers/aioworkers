@@ -36,7 +36,7 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-def main(*config_files, args=None, config_dirs=(), commands=()):
+def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
@@ -53,6 +53,9 @@ def main(*config_files, args=None, config_dirs=(), commands=()):
             cmds.append(argv.pop(0))
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
+        if getattr(args, 'config_stdin', None):
+            assert not args.interact, 'Can not be used --config-stdin with --interact'
+            config_dict = utils.load_from_fd(sys.stdin.buffer)
         if args.logging:
             logging.basicConfig(level=args.logging.upper())
     else:
@@ -64,6 +67,7 @@ def main(*config_files, args=None, config_dirs=(), commands=()):
     cmds = [cmd for cmd in cmds if cmd not in sys.modules]
 
     conf = config.load_conf(*config_files, search_dirs=config_dirs, **conf)
+    conf(config_dict)
 
     def sum_g(list_groups):
         if list_groups:
@@ -128,6 +132,7 @@ def main_with_conf(*args, **kwargs):
     parser.add_argument(
         '-c', '--config', nargs='+',
         type=UriType('r', encoding='utf-8'))
+    parser.add_argument('--config-stdin', action='store_true')
     main(*args, **kwargs)
 
 
