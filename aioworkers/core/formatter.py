@@ -1,3 +1,4 @@
+import os
 from abc import abstractmethod
 
 from .base import AbstractEntity
@@ -81,6 +82,36 @@ class StringFormatter(BaseFormatter):
         return b.encode()
 
 
+class FromStringFormatter(BaseFormatter):
+    name = 'from_str'
+
+    @staticmethod
+    def decode(b):
+        return b.encode()
+
+    @staticmethod
+    def encode(b):
+        return b.decode()
+
+
+class NewLineFormatter(BaseFormatter):
+    name = 'newline'
+    linesep = os.linesep
+
+    @staticmethod
+    def decode(b):
+        return b.rstrip()
+
+    @classmethod
+    def encode(cls, b):
+        return b + cls.linesep
+
+
+class BytesNewLineFormatter(NewLineFormatter):
+    name = 'bnewline'
+    linesep = os.linesep.encode()
+
+
 class PickleFormatter(BaseFormatter):
     name = 'pickle'
 
@@ -145,6 +176,9 @@ class LzmaFormatter(BaseFormatter):
 
 registry = Registry()
 registry(StringFormatter)
+registry(FromStringFormatter)
+registry(NewLineFormatter)
+registry(BytesNewLineFormatter)
 registry(PickleFormatter)
 registry(JsonFormatter)
 registry(YamlFormatter)

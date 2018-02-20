@@ -21,6 +21,10 @@ registry(RtsFormatter)
     ('pickle', {'f': 3}),
     ('yaml', {'f': 3}),
     ('str', '123'),
+    ('newline|str', '123'),
+    ('str|bnewline', '123'),
+    ('str|zlib', '123'),
+    ('str|lzma', '123'),
 ])
 def test_formatters(formatter, data):
     f = registry.get(formatter)
@@ -33,6 +37,7 @@ def test_formatters(formatter, data):
     ['str', 'rts'],
     'str:rts',
     'str|rts',
+    'str|from_str:str|from_str',
 ])
 def test_chain(f):
     f = registry.get(f)
