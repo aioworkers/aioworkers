@@ -6,6 +6,7 @@ import tempfile
 from functools import partial
 from pathlib import Path, PurePath
 
+from aioworkers.core.base import ExecutorEntity
 from . import base, StorageError
 from .. import utils, humanize
 from ..core.base import AbstractNestedEntity
@@ -155,22 +156,14 @@ class AsyncWindowsPath(AsyncPath, pathlib.PureWindowsPath):
 
 class FileSystemStorage(
         AbstractNestedEntity,
+        ExecutorEntity,
         FormattedEntity,
         base.AbstractStorage):
 
     PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
-    PARAM_EXECUTOR = 'executor'
 
     def init(self):
         self._space_waiters = []
-
-        ex = self._config.get(self.PARAM_EXECUTOR)
-        if isinstance(ex, int):
-            cls = utils.import_name('concurrent.futures.ThreadPoolExecutor')
-            ex = cls(max_workers=ex)
-        elif isinstance(ex, str):
-            ex = self._context[ex]
-        self._executor = ex
 
         self._limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
         if isinstance(self._limit, int):
@@ -197,15 +190,6 @@ class FileSystemStorage(
             setattr(inst, i, getattr(self, i))
         inst._path = path
         return inst
-
-    @property
-    def executor(self):
-        return self._executor
-
-    def run_in_executor(self, f, *args, **kwargs):
-        if kwargs:
-            f = partial(f, **kwargs)
-        return self.loop.run_in_executor(self._executor, f, *args)
 
     def disk_usage(self):
         def disk_usage(path):

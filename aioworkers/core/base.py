@@ -2,6 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 
 from copy import deepcopy
+from functools import partial
 
 
 class AbstractEntity(ABC):
@@ -71,3 +72,26 @@ class AbstractWriter(AbstractEntity):
     @abstractmethod  # pragma: no cover
     async def put(self, value):
         raise NotImplementedError()
+
+
+class ExecutorEntity(AbstractEntity):
+    PARAM_EXECUTOR = 'executor'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        ex = self._config.get(self.PARAM_EXECUTOR)
+        if isinstance(ex, int):
+            from concurrent.futures import ThreadPoolExecutor
+            ex = ThreadPoolExecutor(max_workers=ex)
+        elif isinstance(ex, str):
+            ex = self._context[ex]
+        self._executor = ex
+
+    def run_in_executor(self, f, *args, **kwargs):
+        if kwargs:
+            f = partial(f, **kwargs)
+        return self.loop.run_in_executor(self._executor, f, *args)
+
+    @property
+    def executor(self):
+        return self._executor
