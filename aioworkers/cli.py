@@ -16,10 +16,7 @@ from .core import command, plugin
 from .core.config import MergeDict
 from .core.context import Context, GroupResolver
 
-
 parser = argparse.ArgumentParser(prefix_chars='-+')
-parser.add_argument('--host')
-parser.add_argument('-p', '--port', type=int)
 
 group = parser.add_mutually_exclusive_group(required=False)
 group.add_argument('+g', '++groups', nargs='+', action='append',
@@ -31,7 +28,6 @@ group.add_argument('-g', '--groups', nargs='*', action='append',
 parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
 
-
 try:
     import uvloop
 except ImportError:
@@ -40,7 +36,7 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-def main(*config_files, args=None, config_dirs=()):
+def main(*config_files, args=None, config_dirs=(), commands=()):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
@@ -52,7 +48,7 @@ def main(*config_files, args=None, config_dirs=()):
 
     if args is None:
         args, argv = parser.parse_known_args()
-        cmds = []
+        cmds = list(commands)
         while argv and not argv[0].startswith('-'):
             cmds.append(argv.pop(0))
         if getattr(args, 'config', None):
@@ -60,7 +56,7 @@ def main(*config_files, args=None, config_dirs=()):
         if args.logging:
             logging.basicConfig(level=args.logging.upper())
     else:
-        cmds, argv = (), None
+        cmds, argv = list(commands), None
 
     plugins.extend(plugin.search_plugins(*cmds))
     for p in plugins:
@@ -68,11 +64,6 @@ def main(*config_files, args=None, config_dirs=()):
     cmds = [cmd for cmd in cmds if cmd not in sys.modules]
 
     conf = config.load_conf(*config_files, search_dirs=config_dirs, **conf)
-
-    if args.host:
-        conf['http.host'] = args.host
-    if args.port is not None:
-        conf['http.port'] = args.port
 
     def sum_g(list_groups):
         if list_groups:
@@ -133,11 +124,11 @@ class UriType(argparse.FileType):
         return urlopen(string)
 
 
-def main_with_conf():
+def main_with_conf(*args, **kwargs):
     parser.add_argument(
         '-c', '--config', nargs='+',
         type=UriType('r', encoding='utf-8'))
-    main()
+    main(*args, **kwargs)
 
 
 if __name__ == '__main__':
