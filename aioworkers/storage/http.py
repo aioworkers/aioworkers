@@ -44,7 +44,7 @@ class RoStorage(base.AbstractStorageReadOnly):
     def reset_session(self, **kwargs):
         session = getattr(self, 'session', None)
         if session:
-            session.close()
+            asyncio.ensure_future(session.close(), loop=self.loop)
         if kwargs:
             kwargs = {**self.session_params, **kwargs}
         else:
@@ -52,7 +52,7 @@ class RoStorage(base.AbstractStorageReadOnly):
         self.session = client.ClientSession(loop=self.loop, **kwargs)
 
     async def stop(self):
-        self.session.close()
+        await self.session.close()
 
     def raw_key(self, key):
         if self._prefix:
