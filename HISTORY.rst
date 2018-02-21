@@ -2,6 +2,15 @@
 History
 =======
 
+0.10.0 (2018-02-22)
+------------------
+
+* Improved Subprocess
+* Access member of entity over context
+* Proxy queue for readline from stdin
+* Command line param --config-stdin
+
+
 0.9.3 (2017-12-22)
 ------------------
 
