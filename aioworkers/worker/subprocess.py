@@ -1,5 +1,7 @@
 import asyncio
+import shlex
 import subprocess
+import sys
 from collections import Mapping, Sequence
 
 from ..core.formatter import FormattedEntity
@@ -11,25 +13,59 @@ class Subprocess(FormattedEntity, Worker):
     config:
         cmd: str - shell command with mask python format
              list[str] - exec command with mask python format
+        stdin: [none | PIPE | DEVNULL ]
         stdout: [none | PIPE | DEVNULL]
-        stderr: [none | PIPE | DEVNULL]
+        stderr: [none | PIPE | STDOUT | DEVNULL]
         wait: bool - default True for wait shutdown process
+        params: dict of params
+        daemon: true
         format: [json|str|bytes]
     """
 
     async def init(self):
-        if self.config.get('stdout'):
-            self._stdout = getattr(subprocess, self.config.get('stdout'))
-        elif 'stdout' in self.config:
-            self._stdout = None
+        if self.config.get('stdin'):
+            stdin = getattr(subprocess, self.config.get('stdin'))
+        elif 'stdin' in self.config:
+            stdin = None
         else:
-            self._stdout = subprocess.PIPE
+            stdin = subprocess.PIPE
+
+        if self.config.get('stdout'):
+            stdout = getattr(subprocess, self.config.get('stdout'))
+        elif 'stdout' in self.config:
+            stdout = None
+        else:
+            stdout = subprocess.PIPE
 
         if self.config.get('stderr'):
-            self._stderr = getattr(subprocess, self.config.get('stderr'))
+            stderr = getattr(subprocess, self.config.get('stderr'))
         else:
-            self._stderr = None
+            stderr = None
         self._wait = self.config.get('wait', True)
+
+        cmd = self.config.get('cmd')
+        self._shell = self.config.get('shell', isinstance(cmd, str))
+        if self._shell:
+            coro = asyncio.create_subprocess_shell
+        else:
+            coro = asyncio.create_subprocess_exec
+        self.create_subprocess = lambda *args: coro(
+            *args, stdin=stdin, stdout=stdout,
+            stderr=stderr, loop=self.loop)
+
+        self.params = dict(self.config.get('params', ()))
+        self.params.setdefault('python', sys.executable)
+        self.params.setdefault('config', self.config)
+        self.params.setdefault('worker', self)
+
+        self._daemon = self.config.get('daemon')
+        self._keeper = None
+        if self._daemon:
+            self._wait = False
+        else:
+            self.run = self.run_cmd
+        self._event = asyncio.Event(loop=self.loop)
+        self._event.clear()
         await super().init()
 
     @property
@@ -38,30 +74,30 @@ class Subprocess(FormattedEntity, Worker):
 
     def make_command(self, value):
         cmd = self.config.get('cmd')
-        if isinstance(cmd, list) and not value:
-            return cmd
-        elif value is None:
-            return cmd,
-        elif not cmd and isinstance(value, Sequence):
-            return value
-        elif not cmd and isinstance(value, str):
-            return value,
-        elif isinstance(cmd, list) and isinstance(value, str):
-            return cmd + [value]
-        elif isinstance(cmd, list) and isinstance(value, Sequence):
-            result = list(cmd)
-            result.extend(value)
-            return result
-        elif isinstance(cmd, list) and isinstance(value, Mapping):
-            return [i.format_map(value) for i in cmd]
-        elif isinstance(cmd, str) and isinstance(value, str):
-            return self.config.cmd + ' ' + value,
-        elif isinstance(cmd, str) and isinstance(value, Mapping):
-            return self.config.cmd.format_map(value),
-        elif isinstance(cmd, str) and isinstance(value, Sequence):
-            return self.config.cmd.format(*value),
+        args = ()
+        m = dict(self.params)
+        if isinstance(value, Mapping):
+            m.update(value)
+        elif isinstance(value, Sequence):
+            args = value
+        elif isinstance(value, str):
+            args = value,
+
+        is_cmd_str = isinstance(cmd, str)
+
+        if is_cmd_str:
+            cmd = cmd.format_map(m)
         else:
-            raise ValueError(value)
+            cmd = [part.format_map(m) for part in cmd]
+            cmd.extend(args)
+
+        if self._shell and not is_cmd_str:
+            cmd = ' '.join(cmd)
+        elif not self._shell and is_cmd_str:
+            cmd = shlex.split(cmd)
+        if isinstance(cmd, str):
+            cmd = cmd,
+        return cmd
 
     async def run_cmd(self, *args, **kwargs):
         if len(args) > 1:
@@ -74,21 +110,42 @@ class Subprocess(FormattedEntity, Worker):
             value = None
         cmd = self.make_command(value)
         self.logger.info(' '.join(cmd))
-        if len(cmd) > 1:
-            coro = asyncio.create_subprocess_exec
-        else:
-            coro = asyncio.create_subprocess_shell
-        self._process = await coro(
-            *cmd, stdout=self._stdout, stderr=self._stderr, loop=self.loop)
+        self._process = await self.create_subprocess(*cmd)
         if self._wait:
             await self._process.wait()
-        if self._stdout:
+        if not self._daemon and self._process.stdout is not None:
             data = await self._process.stdout.read()
             return self.decode(data)
 
-    run = run_cmd
+    async def work(self):
+        if self._daemon:
+            await self._event.wait()
+        return await super().work()
+
+    async def _keep_daemon(self):
+        while True:
+            try:
+                await self.run_cmd()
+                self._event.set()
+                await self._process.wait()
+            finally:
+                self._event.clear()
+            await asyncio.sleep(1)
+
+    async def start(self):
+        if self._daemon:
+            self._keeper = self.loop.create_task(self._keep_daemon())
+        return await super().start()
 
     async def stop(self, force=True):
+        if self._keeper is not None:
+            self._keeper.cancel()
+            self._event.clear()
+            try:
+                await self._keeper
+            except asyncio.CancelledError:
+                pass
+            self._keeper = None
         process = self.process
         if process is None:
             pass

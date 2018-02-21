@@ -26,7 +26,7 @@ class Supervisor(Worker):
         return self.context.wait_all([lmbd(w) for w in self._children])
 
     def get_child_config(self):
-        return self.config.child
+        return self.config.child.copy()
 
     def create_child(self):
         conf = self.get_child_config()
