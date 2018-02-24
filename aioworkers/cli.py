@@ -59,7 +59,7 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
         if args.logging:
             logging.basicConfig(level=args.logging.upper())
     else:
-        cmds, argv = list(commands), None
+        cmds, argv = list(commands), []
 
     plugins.extend(plugin.search_plugins(*cmds))
     for p in plugins:
