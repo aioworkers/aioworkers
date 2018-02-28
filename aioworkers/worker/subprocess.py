@@ -63,7 +63,7 @@ class Subprocess(FormattedEntity, Worker):
             cmd = self.config['cmd']
         else:
             raise ValueError
-
+        self._cmd = cmd
         self._shell = self.config.get('shell', isinstance(cmd, str))
         if self._shell:
             coro = asyncio.create_subprocess_shell
@@ -93,7 +93,7 @@ class Subprocess(FormattedEntity, Worker):
         return getattr(self, '_process', None)
 
     def make_command(self, value):
-        cmd = self.config.get('cmd')
+        cmd = self._cmd
         args = ()
         m = dict(self.params)
         if isinstance(value, Mapping):
