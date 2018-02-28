@@ -7,6 +7,7 @@ async def test_1(loop):
     config = MergeDict(
         name='',
         autorun=False,
+        cmd='',
     )
     context = Context(config, loop=loop)
     worker = BaseUpdater(config, context=context, loop=loop)

@@ -4,6 +4,7 @@ import subprocess
 import sys
 from collections import Mapping, Sequence
 
+from .. import utils
 from ..core.formatter import FormattedEntity
 from .base import Worker
 
@@ -13,7 +14,8 @@ class Subprocess(FormattedEntity, Worker):
     config:
         cmd: str - shell command with mask python format
              list[str] - exec command with mask python format
-        stdin: [none | PIPE | DEVNULL ]
+        aioworkers: argv or str for aioworkers subprocess
+        stdin: [none | PIPE | DEVNULL]
         stdout: [none | PIPE | DEVNULL]
         stderr: [none | PIPE | STDOUT | DEVNULL]
         wait: bool - default True for wait shutdown process
@@ -43,7 +45,25 @@ class Subprocess(FormattedEntity, Worker):
             stderr = None
         self._wait = self.config.get('wait', True)
 
-        cmd = self.config.get('cmd')
+        self._config_stdin = False
+
+        if 'aioworkers' in self.config:
+            cmd = ['{python}', '-m', 'aioworkers', '--config-stdin']
+            value = self.config['aioworkers']
+            if isinstance(value, str):
+                cmd.append(value)
+                cmd = ' '.join(cmd)
+            elif isinstance(value, list):
+                cmd.extend(value)
+            else:
+                raise TypeError(value)
+            stdin = subprocess.PIPE
+            self._config_stdin = True
+        elif 'cmd' in self.config:
+            cmd = self.config['cmd']
+        else:
+            raise ValueError
+
         self._shell = self.config.get('shell', isinstance(cmd, str))
         if self._shell:
             coro = asyncio.create_subprocess_shell
@@ -111,6 +131,10 @@ class Subprocess(FormattedEntity, Worker):
         cmd = self.make_command(value)
         self.logger.info(' '.join(cmd))
         self._process = await self.create_subprocess(*cmd)
+        if self._config_stdin:
+            utils.dump_to_fd(
+                self._process.stdin, self.context.config)
+            await self._process.stdin.drain()
         if self._wait:
             await self._process.wait()
         if not self._daemon and self._process.stdout is not None:

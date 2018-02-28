@@ -1,3 +1,5 @@
+import pytest
+
 from aioworkers import utils
 from aioworkers.core.config import MergeDict
 from aioworkers.core.context import Context
@@ -23,6 +25,17 @@ async def test_daemon(loop):
         autorun=True,
         daemon=True,
         cmd='echo',
+    )
+    async with Context(dict(a=config), loop=loop) as context:
+        pass
+
+
+@pytest.mark.parametrize('cmd', ['time.time', ['time.time']])
+async def test_aioworkers(loop, cmd):
+    config = MergeDict(
+        cls=utils.import_uri(Subprocess),
+        autorun=True,
+        aioworkers=cmd,
     )
     async with Context(dict(a=config), loop=loop) as context:
         pass
