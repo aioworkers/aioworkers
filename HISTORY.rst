@@ -2,6 +2,13 @@
 History
 =======
 
+0.10.1 (2018-02-28)
+------------------
+
+* Improved Subprocess (aioworkers param)
+* Fix cli.main with args
+
+
 0.10.0 (2018-02-22)
 ------------------
 
