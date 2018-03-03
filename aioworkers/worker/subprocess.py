@@ -171,10 +171,13 @@ class Subprocess(FormattedEntity, Worker):
                 pass
             self._keeper = None
         process = self.process
-        if process is None:
+        try:
+            if process is None:
+                pass
+            elif force:
+                process.kill()
+            else:
+                process.terminate()
+        except ProcessLookupError:
             pass
-        elif force:
-            process.kill()
-        else:
-            process.terminate()
         await super().stop(force=force)
