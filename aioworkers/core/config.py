@@ -50,7 +50,7 @@ class MergeDict(dict):
         is_dict = type(value) is dict or \
                   isinstance(value, MergeDict)
 
-        if '.' in key:
+        if '.' in key and '/' not in key:
             *path, z = key.split('.')
 
             d = self
@@ -87,7 +87,7 @@ class MergeDict(dict):
             return default
 
     def __getitem__(self, item):
-        if '.' in item:
+        if '.' in item and '/' not in item:
             d = self
             path = item.split('.')
             for k in path:

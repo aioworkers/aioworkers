@@ -141,3 +141,11 @@ def test_md_magic():
         d.a
     d(a=1)
     assert d.a == 1
+
+
+def test_uri_as_key():
+    uri = '/data.json'
+    d = MergeDict()
+    d[uri] = 123
+    assert d[uri] == 123
+    assert {uri: 123} == dict(d)
