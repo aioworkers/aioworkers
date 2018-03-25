@@ -2,15 +2,22 @@
 History
 =======
 
+0.10.2 (2018-03-25)
+-------------------
+
+* MergeDict supported uri as key
+* Catch ProcessLookupError on Subprocess.stop
+
+
 0.10.1 (2018-02-28)
-------------------
+-------------------
 
 * Improved Subprocess (aioworkers param)
 * Fix cli.main with args
 
 
 0.10.0 (2018-02-22)
-------------------
+-------------------
 
 * Improved Subprocess
 * Access member of entity over context
