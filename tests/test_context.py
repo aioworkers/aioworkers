@@ -103,3 +103,14 @@ async def test_signal(loop):
     s.append(1)
     await s.send(gr)
     await s.send(GroupResolver(all_groups=True))
+
+
+async def test_func(loop):
+    config = MergeDict(
+        now={
+            'func': 'time.monotonic',
+        }
+    )
+    context = Context(config, loop=loop)
+    async with context:
+        assert isinstance(context.now, float)
