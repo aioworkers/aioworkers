@@ -214,16 +214,42 @@ async def test_fd(loop):
 
 async def test_nested(loop):
     with tempfile.TemporaryDirectory() as d:
-        config = MergeDict(
-            name='',
+        storage_config = dict(
+            cls='aioworkers.storage.filesystem.FileSystemStorage',
             path=d,
+            executor=1,
+        )
+        config = MergeDict(
+            storage=storage_config,
+            storage2={
+                **storage_config,
+                'executor': 'executor',
+            },
             executor=None,
         )
-        context = Context({}, loop=loop)
-        storage = FileSystemStorage(config, context=context, loop=loop)
-        context.storage = storage
-        await storage.init()
-        await storage.set('a/2', b'0')
-        assert b'0' == await storage.a.get('2')
-        assert b'0' == await storage['b', '../a'].get('2')
-        assert b'0' == await context['storage.a'].get('2')
+
+        context = Context(config, loop=loop)
+        async with context:
+            storage = context.storage
+            await storage.set('a/2', b'0')
+            assert b'0' == await storage.a.get('2')
+            assert b'0' == await storage['b', '../a'].get('2')
+            assert b'0' == await context['storage.a'].get('2')
+
+            with pytest.raises(AttributeError):
+                _ = storage._folder
+
+
+storage = FileSystemStorage()
+
+
+async def test_obj(loop):
+    with tempfile.TemporaryDirectory() as d:
+        storage_config = dict(
+            obj='.'.join((__name__, 'storage')),
+            path=d,
+        )
+        context = Context(MergeDict(storage=storage_config), loop=loop)
+        async with context:
+            await context.storage.a.set('b', b'0')
+            assert b'0' == await context.storage.a.get('b')

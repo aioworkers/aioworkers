@@ -1,4 +1,3 @@
-import asyncio
 from abc import ABC, abstractmethod
 
 from copy import deepcopy
@@ -6,10 +5,35 @@ from functools import partial
 
 
 class AbstractEntity(ABC):
-    def __init__(self, config, *, context=None, loop=None):
-        self._loop = loop or asyncio.get_event_loop()
-        self._context = context
+    def __init__(self, config=None, *, context=None, loop=None):
+        self._config = None
+        self._context = None
+        self._loop = None
+        if config is not None:
+            self.set_config(config)
+        if context is not None:
+            self.set_context(context)
+        if loop is not None:
+            self._loop = loop
+
+    @property
+    def config(self):
+        return self._config
+
+    def set_config(self, config):
+        if self._config is not None:
+            raise RuntimeError('Config already set')
         self._config = config
+
+    @property
+    def context(self):
+        return self._context
+
+    def set_context(self, context):
+        if self._context is not None:
+            raise RuntimeError('Context already set')
+        self._context = context
+        self._loop = context.loop
 
     async def init(self):
         pass
@@ -18,18 +42,10 @@ class AbstractEntity(ABC):
     def loop(self):
         return self._loop
 
-    @property
-    def config(self):
-        return self._config
-
-    @property
-    def context(self):
-        return self._context
-
 
 class AbstractNamedEntity(AbstractEntity):
-    def __init__(self, config, *, context=None, loop=None):
-        super().__init__(config, context=context, loop=loop)
+    def set_config(self, config):
+        super().set_config(config)
         self._name = config.name
 
     @property
@@ -38,19 +54,21 @@ class AbstractNamedEntity(AbstractEntity):
 
 
 class AbstractNestedEntity(AbstractEntity):
-    def __init__(self, config, *, context=None, loop=None):
+    def __init__(self, config=None, *, context=None, loop=None):
         super().__init__(config, context=context, loop=loop)
         self._children = {}
 
     def factory(self, item, config=None):
         if item in self._children:
             return self._children[item]
-        cls = type(self)
-        if config is None:
-            config = deepcopy(self.config)
-        config.name += '.%s' % item
-        instance = cls(config, context=self.context, loop=self.loop)
-        self._children[item] = instance
+        instance = self._children[item] = type(self)()
+        if config is None and self._config is not None:
+            config = deepcopy(self._config)
+        if config is not None:
+            config.name += '.%s' % item
+            instance.set_config(config)
+        if self._context is not None:
+            instance.set_context(self._context)
         return instance
 
     def __getattr__(self, item):
@@ -79,6 +97,11 @@ class ExecutorEntity(AbstractEntity):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._executor = None
+
+    def _create_executor(self):
+        if self._config is None or self._context is None:
+            return
         ex = self._config.get(self.PARAM_EXECUTOR)
         if isinstance(ex, int):
             from concurrent.futures import ThreadPoolExecutor
@@ -86,6 +109,14 @@ class ExecutorEntity(AbstractEntity):
         elif isinstance(ex, str):
             ex = self._context[ex]
         self._executor = ex
+
+    def set_config(self, config):
+        super().set_config(config)
+        self._create_executor()
+
+    def set_context(self, context):
+        super().set_context(context)
+        self._create_executor()
 
     def run_in_executor(self, f, *args, **kwargs):
         if kwargs:

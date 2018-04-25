@@ -72,3 +72,15 @@ async def test_crontab(loop, mocker):
     await asyncio.sleep(0.1, loop=loop)
     await worker.stop()
     assert not worker.running()
+
+
+async def test_set_context(loop):
+    worker = Worker()
+    config = MergeDict(name='')
+    context = Context(loop=loop)
+    worker.set_config(config)
+    worker.set_context(context)
+    with pytest.raises(RuntimeError):
+        worker.set_config(config)
+    with pytest.raises(RuntimeError):
+        worker.set_context(context)
