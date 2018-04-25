@@ -196,6 +196,24 @@ class EntityContextProcessor(ContextProcessor):
         await self.entity.init()
 
 
+class InstanceEntityContextProcessor(EntityContextProcessor):
+    key = 'obj'
+
+    def __init__(self, context, path, value):
+        ContextProcessor.__init__(self, context, path, value)
+        entity = import_name(value[self.key])
+        if isinstance(entity, AbstractEntity):
+            value.setdefault('name', path)
+            entity.set_config(value)
+            entity.set_context(context)
+        context[path] = entity
+        self.entity = entity
+
+    async def process(self):
+        if isinstance(self.entity, AbstractEntity):
+            await self.entity.init()
+
+
 class FuncContextProcessor(ContextProcessor):
     key = 'func'
     process = None
@@ -217,6 +235,7 @@ class RootContextProcessor(ContextProcessor):
     processors = (
         LoggingContextProcessor,
         GroupsContextProcessor,
+        InstanceEntityContextProcessor,
         EntityContextProcessor,
         FuncContextProcessor,
     )
