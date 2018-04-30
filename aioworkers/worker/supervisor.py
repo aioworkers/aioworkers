@@ -22,8 +22,9 @@ class Supervisor(Worker):
         await super().init()
         await self._wait(lambda w: w.init())
 
-    def _wait(self, lmbd):
-        return self.context.wait_all([lmbd(w) for w in self._children])
+    def _wait(self, lmbd, children=()):
+        children = children or self._children
+        return self.context.wait_all([lmbd(w) for w in children])
 
     def get_child_config(self):
         return self.config.child.copy()
@@ -47,11 +48,20 @@ class Supervisor(Worker):
         return await self.output.put(*args, **kwargs)
 
     async def work(self):
-        await self._wait(lambda w: w.start())
-        await asyncio.wait([i._future for i in self._children], loop=self.loop)
+        children = self._children
+        then = asyncio.FIRST_EXCEPTION if self._persist else asyncio.ALL_COMPLETED
+        while True:
+            await self._wait(lambda w: w.start(), children)
+            d, p = await asyncio.wait(
+                [i._future for i in self._children],
+                loop=self.loop, return_when=then)
+            if not self._persist:
+                break
+            await asyncio.sleep(1, loop=self.loop)
+            children = [i for i in self._children if i._future in d]
 
-    async def stop(self, force=True):
-        await super().stop(force=force)
+    async def stop(self, force=False):
+        await super().stop(force=True)
         await self._wait(lambda w: w.stop(force=force))
 
     async def status(self):

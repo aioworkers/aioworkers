@@ -1,10 +1,7 @@
-import asyncio
 from pathlib import Path
 
-from aioworkers.core.config import MergeDict
 from aioworkers.core.context import Context
 from aioworkers.core.config import Config
-from aioworkers.worker.supervisor import Supervisor
 
 config = Config().load(Path(__file__).with_suffix('.yaml'))
 
@@ -27,3 +24,10 @@ async def test_super_queue(loop):
         await ctx.q1.put(1)
         result = await ctx.q2.get()
         assert result == 1
+
+
+async def test_super_crash(loop):
+    async with Context(config.super.queue, loop=loop) as ctx:
+        ctx.sv._children[0]._future.cancel()
+        await ctx.q1.put(1)
+        await ctx.q2.get()
