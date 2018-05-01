@@ -2,7 +2,7 @@ language: python
 sudo: false
 services: []
 python:
-  - 3.5.2
+  - 3.5.3
   - 3.6
   # - pypy3
 install:
