@@ -27,16 +27,11 @@ Easy configurable workers based on asyncio
 
 
 * Free software: Apache Software License 2.0
-* Required: Python >=3.5.2, optional
+* Required: Python >=3.5.3, optional
   `pyyaml <https://pypi.python.org/pypi/pyyaml>`_,
-  `uvloop <https://pypi.python.org/pypi/uvloop>`_,
-  `aiohttp <https://pypi.python.org/pypi/aiohttp>`_,
-  `yarl <https://pypi.python.org/pypi/yarl>`_,
-  `aiohttp_apiset <https://pypi.python.org/pypi/aiohttp_apiset>`_,
+  `uvloop <https://pypi.python.org/pypi/uvloop>`_,
   `crontab <https://pypi.python.org/pypi/crontab>`_,
-  `asynqp <https://pypi.python.org/pypi/asynqp>`_,
-  `aioredis <https://pypi.python.org/pypi/aioredis>`_,
-  `ipython <https://pypi.python.org/pypi/ipython>`_.
+  `ipython <https://pypi.python.org/pypi/jupyter>`_.
 * Documentation: https://aioworkers.readthedocs.io.
 
 
