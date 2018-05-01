@@ -26,6 +26,7 @@ group.add_argument('-g', '--groups', nargs='*', action='append',
                    metavar='GROUP', help='Run all exclude groups')
 
 parser.add_argument('-i', '--interact', action='store_true')
+parser.add_argument('-I', '--interact-kernel', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
 
 try:
@@ -87,6 +88,9 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
             from .core.interact import shell
             args.print = lambda *args: None
             shell(run)
+        elif args.interact_kernel:
+            from .core.interact import kernel
+            kernel(run)
         else:
             run()
     finally:

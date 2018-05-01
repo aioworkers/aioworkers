@@ -3,10 +3,6 @@ import concurrent.futures
 from functools import partial
 from threading import Thread
 
-from IPython.terminal.embed import InteractiveShellEmbed
-
-_shell = InteractiveShellEmbed.instance()
-
 
 def _await(coro, context):
     f = concurrent.futures.Future()
@@ -25,12 +21,14 @@ def _await(coro, context):
 
 
 def shell(run):
+    from IPython.terminal.embed import InteractiveShellEmbed
+    shell = InteractiveShellEmbed.instance()
     _f = concurrent.futures.Future()
 
     def _thread():
         context = _f.result()
         await = partial(_await, context=context)
-        _shell(
+        shell(
             header='Welcome to interactive mode of aioworkers. \n'
                    'You available the main context and '
                    'the await function to perform coroutine.')
@@ -39,3 +37,26 @@ def shell(run):
     thread = Thread(target=_thread)
     thread.start()
     run(future=_f)
+
+
+def kernel(run):
+    from ipykernel import kernelapp
+    from tornado import ioloop
+
+    io_loop = ioloop.IOLoop.current()
+    io_loop.start = lambda: None  # without run_forever
+
+    kernelapp._ctrl_c_message = 'IPKernelApp running'
+
+    app = kernelapp.IPKernelApp.instance()
+    app.initialize(['aioworkers'])
+    namespace = {}
+    app.kernel.user_ns = namespace
+
+    class PseudoFuture:
+        def set_result(self, value):
+            namespace['await'] = partial(_await, context=value)
+            namespace['context'] = value
+            app.start()
+
+    run(future=PseudoFuture())
