@@ -37,6 +37,9 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
+context = Context()
+
+
 def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None):
     cwd = os.getcwd()
     if cwd not in sys.path:
@@ -105,10 +108,9 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
 
 def loop_run(conf, future=None, group_resolver=None, ns=None, cmds=None, argv=None, loop=None):
     loop = loop or asyncio.get_event_loop()
-    context = Context(
-        conf, loop=loop,
-        group_resolver=group_resolver,
-    )
+    context.set_config(conf)
+    context.set_loop(loop)
+    context.set_group_resolver(group_resolver)
 
     cmds = cmds or ['run_forever']
     with utils.monkey_close(loop), context:

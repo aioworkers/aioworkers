@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 import logging.config
-from collections import Mapping, MutableMapping
+from collections import Mapping, MutableMapping, OrderedDict
 
 from .base import AbstractEntity
 from ..utils import import_name
@@ -154,13 +154,18 @@ class ContextProcessor:
 
 
 class LoggingContextProcessor(ContextProcessor):
+    key = 'logging'
     process = None
 
     @classmethod
     def match(cls, context, path, value):
-        if path == 'logging' and isinstance(value, Mapping):
-            logging.config.dictConfig(value)
-            return cls(context, path, value)
+        if path == cls.key and isinstance(value, Mapping):
+            m = cls(context, path, value)
+            m.configure(value)
+            return m
+
+    def configure(self, value):
+        logging.config.dictConfig(value)
 
 
 class GroupsContextProcessor(ContextProcessor):
@@ -243,9 +248,10 @@ class RootContextProcessor(ContextProcessor):
     def __init__(self, context, path=None, value=None):
         super().__init__(context, path, value)
         self.on_ready = Signal(context, name='ready')
+        self.processors = OrderedDict((i.key, i) for i in self.processors)
 
     def __iter__(self):
-        yield from self.processors
+        yield from self.processors.values()
 
     def processing(self, config, path=None):
         for k, v in config.items():
@@ -261,18 +267,30 @@ class RootContextProcessor(ContextProcessor):
                 if isinstance(v, Mapping):
                     self.processing(v, p)
 
-    async def process(self):
+    async def process(self, config=None):
+        if config:
+            self.value = config
         self.processing(self.value)
         await self.on_ready.send(self.context._group_resolver)
 
 
 class Context(AbstractEntity, Octopus):
-    def __init__(self, *args, group_resolver=None, **kwargs):
-        self._group_resolver = group_resolver or GroupResolver()
+    def __init__(self, *args, **kwargs):
+        self._group_resolver = kwargs.pop('group_resolver', GroupResolver())
         self._on_start = Signal(self, name='start')
         self._on_stop = Signal(self, name='stop')
         self.logger = logging.getLogger('aioworkers')
+        root_processor = kwargs.pop('root_processor', RootContextProcessor)
+        self.processors = root_processor(self)
         super().__init__(*args, **kwargs)
+
+    def set_group_resolver(self, gr):
+        self._group_resolver = gr
+
+    def set_loop(self, loop):
+        if self._loop is not None:
+            raise RuntimeError('Context already set')
+        self._loop = loop
 
     @property
     def on_start(self):
@@ -283,7 +301,9 @@ class Context(AbstractEntity, Octopus):
         return self._on_stop
 
     async def init(self):
-        await RootContextProcessor(self, value=self.config).process()
+        if self._loop is None:
+            self._loop = asyncio.get_event_loop()
+        await self.processors.process(self.config)
 
     async def wait_all(self, coros, timeout=None):
         if not coros:
