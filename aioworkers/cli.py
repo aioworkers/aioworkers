@@ -109,8 +109,10 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
 def loop_run(conf, future=None, group_resolver=None, ns=None, cmds=None, argv=None, loop=None):
     loop = loop or asyncio.get_event_loop()
     context.set_config(conf)
-    context.set_loop(loop)
-    context.set_group_resolver(group_resolver)
+    if loop is not None:
+        context.set_loop(loop)
+    if group_resolver is not None:
+        context.set_group_resolver(group_resolver)
 
     cmds = cmds or ['run_forever']
     with utils.monkey_close(loop), context:
