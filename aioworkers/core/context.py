@@ -289,7 +289,7 @@ class Context(AbstractEntity, Octopus):
 
     def set_loop(self, loop):
         if self._loop is not None:
-            raise RuntimeError('Context already set')
+            raise RuntimeError('Loop already set')
         self._loop = loop
 
     @property
