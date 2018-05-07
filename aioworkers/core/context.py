@@ -159,7 +159,7 @@ class LoggingContextProcessor(ContextProcessor):
 
     @classmethod
     def match(cls, context, path, value):
-        if path == cls.key and isinstance(value, Mapping):
+        if path == cls.key and value and isinstance(value, Mapping):
             m = cls(context, path, value)
             m.configure(value)
             return m
@@ -187,7 +187,7 @@ class EntityContextProcessor(ContextProcessor):
     def __init__(self, context, path, value):
         super().__init__(context, path, value)
         cls = import_name(value[self.key])
-        value.setdefault('name', path)
+        value = value.new_parent(name=path)
         entity = cls(value, context=context, loop=context.loop)
         context[path] = entity
         self.entity = entity
@@ -208,7 +208,7 @@ class InstanceEntityContextProcessor(EntityContextProcessor):
         ContextProcessor.__init__(self, context, path, value)
         entity = import_name(value[self.key])
         if isinstance(entity, AbstractEntity):
-            value.setdefault('name', path)
+            value = value.new_parent(name=path)
             entity.set_config(value)
             entity.set_context(context)
         context[path] = entity
