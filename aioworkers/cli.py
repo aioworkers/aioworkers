@@ -11,9 +11,9 @@ from functools import reduce, partial
 from urllib.parse import splittype
 from urllib.request import urlopen
 
-from . import config, utils
+from . import utils
 from .core import command, plugin
-from .core.config import MergeDict
+from .core.config import Config
 from .core.context import Context, GroupResolver
 
 parser = argparse.ArgumentParser(prefix_chars='-+')
@@ -37,14 +37,14 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-context = Context()
+context = Context(Config())
 
 
 def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
-    conf = MergeDict()
+    context.config.search_dirs.extend(config_dirs)
 
     plugins = plugin.search_plugins()
     for i in plugins:
@@ -65,20 +65,22 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
     else:
         cmds, argv = list(commands), []
 
+    config = context.config
     plugins.extend(plugin.search_plugins(*cmds))
     for p in plugins:
-        conf(p.get_config())
+        config.load(*p.configs)
+        config.update(p.get_config())
     cmds = [cmd for cmd in cmds if cmd not in sys.modules]
 
-    conf = config.load_conf(*config_files, search_dirs=config_dirs, **conf)
-    conf(config_dict)
+    config.load(*config_files)
+    config_dict and config.update(config_dict)
 
     def sum_g(list_groups):
         if list_groups:
             return set(reduce(operator.add, list_groups))
 
     run = partial(
-        loop_run, conf,
+        loop_run,
         group_resolver=GroupResolver(
             include=sum_g(args.groups),
             exclude=sum_g(args.exclude_groups),
@@ -106,9 +108,10 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
             sig = signal.SIGKILL
 
 
-def loop_run(conf, future=None, group_resolver=None, ns=None, cmds=None, argv=None, loop=None):
+def loop_run(conf=None, future=None, group_resolver=None, ns=None, cmds=None, argv=None, loop=None):
     loop = loop or asyncio.get_event_loop()
-    context.set_config(conf)
+    if conf:
+        context.set_config(conf)
     if loop is not None:
         context.set_loop(loop)
     if group_resolver is not None:
