@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-
-from copy import deepcopy
+from collections import Mapping
 from functools import partial
+
+from .config import ValueExtractor
 
 
 class AbstractEntity(ABC):
@@ -23,6 +24,12 @@ class AbstractEntity(ABC):
     def set_config(self, config):
         if self._config is not None:
             raise RuntimeError('Config already set')
+        elif isinstance(config, ValueExtractor):
+            pass
+        elif isinstance(config, Mapping):
+            config = ValueExtractor(config)
+        else:
+            raise TypeError('Config must be instance of ValueExtractor')
         self._config = config
 
     @property
@@ -63,10 +70,12 @@ class AbstractNestedEntity(AbstractEntity):
             return self._children[item]
         instance = self._children[item] = type(self)()
         if config is None and self._config is not None:
-            config = deepcopy(self._config)
+            config = self._config
         if config is not None:
-            config.name += '.%s' % item
-            instance.set_config(config)
+            instance.set_config(
+                config.new_child(
+                    name='{}.{}'.format(config.name, item)
+                ))
         if self._context is not None:
             instance.set_context(self._context)
         return instance
