@@ -2,7 +2,6 @@ import logging
 import sys
 from pathlib import Path
 
-from aioworkers.core.config import Config
 from . import formatter, config
 
 
@@ -51,6 +50,7 @@ def search_plugins(*modules):
 class Plugin:
     formatters = ()
     config_loaders = ()
+    configs = ()
 
     def __init__(self):
         for f in self.formatters:
@@ -69,21 +69,20 @@ class ProxyPlugin(Plugin):
     def __init__(self, original):
         self._original = original
         for i in (
-                'formatters', 'config_loaders',
+                'formatters', 'config_loaders', 'configs',
                 'get_config', 'add_arguments',
         ):
             v = getattr(original, i, None)
             if v:
                 setattr(self, i, v)
-        super().__init__()
 
-    def get_config(self):
         if hasattr(self._original, '__file__'):
             p = self._original.__file__
         elif hasattr(self._original, '__module__'):
             mod = sys.modules[self._original.__module__]
             p = mod.__file__
         else:
-            return {}
-        d = Path(p).parent
-        return Config().load(*d.glob('plugin*'))
+            p = None
+        if p is not None:
+            self.configs = tuple(Path(p).parent.glob('plugin*')) + tuple(self.configs)
+        super().__init__()
