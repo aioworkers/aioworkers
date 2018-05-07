@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-from aioworkers import utils
 from .base import Worker
 
 
@@ -27,18 +26,21 @@ class Supervisor(Worker):
         return self.context.wait_all([lmbd(w) for w in children])
 
     def get_child_config(self):
-        return self.config.child.copy()
+        return self.config.child
 
     def create_child(self):
         conf = self.get_child_config()
+        add = {}
         if not conf.get('input') and self.input is not None:
-            conf.input = self.name
+            add['input'] = self.name
         if not conf.get('output') and self.output is not None:
-            conf.output = self.name
-        cls = utils.import_name(conf.cls)
+            add['output'] = self.name
+        cls = conf.get_obj('cls')
         if 'name' not in conf:
             name = self.name + '.child'
-            conf['name'] = name
+            add['name'] = name
+        if add:
+            conf = conf.new_child(add)
         return cls(conf, context=self.context, loop=self.loop)
 
     async def get(self):

@@ -7,15 +7,17 @@ from aioworkers.worker.subprocess import Subprocess
 
 
 class BaseUpdater(Subprocess):
-    def init(self):
-        c = self.config
-        c.autorun = c.get('autorun', True)
-        c.persist = c.get('persist', True)
-        c.stderr = c.get('stderr', None)
-        c.stdout = c.get('stdout', None)
-        if not c.get('sleep') and not c.get('crontab'):
-            c.crontab = c.get('crontab', '0 * * * *')
-        return super().init()
+    def set_config(self, config):
+        super().set_config(config)
+        c = {
+            'autorun': True,
+            'persist': True,
+            'stderr': None,
+            'stdout': None,
+        }
+        if not config.get('sleep') and not config.get('crontab'):
+            c['crontab'] = '0 * * * *'
+        self._config = self._config.new_parent(c)
 
     async def can_restart(self):
         return True
