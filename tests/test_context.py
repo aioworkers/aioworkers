@@ -1,6 +1,6 @@
 import pytest
 
-from aioworkers.core.config import MergeDict
+from aioworkers.core.config import MergeDict, Config
 from aioworkers.core.context import Octopus, Context, GroupResolver, Signal
 
 
@@ -40,11 +40,13 @@ async def test_context_items(loop):
 
 
 async def test_context_create(loop):
-    c = Context(MergeDict({
+    conf = Config()
+    conf.update(MergeDict({
         'q.cls': 'aioworkers.queue.timeout.TimestampQueue',
         'f.e': 1,
         'app.cls': 'aioworkers.app.Application',
-    }), loop=loop)
+    }))
+    c = Context(conf, loop=loop)
     await c.init()
     await c.start()
     assert c.f.e == 1

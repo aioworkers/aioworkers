@@ -1,9 +1,10 @@
+import os
 from pathlib import Path
 
 import pytest
 
 from aioworkers.core.config import \
-    MergeDict, Config, IniLoader, StringReplaceLoader
+    MergeDict, Config, IniLoader, StringReplaceLoader, ValueExtractor
 
 
 def test_dict_create():
@@ -149,3 +150,40 @@ def test_uri_as_key():
     d[uri] = 123
     assert d[uri] == 123
     assert {uri: 123} == dict(d)
+
+
+def test_value_extractor():
+    v = ValueExtractor(os.environ)
+    assert isinstance(v.get_path('HOME'), Path)
+
+
+def test_logging():
+    confs = (
+        {'logging.disable_existing_loggers': True},
+        {'logging': {
+            'handlers': {'a': {'level': 'DEBUG'}, 'b': {'level': 'DEBUG'}},
+            'loggers': {'a': {'level': 'DEBUG'}, 'a.a': {'level': 'DEBUG'}},
+        }},
+        {'logging.handlers.a': {'level': 'WARNING'}},
+        {'logging.handlers.b.level': 'WARNING'},
+        {'logging.loggers.a': {'level': 'INFO'}},
+        {'logging.loggers.a.a.level': 'WARNING'},
+        {'logging.loggers.b': {'level': 'ERROR'}},
+        {'logging.loggers.b.b': {'level': 'CRITICAL'}},
+    )
+    c = Config()
+    for i in confs:
+        c._update_logging(i)
+    assert c.logging == {
+        'disable_existing_loggers': True,
+        'handlers': {
+            'a': {'level': 'WARNING'},
+            'b': {'level': 'WARNING'},
+        },
+        'loggers': {
+            'a': {'level': 'INFO'},
+            'a.a': {'level': 'WARNING'},
+            'b': {'level': 'ERROR'},
+            'b.b': {'level': 'CRITICAL'},
+        },
+    }

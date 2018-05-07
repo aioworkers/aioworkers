@@ -3,28 +3,29 @@ from queue import Queue
 import io
 
 from aioworkers import utils
+from aioworkers.core.config import Config
 from aioworkers.core.context import Context
 from aioworkers.queue import proxy
 
 
 async def test_q(loop):
-    c = dict(
-        cls=utils.import_uri(proxy.ProxyQueue),
-    )
+    conf = Config()
+    conf.update({'q.cls': utils.import_uri(proxy.ProxyQueue)})
 
-    async with Context(dict(q=c), loop=loop) as ctx:
+    async with Context(conf, loop=loop) as ctx:
         ctx.q.set_queue(Queue())
         await ctx.q.put(1)
         assert 1 == await ctx.q.get()
 
 
 async def test_plq(loop):
-    c = dict(
-        cls=utils.import_uri(proxy.PipeLineQueue),
-        format='newline:str',
-    )
+    conf = Config()
+    conf.update({
+        'q.cls': utils.import_uri(proxy.PipeLineQueue),
+        'q.format': 'newline:str',
+    })
 
-    async with Context(dict(q=c), loop=loop) as ctx:
+    async with Context(conf, loop=loop) as ctx:
         fin = io.BytesIO(b'123\n')
         fout = io.BytesIO()
         ctx.q.set_reader(fin)

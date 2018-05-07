@@ -18,12 +18,16 @@ class MockedAsynqp:
         return coro().__await__()
 
 
-async def test_queue(loop, mocker):
+async def test_queue(loop, mocker, config):
     mocker.patch('aioworkers.amqp.asynqp', MockedAsynqp())
-    config = mocker.Mock(format='json')
-    config.connection.auth = {}
-    config.connection.host = 'localhost'
-    config.connection.port = 5672
+    config.update(dict(format='json', connection=dict(
+        auth={},
+        host='localhost',
+        port=5672,
+    ), exchange=dict(
+        name='',
+        type='',
+    ), queue='', route_key=''))
     context = mocker.Mock()
     q = AmqpQueue(config, context=context, loop=loop)
     await q.init()

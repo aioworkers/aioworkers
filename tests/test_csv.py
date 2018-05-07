@@ -13,11 +13,8 @@ def csv_file():
         yield tmpfile1
 
 
-async def test_dictreader(loop, csv_file):
-
-    class config:
-        file = csv_file.name
-
+async def test_dictreader(loop, csv_file, config):
+    config.update(file=csv_file.name)
     reader = csv.DictReader(config, loop=loop)
     await reader.init()
     assert {'name': 'x', 'uid': '3'} == await reader.get()

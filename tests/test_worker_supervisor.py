@@ -3,7 +3,8 @@ from pathlib import Path
 from aioworkers.core.context import Context
 from aioworkers.core.config import Config
 
-config = Config().load(Path(__file__).with_suffix('.yaml'))
+config = Config()
+config.load(Path(__file__).with_suffix('.yaml'))
 
 
 async def test_autorun(loop):
