@@ -1,15 +1,17 @@
+import functools
 import http.client
 import io
 import logging
 import mimetypes
+import os
 import re
 from abc import abstractmethod
+from collections import ChainMap, Mapping, MutableMapping
 from pathlib import Path
+from typing import Iterator
 
-try:
-    from yarl import URL
-except ImportError:
-    URL = type('URL', (str,), {})
+from .. import humanize, utils
+from ..http import URL
 
 
 logger = logging.getLogger(__name__)
@@ -83,7 +85,7 @@ class MergeDict(dict):
     def get(self, key, default=None):
         try:
             return self[key]
-        except:
+        except Exception:
             return default
 
     def __getitem__(self, item):
@@ -99,7 +101,7 @@ class MergeDict(dict):
     def __contains__(self, key):
         try:
             self[key]
-        except KeyError:
+        except Exception:
             return False
         else:
             return True
@@ -120,6 +122,16 @@ class MergeDict(dict):
     def copy(self):
         cls = type(self)
         return cls(self)
+
+
+def merge(source: Mapping, destination: MutableMapping):
+    for key, value in source.items():
+        if isinstance(value, Mapping):
+            node = destination.setdefault(key, {})
+            merge(value, node)
+        else:
+            destination[key] = value
+    return destination
 
 
 class ConfigFileLoader:
@@ -316,14 +328,85 @@ registry(JsonLoader)
 registry(IniLoader)
 
 
-class Config:
-    def __init__(self, search_dirs=()):
+extractors = {
+    'get_int': int,
+    'get_float': float,
+    'get_duration': humanize.parse_duration,
+    'get_size': humanize.parse_size,
+    'get_url': URL,
+    'get_path': Path,
+    'get_obj': utils.import_name,
+}
+
+
+class ValueExtractor(Mapping):
+    def __init__(self, mapping):
+        self._val = mapping
+        self._setattr = False
+
+    @classmethod
+    def _mapping_factory(cls, mapping):
+        return ValueExtractor(mapping)
+
+    def __setattr__(self, key, value):
+        if not self.__dict__.get('_setattr', True):
+            raise RuntimeError('Set attribute not supported')
+        super().__setattr__(key, value)
+
+    def new_child(self, *mappings, **kwargs):
+        c = ChainMap(*mappings, kwargs, self._val)
+        return self._mapping_factory(c)
+
+    def new_parent(self, *mappings, **kwargs):
+        c = ChainMap(self._val, *mappings, kwargs)
+        return self._mapping_factory(c)
+
+    def __getitem__(self, item):
+        v = self._val[item]
+        if isinstance(v, Mapping):
+            return self._mapping_factory(v)
+        return v
+
+    def get(self, item, default=None):
+        v = self._val.get(item, default)
+        if v is default:
+            return v
+        elif isinstance(v, Mapping):
+            return self._mapping_factory(v)
+        return v
+
+    def __contains__(self, item):
+        return item in self._val
+
+    def __getattr__(self, item):
+        if item not in extractors:
+            v = self._val[item]
+            if not isinstance(v, Mapping):
+                return v
+            return self._mapping_factory(v)
+        converter = extractors[item]
+        return functools.wraps(converter)(
+            lambda key: converter(self._val[key]))
+
+    def __len__(self) -> int:
+        return len(self._val)
+
+    def __iter__(self) -> Iterator:
+        yield from self._val
+
+
+class Config(ValueExtractor):
+    def __init__(self, search_dirs=(), **kwargs):
+        self.env = ValueExtractor(os.environ)
+        self.logging = dict()
         self.search_dirs = []
         for i in search_dirs:
             if not isinstance(i, Path):
                 i = Path(i)
             self.search_dirs.append(i)
         self.uris = []
+        super().__init__(MergeDict())
+        self.update(kwargs)
 
     def load_conf(self, fd, *, path=None, mime_type=None, response=None):
         if isinstance(response, http.client.HTTPResponse):
@@ -353,9 +436,37 @@ class Config:
         with fd:
             return loader.load_fd(fd)
 
+    def _update_logging(self, conf):
+        label = 'logging'
+        if label in conf:
+            merge(conf.pop(label), self.logging)
+        parts = []
+        for k in list(conf):
+            if k.startswith(label):
+                parts.append((k[8:], conf.pop(k)))
+        for k, v in parts:
+            dest = self.logging
+            if '.' not in k:
+                pass
+            elif k.startswith('loggers'):
+                k = k[len('loggers.'):]
+                dest = dest['loggers']
+                if not isinstance(v, Mapping):
+                    logger, k = k.rsplit('.', 1)
+                    dest.setdefault(logger, {})[k] = v
+                    continue
+            else:
+                *p, k = k.split('.')
+                for i in p:
+                    dest = dest.setdefault(i, {})
+            if isinstance(v, Mapping):
+                merge(v, dest.setdefault(k, {}))
+            else:
+                dest[k] = v
+
     def load(self, *filenames, base=None):
         if base is None:
-            config = MergeDict()
+            config = self._val
         else:
             config = base
         fns = []
@@ -374,6 +485,7 @@ class Config:
             else:
                 raise ValueError(fn)
             if c:
+                self._update_logging(c)
                 config(c)
         for d in self.search_dirs:
             for fn in fns:
@@ -382,5 +494,32 @@ class Config:
                 f = Path(d, fn)
                 c = self.load_conf(None, path=f)
                 if c:
+                    self._update_logging(c)
                     config(c)
         return config
+
+    def update(self, *mappings, **kwargs):
+        if kwargs:
+            mappings += kwargs,
+        for d in mappings:
+            self._update_logging(d)
+            self._val(d)
+
+    def __len__(self) -> int:
+        return len(self._val) + 1
+
+    def __iter__(self) -> Iterator:
+        yield from self._val
+        yield 'logging'
+
+    def __getitem__(self, item):
+        if item == 'logging':
+            return self.logging
+        else:
+            return super().__getitem__(item)
+
+    def __contains__(self, item):
+        if item == 'logging':
+            return True
+        else:
+            return super().__contains__(item)
