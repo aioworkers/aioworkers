@@ -2,6 +2,19 @@
 History
 =======
 
+0.11 (2018-05-08)
+-----------------
+
+* Config now is immutable
+* Config support extendable methods such as get_int, get_float..
+* Plugin.configs is sequence of config files of plugin
+* Methods set_context and set_config of entities
+* label `obj` for config to attach already created entities
+* Support run process with ipykernel
+* Dropped module aioworkers.config
+* Dropped deprecated class aioworkers.http.Application
+
+
 0.10.2 (2018-03-25)
 -------------------
 
