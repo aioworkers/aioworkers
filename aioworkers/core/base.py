@@ -31,6 +31,7 @@ class AbstractEntity(ABC):
         else:
             raise TypeError('Config must be instance of ValueExtractor')
         self._config = config
+        return config
 
     @property
     def context(self):
