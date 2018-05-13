@@ -331,6 +331,7 @@ registry(IniLoader)
 extractors = {
     'get_int': int,
     'get_float': float,
+    'get_bool': bool,
     'get_duration': humanize.parse_duration,
     'get_size': humanize.parse_size,
     'get_url': URL,
@@ -346,7 +347,9 @@ class ValueExtractor(Mapping):
 
     @classmethod
     def _mapping_factory(cls, mapping):
-        return ValueExtractor(mapping)
+        if not isinstance(mapping, ValueExtractor) and isinstance(mapping, Mapping):
+            return ValueExtractor(mapping)
+        return mapping
 
     def __setattr__(self, key, value):
         if not self.__dict__.get('_setattr', True):
@@ -379,14 +382,24 @@ class ValueExtractor(Mapping):
         return item in self._val
 
     def __getattr__(self, item):
-        if item not in extractors:
+        if item.startswith('_'):
+            raise AttributeError(item)
+        elif item not in extractors:
             v = self._val[item]
             if not isinstance(v, Mapping):
                 return v
             return self._mapping_factory(v)
         converter = extractors[item]
-        return functools.wraps(converter)(
-            lambda key: converter(self._val[key]))
+
+        def extractor(key, default=..., *, null=False):
+            if default is ...:
+                v = self._val[key]
+            else:
+                v = self._val.get(key, default)
+            if v is None and null:
+                return v
+            return converter(v)
+        return extractor
 
     def __len__(self) -> int:
         return len(self._val)

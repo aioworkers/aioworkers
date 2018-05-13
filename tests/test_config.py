@@ -153,8 +153,22 @@ def test_uri_as_key():
 
 
 def test_value_extractor():
-    v = ValueExtractor(os.environ)
-    assert isinstance(v.get_path('HOME'), Path)
+    e = ValueExtractor(os.environ)
+    assert isinstance(e.get_path('HOME'), Path)
+    v = ValueExtractor({'a': {'b': 1, 'c': None}, 'env': e})
+    assert isinstance(v.get('a'), ValueExtractor)
+    assert v.a.get_int('b') is v.a.b
+    assert v.env is e
+
+    with pytest.raises(RuntimeError):
+        v.x = 1
+
+    with pytest.raises(TypeError):
+        v.a.get_int('c')
+    assert v.a.get_int('c', null=True) is None
+
+    with pytest.raises(AttributeError):
+        getattr(v, '_a')
 
 
 def test_logging():
