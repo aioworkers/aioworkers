@@ -8,10 +8,10 @@ python:
 install:
   - pip install -U pip setuptools
   - pip install -U pytest-runner pytest-aiohttp pytest-pep8 pytest-mock pytest-cov
-  - pip install -U aiohttp aiohttp_apiset "aioredis<1" asynqp crontab ipython ipykernel
+  - pip install -U 'crontab<0.22' ipython ipykernel
   - pip install codecov
   - python setup.py install
-script: py.test --cov=aioworkers
+script: pytest tests --cov=aioworkers --doctest-modules aioworkers/humanize.py
 
 after_success:
   - codecov
