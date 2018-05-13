@@ -83,6 +83,8 @@ class ProxyPlugin(Plugin):
             p = mod.__file__
         else:
             p = None
-        if p is not None:
-            self.configs = tuple(Path(p).parent.glob('plugin*')) + tuple(self.configs)
+        if not self.configs and p is not None:
+            path = Path(p)
+            if path.name == '__init__.py':
+                self.configs = tuple(path.parent.glob('plugin*'))
         super().__init__()
