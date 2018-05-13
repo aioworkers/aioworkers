@@ -44,7 +44,6 @@ async def test_context_create(loop):
     conf.update(MergeDict({
         'q.cls': 'aioworkers.queue.timeout.TimestampQueue',
         'f.e': 1,
-        'app.cls': 'aioworkers.app.Application',
     }))
     c = Context(conf, loop=loop)
     await c.init()
