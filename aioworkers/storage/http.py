@@ -4,8 +4,8 @@ import logging
 from collections import Mapping, Sequence
 
 from aiohttp import client, ClientOSError
-from yarl import URL
 
+from ..http import URL
 from . import base, StorageError
 
 

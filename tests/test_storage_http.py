@@ -1,9 +1,9 @@
 import pytest
 from aiohttp import web
-from yarl import URL
 
 from aioworkers.core.config import Config
 from aioworkers.core.context import Context
+from aioworkers.http import _URL as URL
 from aioworkers.storage import StorageError
 
 
