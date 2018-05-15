@@ -2,6 +2,14 @@
 History
 =======
 
+0.11.1 (2018-05-15)
+-------------------
+
+* Additional params for get_int, get_float..
+* Autoload configs by mask plugin* only for package
+* Drop deprecated modules amqp, redis, app
+
+
 0.11 (2018-05-08)
 -----------------
 
