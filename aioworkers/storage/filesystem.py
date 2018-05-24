@@ -199,8 +199,7 @@ class FileSystemStorage(
                 os.makedirs(path, exist_ok=True)
             return shutil.disk_usage(path)
 
-        return self.loop.run_in_executor(
-            self._executor, disk_usage, self._config.path)
+        return self.run_in_executor(disk_usage, self._config.path)
 
     async def get_free_space(self):
         du = await self.disk_usage()
@@ -269,8 +268,7 @@ class FileSystemStorage(
             await self.wait_free_space(len(value))
         k = self.raw_key(key).path
         try:
-            await self.loop.run_in_executor(
-                self.executor, self._write, k, value)
+            await self.run_in_executor(self._write, k, value)
         except OSError as e:
             raise StorageError(str(e)) from e
         await self.next_space_waiter()
@@ -300,15 +298,15 @@ class FileSystemStorage(
 
     def copy(self, key_source, storage_dest, key_dest):
         if isinstance(storage_dest, FileSystemStorage):
-            return self.loop.run_in_executor(
-                self._executor, self._copy, key_source,
+            return self.run_in_executor(
+                self._copy, key_source,
                 storage_dest, key_dest, shutil.copy)
         return super().copy(key_source, storage_dest, key_dest)
 
     def move(self, key_source, storage_dest, key_dest):
         if isinstance(storage_dest, FileSystemStorage):
-            return self.loop.run_in_executor(
-                self._executor, self._copy, key_source,
+            return self.run_in_executor(
+                self._copy, key_source,
                 storage_dest, key_dest, shutil.move)
         return super().move(key_source, storage_dest, key_dest)
 
