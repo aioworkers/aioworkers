@@ -106,8 +106,8 @@ class ExecutorEntity(AbstractEntity):
     PARAM_EXECUTOR = 'executor'
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self._executor = None
+        super().__init__(*args, **kwargs)
 
     def _create_executor(self):
         if self._config is None or self._context is None:
