@@ -1,3 +1,0 @@
-aioworkers==0.5.0
-pyyaml==3.12
-aioredis==0.2.9
