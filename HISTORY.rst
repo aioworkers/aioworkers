@@ -2,6 +2,13 @@
 History
 =======
 
+0.11.2 (2018-06-13)
+-------------------
+
+* Fix unicode README.rst
+* Fix init ExecutorEntity
+
+
 0.11.1 (2018-05-15)
 -------------------
 
