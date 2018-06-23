@@ -1,7 +1,9 @@
 import pytest
 
 from aioworkers.core.config import MergeDict, Config
-from aioworkers.core.context import Octopus, Context, GroupResolver, Signal
+from aioworkers.core.context import \
+    Octopus, Context, EntityContextProcessor, \
+    GroupResolver, Signal
 
 
 def test_octopus():
@@ -115,3 +117,10 @@ async def test_func(loop):
     context = Context(config, loop=loop)
     async with context:
         assert isinstance(context.now, float)
+
+
+def test_create_entity():
+    with pytest.raises(ValueError):
+        EntityContextProcessor(None, 'x', {'cls': 'time.time'})
+    with pytest.raises(TypeError):
+        EntityContextProcessor(None, 'x', {'cls': 'aioworkers.humanize.size'})

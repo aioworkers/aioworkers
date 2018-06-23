@@ -187,6 +187,18 @@ class EntityContextProcessor(ContextProcessor):
     def __init__(self, context, path, value):
         super().__init__(context, path, value)
         cls = import_name(value[self.key])
+        if not isinstance(cls, AbstractEntity):
+            try:
+                signature = inspect.signature(cls)
+                signature.bind(config=None, context=None, loop=None)
+            except TypeError as e:
+                raise TypeError(
+                    'Error while creating entity on {} from {}: {}'.format(
+                        path, value[self.key], e))
+            except ValueError as e:
+                raise ValueError(
+                    'Error while checking entity on {} from {}: {}'.format(
+                        path, value[self.key], e))
         value = value.new_parent(name=path)
         entity = cls(value, context=context, loop=context.loop)
         context[path] = entity
