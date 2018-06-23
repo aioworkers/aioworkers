@@ -518,9 +518,9 @@ class Config(ValueExtractor):
             self._update_logging(d)
             self._val(d)
 
-    def load_plugins(self, *modules):
+    def load_plugins(self, *modules, force=True):
         from . import plugin
-        plugins = plugin.search_plugins(*modules)
+        plugins = plugin.search_plugins(*modules, force=force)
         for p in plugins:
             self.load(*p.configs)
             self.update(p.get_config())

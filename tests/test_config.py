@@ -93,11 +93,8 @@ def test_load_config():
     assert config
 
 
-def test_load_plugins(mocker):
+def test_load_plugins():
     conf = Config()
-    plugin = mocker.Mock(configs=(), get_config=lambda: {})
-    mocker.patch('aioworkers.core.plugin.search_plugins',
-                 lambda *args: [plugin])
     plugins = conf.load_plugins('time')
     assert isinstance(plugins, list)
 

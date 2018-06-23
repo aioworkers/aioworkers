@@ -8,8 +8,10 @@ from . import formatter, config
 logger = logging.getLogger(__name__)
 
 
-def load_plugin(module: str):
-    if module in sys.modules:
+def load_plugin(module: str, force=False):
+    if force:
+        pass
+    elif module in sys.modules:
         return
     try:
         m = __import__(module, fromlist=['plugin'])
@@ -35,12 +37,12 @@ def get_names():
             yield i.with_suffix('').name
 
 
-def search_plugins(*modules):
+def search_plugins(*modules, force=False):
     result = []
     if not modules:
         modules = get_names()
     for name in modules:
-        plugin = load_plugin(name)
+        plugin = load_plugin(name, force=force)
         if plugin:
             logger.info('Loaded plugin {} from {}'.format(plugin, name))
             result.append(plugin)
