@@ -518,6 +518,14 @@ class Config(ValueExtractor):
             self._update_logging(d)
             self._val(d)
 
+    def load_plugins(self, *modules):
+        from . import plugin
+        plugins = plugin.search_plugins(*modules)
+        for p in plugins:
+            self.load(*p.configs)
+            self.update(p.get_config())
+        return plugins
+
     def __len__(self) -> int:
         return len(self._val) + 1
 
