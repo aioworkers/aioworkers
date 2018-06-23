@@ -2,6 +2,14 @@
 History
 =======
 
+0.11.3 (2018-06-23)
+-------------------
+
+* Check signature of class entity
+* Method Config.load_plugin
+* Flag force for search_plugins
+
+
 0.11.2 (2018-06-13)
 -------------------
 
