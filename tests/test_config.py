@@ -1,3 +1,4 @@
+import io
 import os
 from pathlib import Path
 
@@ -5,6 +6,7 @@ import pytest
 
 from aioworkers.core.config import \
     MergeDict, Config, IniLoader, StringReplaceLoader, ValueExtractor
+from aioworkers import utils
 
 
 def test_dict_create():
@@ -207,3 +209,11 @@ def test_logging():
             'b.b': {'level': 'CRITICAL'},
         },
     }
+
+
+def test_dump_config():
+    fd = io.BytesIO()
+    utils.dump_to_fd(fd, Config())
+    fd.seek(0)
+    c = utils.load_from_fd(fd)
+    assert c

@@ -407,6 +407,12 @@ class ValueExtractor(Mapping):
     def __iter__(self) -> Iterator:
         yield from self._val
 
+    def __setstate__(self, state: dict):
+        self.__init__(state)
+
+    def __getstate__(self) -> dict:
+        return dict(self._val)
+
 
 class Config(ValueExtractor):
     def __init__(self, search_dirs=(), **kwargs):
@@ -515,6 +521,8 @@ class Config(ValueExtractor):
         if kwargs:
             mappings += kwargs,
         for d in mappings:
+            if isinstance(d, ValueExtractor):
+                d = d.__getstate__()
             self._update_logging(d)
             self._val(d)
 
@@ -544,3 +552,12 @@ class Config(ValueExtractor):
             return True
         else:
             return super().__contains__(item)
+
+    def __setstate__(self, state: dict):
+        self.__init__(**state)
+
+    def __getstate__(self) -> dict:
+        state = super().__getstate__()
+        if self.logging:
+            state['logging'] = self.logging
+        return state
