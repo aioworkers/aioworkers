@@ -4,7 +4,7 @@ services: []
 python:
   - 3.5.3
   - 3.6
-  - 3.7-dev
+  # - 3.7-dev
   # - pypy3
 install:
   - pip install -U pip setuptools
