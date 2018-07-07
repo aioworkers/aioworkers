@@ -109,13 +109,16 @@ class ExecutorEntity(AbstractEntity):
         self._executor = None
         super().__init__(*args, **kwargs)
 
+    def executor_factory(self, *args, **kwargs):
+        from concurrent.futures import ThreadPoolExecutor
+        return ThreadPoolExecutor(*args, **kwargs)
+
     def _create_executor(self):
         if self._config is None or self._context is None:
             return
         ex = self._config.get(self.PARAM_EXECUTOR)
         if isinstance(ex, int):
-            from concurrent.futures import ThreadPoolExecutor
-            ex = ThreadPoolExecutor(max_workers=ex)
+            ex = self.executor_factory(max_workers=ex)
         elif isinstance(ex, str):
             ex = self._context[ex]
         self._executor = ex
