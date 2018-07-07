@@ -10,10 +10,10 @@ class AbstractEntity(ABC):
         self._config = None
         self._context = None
         self._loop = None
-        if config is not None:
-            self.set_config(config)
         if context is not None:
             self.set_context(context)
+        if config is not None:
+            self.set_config(config)
         if loop is not None:
             self._loop = loop
 
