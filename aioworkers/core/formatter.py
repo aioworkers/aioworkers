@@ -1,11 +1,13 @@
 import os
 from abc import abstractmethod
 
+from ..utils import import_name
 from .base import AbstractEntity
 
 
 class BaseFormatter:
     name = NotImplemented
+    mimetypes = ()
 
     @abstractmethod  # pragma: no cover
     def decode(self, value):
@@ -129,9 +131,27 @@ class PickleFormatter(BaseFormatter):
 
 class JsonFormatter(BaseFormatter):
     name = 'json'
+    mimetypes = ('application/json',)
+    converters = [
+        (0, 'aioworkers.core.config.ValueExtractor', dict),
+    ]
 
     def __init__(self):
         import json
+        convs = []
+        for score, klass, conv in self.converters:
+            if isinstance(klass, str):
+                klass = import_name(klass)
+            convs.append((score, klass, conv))
+
+        class Encoder(json.JSONEncoder):
+            def default(self, o):
+                for score, klass, conv in convs:
+                    if isinstance(o, klass):
+                        return conv(o)
+                return super().default(o)
+
+        self._encoder = Encoder
         self._loads = json.loads
         self._dumps = json.dumps
 
@@ -139,7 +159,22 @@ class JsonFormatter(BaseFormatter):
         return self._loads(b.decode())
 
     def encode(self, b):
-        return self._dumps(b).encode()
+        return self._dumps(b, cls=self._encoder).encode()
+
+    @classmethod
+    def add_converter(cls, klass, conv, score=0):
+        """ Add converter
+        :param klass: class or str
+        :param conv: callable
+        :param score:
+        :return:
+        """
+        if isinstance(klass, str):
+            klass = import_name(klass)
+        item = klass, conv, score
+        cls.converters.append(item)
+        cls.converters.sort(key=lambda x: x[0])
+        return cls
 
 
 class YamlFormatter(JsonFormatter):
@@ -149,6 +184,9 @@ class YamlFormatter(JsonFormatter):
         import yaml
         self._loads = yaml.load
         self._dumps = yaml.dump
+
+    def encode(self, b):
+        return self._dumps(b).encode()
 
 
 class ZLibFormatter(BaseFormatter):
