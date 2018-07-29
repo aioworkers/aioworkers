@@ -30,6 +30,7 @@ Easy configurable workers based on asyncio
 * Required: Python >=3.5.3, optional
   `pyyaml <https://pypi.python.org/pypi/pyyaml>`_,
   `uvloop <https://pypi.python.org/pypi/uvloop>`_,
+  `httptools <https://pypi.python.org/pypi/httptools>`_,
   `crontab <https://pypi.python.org/pypi/crontab>`_ <0.22,
   `jupyter <https://pypi.python.org/pypi/jupyter>`_.
 * Documentation: https://aioworkers.readthedocs.io.
