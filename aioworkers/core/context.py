@@ -385,3 +385,8 @@ class Context(AbstractEntity, Octopus):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.stop()
+
+    def get_object(self, path):
+        if path.startswith('.'):
+            return self[path[1:]]
+        return import_name(path)
