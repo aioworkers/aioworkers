@@ -1,4 +1,6 @@
 import abc
+from urllib.parse import urlparse
+
 
 try:  # pragma: no cover
     import yarl
@@ -7,6 +9,14 @@ except ImportError:  # pragma: no cover
 
 
 class _URL(str, abc.ABC):
+    def __init__(self, *args):
+        result = urlparse(*args)
+        self._path = result.path
+
+    @property
+    def path(self):
+        return self._path
+
     def __truediv__(self, other):
         if not isinstance(other, str):
             raise TypeError
