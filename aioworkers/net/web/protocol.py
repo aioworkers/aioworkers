@@ -43,6 +43,7 @@ class Protocol(asyncio.Protocol):
             method=self._parser.get_method().decode(),
             headers=self._headers,
             transport=self._transport,
+            context=self._server._context,
         )
         self._server._loop.create_task(self._server.handler(request))
 

@@ -3,11 +3,12 @@ from .exceptions import HttpException
 
 
 class Request:
-    def __init__(self, url, method, *, headers=(), transport=None):
+    def __init__(self, url, method, *, headers=(), transport=None, context=None):
         self.url = url
         self.method = method
         self.headers = headers
         self.transport = transport
+        self.context = context
         self.content_length = None
         for k, v in headers:
             if k.lower() == 'content-length':
