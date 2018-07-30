@@ -1,0 +1,16 @@
+http:
+  port: 8080
+
+app:
+  resources:
+    m:
+      prefix: /api
+      /s:
+        get: .data
+      /g:
+        get: time.time
+      /h:
+        get: handlers.handler
+
+data:
+  o: 1
