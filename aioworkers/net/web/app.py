@@ -50,6 +50,8 @@ class Application(AbstractNamedEntity):
         kwargs = {}
         if 'request' in route.kwargs:
             kwargs['request'] = request
+        if 'context' in route.kwargs:
+            kwargs['context'] = self._context
         if asyncio.iscoroutinefunction(handler):
             request.app = self
             handler = await handler(**kwargs)
