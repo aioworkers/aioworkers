@@ -55,7 +55,6 @@ def kernel(run):
 
     class PseudoFuture:
         def set_result(self, value):
-            namespace['await'] = partial(_await, context=value)
             namespace['context'] = value
             app.start()
 
