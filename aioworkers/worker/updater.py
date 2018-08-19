@@ -9,15 +9,14 @@ from aioworkers.worker.subprocess import Subprocess
 class BaseUpdater(Subprocess):
     def set_config(self, config):
         super().set_config(config)
-        c = {
-            'autorun': True,
-            'persist': True,
-            'stderr': None,
-            'stdout': None,
-        }
-        if not config.get('sleep') and not config.get('crontab'):
-            c['crontab'] = '0 * * * *'
-        self._config = self._config.new_parent(c)
+        cfg = self._config
+        self._config = cfg.new_parent(
+            {} if cfg.get('sleep') else {'crontab': '0 * * * *'},
+            autorun=True,
+            persist=True,
+            stderr=None,
+            stdout=None,
+        )
 
     async def can_restart(self):
         return True
@@ -47,20 +46,20 @@ class BaseUpdater(Subprocess):
 
 
 class PipUpdater(BaseUpdater):
-    pip = [sys.executable, '-m', 'pip']
+    pip = (sys.executable, '-m', 'pip')
 
-    def init(self):
-        c = self.config
+    def set_config(self, config):
+        super().set_config(config)
+        c = self._config
         params = ['install']
         if c.get('upgrade', True):
             params.append('-U')
         if 'find-links' in c:
             params.append('--find-links')
             params.append(c.get('find-links'))
-        c.cmd = c.get('cmd', self.pip + params)
+        self._config = c.new_parent(cmd=list(self.pip) + params)
         self.current_version = self.version(c.package.name)
         self.new_version = self.current_version
-        return super().init()
 
     async def can_update(self):
         # TODO parse https://pypi.python.org/pypi?:action=doap&name={package.name}
@@ -77,5 +76,6 @@ class PipUpdater(BaseUpdater):
         package = self.config.package
         val = package.get('link', package.name)
         await self.run_cmd(val)
-        if not self._process.returncode:
+        process = self.process
+        if process and not process.returncode:
             self.current_version = self.new_version

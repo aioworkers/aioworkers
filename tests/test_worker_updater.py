@@ -1,14 +1,31 @@
-from aioworkers.core.config import MergeDict
-from aioworkers.core.context import Context
-from aioworkers.worker.updater import BaseUpdater
+from unittest import mock
+
+import pytest
+
+from aioworkers.worker.updater import BaseUpdater, PipUpdater
+from aioworkers.utils import import_uri
 
 
-async def test_1(loop):
-    config = MergeDict(
-        name='',
-        autorun=False,
-        cmd='',
+@pytest.fixture
+def config(config):
+    config.update(
+        base_updater=dict(
+            cls=import_uri(BaseUpdater),
+            autorun=False,
+        ),
+        pip_updater=dict(
+            cls=import_uri(PipUpdater),
+            package=dict(name='pip'),
+            autorun=False,
+        )
     )
-    context = Context(config, loop=loop)
-    worker = BaseUpdater(config, context=context, loop=loop)
-    await worker.init()
+    return config
+
+
+@pytest.mark.parametrize('p', ['base_updater', 'pip_updater'])
+async def test_run(context, mocker, make_coro, p):
+    w = context[p]
+    mocker.patch('aioworkers.worker.updater.atexit')
+    mocker.patch.object(w, 'run_cmd', make_coro())
+    with mock.patch.object(w._loop, 'stop'):
+        await w()
