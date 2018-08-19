@@ -154,7 +154,7 @@ class AsyncWindowsPath(AsyncPath, pathlib.PureWindowsPath):
     pass
 
 
-class FileSystemStorage(
+class BaseFileSystemStorage(
         AbstractNestedEntity,
         ExecutorEntity,
         FormattedEntity,
@@ -320,7 +320,22 @@ class FileSystemStorage(
             ' '.join(map('{0[0]}={0[1]}'.format, props)))
 
 
-class NestedFileSystemStorage(FileSystemStorage):
+class FileSystemStorage(
+        BaseFileSystemStorage,
+        base.AbstractListedStorage):
+
+    def list(self, glob='*'):
+        base = self._path
+        g = base.path.glob(glob)
+        return self.run_in_executor(
+            list, map(lambda x: x.relative_to(base), g)
+        )
+
+    async def length(self, glob='*'):
+        return len(await self.list(glob))
+
+
+class NestedFileSystemStorage(BaseFileSystemStorage):
     def path_transform(self, rel_path: str):
         return os.path.join(rel_path[:2], rel_path[2:4], rel_path)
 

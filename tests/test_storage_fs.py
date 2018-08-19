@@ -220,3 +220,10 @@ async def test_obj(loop):
         async with context:
             await context.storage.a.set('b', b'0')
             assert b'0' == await context.storage.a.get('b')
+
+
+async def test_fs_glob(context):
+    s = context.storage
+    await s.set('1', b'1')
+    assert await s.length()
+    assert ['1'] == list(map(str, await s.list()))
