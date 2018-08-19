@@ -29,3 +29,4 @@ async def test_run(context, mocker, make_coro, p):
     mocker.patch.object(w, 'run_cmd', make_coro())
     with mock.patch.object(w._loop, 'stop'):
         await w()
+    await w.update()
