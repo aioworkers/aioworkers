@@ -82,8 +82,6 @@ class Subprocess(FormattedEntity, Worker):
         self._keeper = None
         if self._daemon:
             self._wait = False
-        else:
-            self.run = self.run_cmd
         self._event = asyncio.Event(loop=self.loop)
         self._event.clear()
         await super().init()
