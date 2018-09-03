@@ -29,6 +29,17 @@ parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-I', '--interact-kernel', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
 
+
+class PidFileType(argparse.FileType):
+    def __call__(self, string):
+        f = super().__call__(string)
+        with f:
+            f.write(str(os.getpid()))
+        return f
+
+
+parser.add_argument('--pid-file', help='Process ID file', type=PidFileType('w'))
+
 try:
     import uvloop
 except ImportError:
