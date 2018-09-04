@@ -217,3 +217,19 @@ def test_dump_config():
     fd.seek(0)
     c = utils.load_from_fd(fd)
     assert c
+
+
+def test_from_env():
+    c = Config()
+    c.update({
+        'env.x.y': 'HOME',
+        'env.x': {'z': 'HOME'},
+        'env': {'z': 'HOME'},
+    })
+    assert c._env == {
+        'x.y': 'HOME',
+        'x.z': 'HOME',
+        'z': 'HOME',
+    }
+    assert c.x.y == c.x.z == c.z != 'HOME'
+

@@ -417,7 +417,8 @@ class ValueExtractor(Mapping):
 class Config(ValueExtractor):
     def __init__(self, search_dirs=(), **kwargs):
         self.env = ValueExtractor(os.environ)
-        self.logging = dict()
+        self._env = {}
+        self.logging = {}
         self.search_dirs = []
         for i in search_dirs:
             if not isinstance(i, Path):
@@ -483,6 +484,30 @@ class Config(ValueExtractor):
             else:
                 dest[k] = v
 
+    def _from_env(self, c):
+        def flater(d, prefix=''):
+            for k, v in d.items():
+                if prefix:
+                    k = '.'.join([prefix, k])
+                if isinstance(v, Mapping):
+                    flater(v, k)
+                else:
+                    self._env[k] = v
+        if 'env' in c:
+            flater(c.pop('env'))
+        for k in [i for i in c if i.startswith('env.')]:
+            d = c.pop(k)
+            key = k[4:]
+            if isinstance(d, Mapping):
+                flater(d, key)
+            else:
+                self._env[key] = d
+        return {
+            k: os.environ[name]
+            for k, name in self._env.items()
+            if name in os.environ
+        }
+
     def load(self, *filenames, base=None):
         if base is None:
             config = self._val
@@ -514,7 +539,9 @@ class Config(ValueExtractor):
                 c = self.load_conf(None, path=f)
                 if c:
                     self._update_logging(c)
+                    env_map = self._from_env(c)
                     config(c)
+                    config(env_map)
         return config
 
     def update(self, *mappings, **kwargs):
@@ -524,7 +551,9 @@ class Config(ValueExtractor):
             if isinstance(d, ValueExtractor):
                 d = d.__getstate__()
             self._update_logging(d)
+            env_map = self._from_env(d)
             self._val(d)
+            self._val(env_map)
 
     def load_plugins(self, *modules, force=True):
         from . import plugin
