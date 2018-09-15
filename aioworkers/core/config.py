@@ -567,8 +567,8 @@ class Config(ValueExtractor):
         return len(self._val) + 1
 
     def __iter__(self) -> Iterator:
-        yield from self._val
         yield 'logging'
+        yield from self._val
 
     def __getitem__(self, item):
         if item == 'logging':
