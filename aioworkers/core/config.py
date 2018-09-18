@@ -530,7 +530,9 @@ class Config(ValueExtractor):
                 raise ValueError(fn)
             if c:
                 self._update_logging(c)
+                env_map = self._from_env(c)
                 config(c)
+                config(env_map)
         for d in self.search_dirs:
             for fn in fns:
                 if not Path(d, fn).exists():
