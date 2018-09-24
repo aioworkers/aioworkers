@@ -508,6 +508,13 @@ class Config(ValueExtractor):
             if name in os.environ
         }
 
+    def _update(self, conf: MergeDict, data: dict) -> None:
+        self._update_logging(data)
+        env_map = self._from_env(data)
+        conf(data)
+        self._update_logging(env_map)
+        conf(env_map)
+
     def load(self, *filenames, base=None):
         if base is None:
             config = self._val
@@ -529,10 +536,7 @@ class Config(ValueExtractor):
             else:
                 raise ValueError(fn)
             if c:
-                self._update_logging(c)
-                env_map = self._from_env(c)
-                config(c)
-                config(env_map)
+                self._update(config, c)
         for d in self.search_dirs:
             for fn in fns:
                 if not Path(d, fn).exists():
@@ -540,10 +544,7 @@ class Config(ValueExtractor):
                 f = Path(d, fn)
                 c = self.load_conf(None, path=f)
                 if c:
-                    self._update_logging(c)
-                    env_map = self._from_env(c)
-                    config(c)
-                    config(env_map)
+                    self._update(config, c)
         return config
 
     def update(self, *mappings, **kwargs):
@@ -552,10 +553,7 @@ class Config(ValueExtractor):
         for d in mappings:
             if isinstance(d, ValueExtractor):
                 d = d.__getstate__()
-            self._update_logging(d)
-            env_map = self._from_env(d)
-            self._val(d)
-            self._val(env_map)
+            self._update(self._val, d)
 
     def load_plugins(self, *modules, force=True):
         from . import plugin

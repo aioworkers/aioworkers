@@ -220,16 +220,20 @@ def test_dump_config():
 
 
 def test_from_env():
+    os.environ['TEST'] = 'DEBUG'
     c = Config()
     c.update({
-        'env.x.y': 'HOME',
-        'env.x': {'z': 'HOME'},
-        'env': {'z': 'HOME'},
+        'env.x.y': 'TEST',
+        'env.x': {'z': 'TEST'},
+        'env': {'z': 'TEST'},
+        'env.logging.root.level': 'TEST',
     })
     assert c._env == {
-        'x.y': 'HOME',
-        'x.z': 'HOME',
-        'z': 'HOME',
+        'x.y': 'TEST',
+        'x.z': 'TEST',
+        'z': 'TEST',
+        'logging.root.level': 'TEST',
     }
-    assert c.x.y == c.x.z == c.z != 'HOME'
+    assert c.x.y == c.x.z == c.z == 'DEBUG'
+    assert c.logging['root']['level'] == 'DEBUG'
 
