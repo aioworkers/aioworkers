@@ -140,7 +140,8 @@ def loop_run(conf=None, future=None, group_resolver=None, ns=None, cmds=None, ar
                 continue
             if result is not None:
                 print('{} => {}'.format(cmd, result))
-
+        if hasattr(loop, 'shutdown_asyncgens'):
+            loop.run_until_complete(loop.shutdown_asyncgens())
 
 class UriType(argparse.FileType):
     def __call__(self, string):
