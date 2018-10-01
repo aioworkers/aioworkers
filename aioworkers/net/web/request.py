@@ -3,9 +3,9 @@ from .exceptions import HttpException
 
 
 class Request:
-    def __init__(
-        self, url, method, *, headers=(), transport=None, context=None,
-    ):
+    def __init__(self, url, method, *,
+                 headers=(), transport=None,
+                 context=None):
         self.url = url
         self.method = method
         self.headers = headers

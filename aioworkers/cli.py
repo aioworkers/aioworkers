@@ -53,10 +53,8 @@ else:
 context = Context(Config())
 
 
-def main(
-    *config_files, args=None, config_dirs=(),
-    commands=(), config_dict=None,
-):
+def main(*config_files, args=None, config_dirs=(),
+         commands=(), config_dict=None):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)

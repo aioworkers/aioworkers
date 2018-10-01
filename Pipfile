@@ -9,6 +9,7 @@ python_version = "3.6"
 [packages]
 
 [dev-packages]
+async-timeout = "==2.0.1"
 pytest = "*"
 pytest-aiohttp = "*"
 pytest-mock = "*"
