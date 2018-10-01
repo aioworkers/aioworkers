@@ -2,14 +2,10 @@ import re
 from math import log2
 
 
-def size(value, suffixes=None):
+def size(value: int, suffixes: list = None) -> str:
     """
     >>> size(1024)
     '1 KB'
-
-    :param size: 
-    :param suffixes: 
-    :return: 
     """
     suffixes = suffixes or [
         'bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']

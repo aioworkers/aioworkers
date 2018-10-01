@@ -38,7 +38,9 @@ class PidFileType(argparse.FileType):
         return f
 
 
-parser.add_argument('--pid-file', help='Process ID file', type=PidFileType('w'))
+parser.add_argument(
+    '--pid-file', help='Process ID file',
+    type=PidFileType('w'))
 
 try:
     import uvloop
@@ -51,7 +53,10 @@ else:
 context = Context(Config())
 
 
-def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None):
+def main(
+    *config_files, args=None, config_dirs=(),
+    commands=(), config_dict=None,
+):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
@@ -69,7 +74,8 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
         if getattr(args, 'config_stdin', None):
-            assert not args.interact, 'Can not be used --config-stdin with --interact'
+            assert not args.interact, 'Can not be used --config-stdin' \
+                                      ' with --interact'
             config_dict = utils.load_from_fd(sys.stdin.buffer)
         if args.logging:
             logging.basicConfig(level=args.logging.upper())
@@ -119,7 +125,12 @@ def main(*config_files, args=None, config_dirs=(), commands=(), config_dict=None
             sig = signal.SIGKILL
 
 
-def loop_run(conf=None, future=None, group_resolver=None, ns=None, cmds=None, argv=None, loop=None):
+def loop_run(
+    conf=None, future=None,
+    group_resolver=None,
+    ns=None, cmds=None,
+    argv=None, loop=None,
+):
     loop = loop or asyncio.get_event_loop()
     if conf:
         context.set_config(conf)

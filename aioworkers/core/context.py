@@ -22,7 +22,7 @@ class Octopus(MutableMapping):
         else:
             try:
                 v = self[k]
-            except:
+            except Exception:
                 raise KeyError(key)
         if len(sp) == 1:
             return v
@@ -347,15 +347,15 @@ class Context(AbstractEntity, Octopus):
         elif isinstance(item, str):
             try:
                 return super().__getitem__(item)
-            except:
+            except Exception:
                 pass
             try:
                 return self._config[item]
-            except:
+            except Exception:
                 pass
             try:
                 return import_name(item)
-            except:
+            except Exception:
                 pass
         raise KeyError(item)
 

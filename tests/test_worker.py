@@ -18,8 +18,10 @@ async def test_autorun(loop):
 
 async def test_coro_run(loop, mocker):
     f = loop.create_future()
+
     async def myrun(*args, **kwargs):
         f.set_result(10)
+
     mocker.patch('aioworkers.worker.base.import_name',
                  lambda x: myrun)
 

@@ -16,8 +16,10 @@ class Application(AbstractNamedEntity):
             for method, operation in routes.items():
                 if not isinstance(operation, Mapping):
                     raise TypeError(
-                        'operation for {method} {url} expected Mapping, not {t}'.format(
-                            method=method.upper(), url=url, t=type(operation)))
+                        'operation for {method} {url} '
+                        'expected Mapping, not {t}'.format(
+                            method=method.upper(), url=url,
+                            t=type(operation)))
                 operation = dict(operation)
                 handler = operation.pop('handler')
                 self.add_route(method, url, handler, name=name)
@@ -110,5 +112,6 @@ class Resources(Iterable):
             yield priority, prefix + url, name, routes
 
     def _sort_resources(self, resources):
-        r = sorted(self._iter_resources(resources), key=lambda x: x[0], reverse=True)
+        iterator = self._iter_resources(resources)
+        r = sorted(iterator, key=lambda x: x[0], reverse=True)
         return map(lambda x: x[1:], r)

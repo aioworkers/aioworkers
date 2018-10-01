@@ -60,7 +60,9 @@ async def test_set_get(context):
     await storage.set(key[0], None)  # del dir
 
     await storage.set(key, data)
-    d = await asyncio.gather(storage.get(key), storage.get(key), loop=context.loop)
+    d = await asyncio.gather(
+        storage.get(key), storage.get(key),
+        loop=context.loop)
     for j in d:
         assert data == j
 
@@ -112,7 +114,10 @@ async def test_freespace(context, loop):
 
     assert await storage.get_free_space()
 
-    with mock.patch.object(storage, 'get_free_space', asyncio.coroutine(lambda: 1)):
+    with mock.patch.object(
+        storage, 'get_free_space',
+        asyncio.coroutine(lambda: 1)
+    ):
         assert 1 == await storage.get_free_space()
         storage.config._val.limit_free_space = 2
         f = asyncio.ensure_future(storage.set(key1, data), loop=loop)
@@ -202,7 +207,7 @@ async def test_nested(context):
     assert b'0' == await context['storage.a'].get('2')
 
     with pytest.raises(AttributeError):
-        _ = storage._folder
+        print(storage._folder)
 
 
 storage = FileSystemStorage()

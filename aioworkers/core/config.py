@@ -1,4 +1,3 @@
-import functools
 import http.client
 import io
 import logging
@@ -49,7 +48,7 @@ class MergeDict(dict):
             key = key.strip('!')
 
         is_dict = type(value) is dict or \
-                  isinstance(value, MergeDict)
+            isinstance(value, MergeDict)
 
         if '.' in key and '/' not in key:
             *path, z = key.split('.')
@@ -303,13 +302,15 @@ class Registry(dict):
     def __call__(self, cls):
         for ext in cls.extensions:
             if not isinstance(ext, str):
-                raise ValueError('Extension expect string, given {!r}'.format(ext))
+                raise ValueError(
+                    'Extension expect string, given {!r}'.format(ext))
             elif ext in self:
                 raise ValueError('Duplicate extension {}'.format(ext))
             self[ext] = cls
         for mime in cls.mime_types:
             if not isinstance(mime, str):
-                raise ValueError('MimeType expect string, given {!r}'.format(mime))
+                raise ValueError(
+                    'MimeType expect string, given {!r}'.format(mime))
             elif mime in self:
                 raise ValueError('Duplicate MimeType {}'.format(mime))
             self[mime] = cls
@@ -346,7 +347,8 @@ class ValueExtractor(Mapping):
 
     @classmethod
     def _mapping_factory(cls, mapping):
-        if not isinstance(mapping, ValueExtractor) and isinstance(mapping, Mapping):
+        if not isinstance(mapping, ValueExtractor) \
+                and isinstance(mapping, Mapping):
             return ValueExtractor(mapping)
         return mapping
 

@@ -55,7 +55,7 @@ def import_name(stref: str):
 def import_uri(obj):
     """
     >>> import_uri(import_uri)
-    'utils.import_uri'
+    'aioworkers.utils.import_uri'
     >>> import_uri(Path)
     'pathlib.Path'
     >>> import_uri(Path.exists)

@@ -1,1 +1,1 @@
-from aioworkers.storage import meta
+from aioworkers.storage import meta  # noqa

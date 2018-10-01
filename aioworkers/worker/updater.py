@@ -63,7 +63,7 @@ class PipUpdater(BaseUpdater):
         self.new_version = self.current_version
 
     async def can_update(self):
-        # TODO parse https://pypi.python.org/pypi?:action=doap&name={package.name}
+        # TODO parse https://pypi.python.org/pypi?:action=doap&name={package.name}  # noqa
         return True
 
     @classmethod

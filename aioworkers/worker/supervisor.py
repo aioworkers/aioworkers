@@ -50,7 +50,10 @@ class Supervisor(Worker):
 
     async def work(self):
         children = self._children
-        then = asyncio.FIRST_EXCEPTION if self._persist else asyncio.ALL_COMPLETED
+        if self._persist:
+            then = asyncio.FIRST_EXCEPTION
+        else:
+            then = asyncio.ALL_COMPLETED
         while True:
             await self._wait(lambda w: w.start(), children)
             d, p = await asyncio.wait(
