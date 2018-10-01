@@ -7,12 +7,10 @@ python:
   # - 3.7-dev
   # - pypy3
 install:
-  - pip install -U pip setuptools
-  - pip install -U pytest-runner pytest-aiohttp pytest-pep8 pytest-mock pytest-cov
-  - pip install -U pyyaml 'crontab<0.22' ipython ipykernel httptools
+  - pip install -U pip setuptools pipenv
+  - pipenv install -d --skip-lock
   - pip install codecov
-  - python setup.py install
-script: pytest tests --cov=aioworkers --doctest-modules aioworkers/humanize.py
+script: pytest --cov=aioworkers
 
 after_success:
   - codecov
