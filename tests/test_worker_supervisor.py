@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from aioworkers.core.context import Context
 from aioworkers.core.config import Config
+from aioworkers.core.context import Context
 
 config = Config()
 config.load(Path(__file__).with_suffix('.yaml'))

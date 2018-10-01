@@ -1,5 +1,5 @@
-import sys
 import asyncio
+import sys
 
 from ..core.base import ExecutorEntity
 from ..core.formatter import FormattedEntity

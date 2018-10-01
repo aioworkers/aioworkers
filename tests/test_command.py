@@ -2,7 +2,7 @@ from argparse import Namespace
 
 import pytest
 
-from aioworkers.core.command import run, CommandNotFound
+from aioworkers.core.command import CommandNotFound, run
 from aioworkers.core.config import MergeDict
 from aioworkers.core.context import Context
 

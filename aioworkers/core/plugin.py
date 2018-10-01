@@ -2,8 +2,7 @@ import logging
 import sys
 from pathlib import Path
 
-from . import formatter, config
-
+from . import config, formatter
 
 logger = logging.getLogger(__name__)
 

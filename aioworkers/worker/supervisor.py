@@ -3,7 +3,6 @@ import logging
 
 from .base import Worker
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -6,10 +6,9 @@ import tempfile
 from functools import partial
 from pathlib import Path, PurePath
 
-from aioworkers.core.base import ExecutorEntity
-from . import base, StorageError
-from .. import utils, humanize
-from ..core.base import AbstractNestedEntity
+from . import StorageError, base
+from .. import humanize, utils
+from ..core.base import AbstractNestedEntity, ExecutorEntity
 from ..core.formatter import FormattedEntity
 
 

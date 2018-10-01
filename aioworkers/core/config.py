@@ -13,7 +13,6 @@ from typing import Iterator
 from .. import humanize, utils
 from ..http import URL
 
-
 logger = logging.getLogger(__name__)
 
 

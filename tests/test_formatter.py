@@ -1,6 +1,6 @@
 import pytest
 
-from aioworkers.core.formatter import registry, StringFormatter, BaseFormatter
+from aioworkers.core.formatter import BaseFormatter, StringFormatter, registry
 
 
 class RtsFormatter(StringFormatter):

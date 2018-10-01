@@ -6,10 +6,10 @@ from unittest import mock
 import pytest
 import yaml
 
-from aioworkers.core.config import MergeDict, Config
+from aioworkers.core.config import Config, MergeDict
 from aioworkers.core.context import Context
 from aioworkers.storage.base import FieldStorageMixin
-from aioworkers.storage.filesystem import FileSystemStorage, AsyncPath
+from aioworkers.storage.filesystem import AsyncPath, FileSystemStorage
 
 
 @pytest.fixture

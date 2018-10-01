@@ -2,8 +2,8 @@ from unittest import mock
 
 import pytest
 
-from aioworkers.worker.updater import BaseUpdater, PipUpdater
 from aioworkers.utils import import_uri
+from aioworkers.worker.updater import BaseUpdater, PipUpdater
 
 
 @pytest.fixture

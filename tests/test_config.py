@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from aioworkers.core.config import \
-    MergeDict, Config, IniLoader, StringReplaceLoader, ValueExtractor
 from aioworkers import utils
+from aioworkers.core.config import (Config, IniLoader, MergeDict,
+                                    StringReplaceLoader, ValueExtractor)
 
 
 def test_dict_create():
@@ -236,4 +236,3 @@ def test_from_env():
     }
     assert c.x.y == c.x.z == c.z == 'DEBUG'
     assert c.logging['root']['level'] == 'DEBUG'
-

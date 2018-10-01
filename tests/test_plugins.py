@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from aioworkers.core.plugin import search_plugins, ProxyPlugin
+from aioworkers.core.plugin import ProxyPlugin, search_plugins
 
 
 class plugin:

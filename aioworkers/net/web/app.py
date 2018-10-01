@@ -1,10 +1,9 @@
 import asyncio
 import inspect
-from collections import defaultdict, Iterable, Mapping, namedtuple
+from collections import Iterable, Mapping, defaultdict, namedtuple
 
 from aioworkers.core.base import AbstractNamedEntity
 from aioworkers.net.web.exceptions import HttpException
-
 
 Route = namedtuple('Route', 'handler kwargs')
 

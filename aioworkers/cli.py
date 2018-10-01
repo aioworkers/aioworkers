@@ -7,7 +7,7 @@ import os
 import signal
 import sys
 import time
-from functools import reduce, partial
+from functools import partial, reduce
 from urllib.parse import splittype
 from urllib.request import urlopen
 

@@ -1,6 +1,5 @@
-from queue import Queue
-
 import io
+from queue import Queue
 
 from aioworkers import utils
 from aioworkers.core.config import Config

@@ -1,7 +1,6 @@
 import abc
 from urllib.parse import urlparse
 
-
 try:  # pragma: no cover
     import yarl
 except ImportError:  # pragma: no cover

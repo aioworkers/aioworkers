@@ -3,10 +3,10 @@ import json
 import logging
 from collections import Mapping, Sequence
 
-from aiohttp import client, ClientOSError
+from aiohttp import ClientOSError, client
 
+from . import StorageError, base
 from ..http import URL
-from . import base, StorageError
 
 
 class RoStorage(base.AbstractStorageReadOnly):

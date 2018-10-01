@@ -1,10 +1,9 @@
-from os import getenv
-import time
 import random
+import time
+from os import getenv
 
-from aiographite.protocol import PlaintextProtocol
 from aiographite.aiographite import connect
-
+from aiographite.protocol import PlaintextProtocol
 
 GRAPHITE_HOST = getenv('GRAPHITE_HOST', 'localhost')
 
