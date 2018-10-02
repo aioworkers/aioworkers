@@ -8,16 +8,27 @@ The module can be written by defining the plugin class in the module:
 .. code-block:: python
 
    class plugin(aioworkers.core.plugin.Plugin):
+       configs = ('/path/to/config.yaml',)
+
        def get_config(self):
            return {}
 
-Loading:
+
+or module/package contains:
+
+.. code-block:: python
+
+   configs = ('/path/to/config.yaml',)
+
+   def get_config():
+       return {}
+
+
+Run my module as plugin:
 
 .. code-block:: shell
 
     aioworkers mymodule
 
 
-The plugin is also considered to be a module whose functions are defined according
-to the interface of the base class Plugin.
 If in module not defined get_config search config files by mask plugin*.
