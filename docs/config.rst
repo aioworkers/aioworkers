@@ -54,3 +54,22 @@ or:
 
   a.b:
     c: 2
+
+Advanced confugure
+------------------
+
+.. code-block:: yaml
+
+  env:
+    logging.root.level: LOG_LEVEL  # replace value to value of environment variable (if set)
+  
+  logging:
+    version: 1
+    disable_existing_loggers: false
+    root:
+      level: ERROR
+      handlers: [console]
+    handlers:
+      console:
+        level: INFO
+        class: logging.StreamHandler
