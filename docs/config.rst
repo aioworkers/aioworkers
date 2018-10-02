@@ -18,7 +18,8 @@ Loading a configuration file:
 
   from aioworkers.core.config import Config
    
-  conf = Config().load('/path/to/config.yaml')
+  config = Config()
+  config.load('/path/to/config.yaml')
 
 
 Access to fields config:
@@ -37,10 +38,11 @@ Overriding
 
 .. code-block:: python
 
-  conf = Config().load('/path/to/config.yaml',
-                       '/path/to/override.yaml',
-                       ...
-                       'override.yaml')
+  config = Config()
+  config.load('/path/to/config.yaml',
+              '/path/to/override.yaml',
+              ...
+              'override.yaml')
 
 Override contains:
 
