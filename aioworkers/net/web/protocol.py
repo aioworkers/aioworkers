@@ -20,7 +20,7 @@ class Protocol(asyncio.Protocol):
         self._transport = transport
         self._parser = self._server.parser_factory(self)
         self._headers = []
-        self._body = None
+        self._body_future = self._server.loop.create_future()
 
     def data_received(self, data):
         try:
@@ -41,6 +41,7 @@ class Protocol(asyncio.Protocol):
         request = self._server.request_factory(
             url=self._url,
             method=self._parser.get_method().decode(),
+            body_future=self._body_future,
             headers=self._headers,
             transport=self._transport,
             context=self._server._context,
@@ -48,7 +49,11 @@ class Protocol(asyncio.Protocol):
         self._server._loop.create_task(self._server.handler(request))
 
     def on_body(self, body: bytes):
-        self._body = io.BytesIO(body)
+        self._body_future.set_result(body)
+
+    def connection_lost(self, exc):
+        if not self._body_future.done():
+            self._body_future.set_result(b'')
 
     def on_message_begin(self):
         pass  # logger.info('on_message_begin')

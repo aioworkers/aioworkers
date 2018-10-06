@@ -2,6 +2,7 @@ import logging
 
 from ...core.base import AbstractNamedEntity
 from ...http import URL
+from . import access_logger
 from .exceptions import HttpException
 from .protocol import Protocol
 
@@ -35,9 +36,15 @@ class WebServer(AbstractNamedEntity):
             result = await self._handler(request)
             request.response(result)
         except HttpException as e:
-            request.response(e)
-        logger.info(
-            "Received request %s %s",
-            request.method,
-            request.url,
-        )
+            request.response(e, status=500)
+            logger.exception('Server error:')
+        except Exception:
+            request.response(b'Internal error', status=500)
+            logger.exception('Server error:')
+        else:
+            access_logger.info(
+                "Received request %s %s",
+                request.method,
+                request.url,
+            )
+        request.transport.close()

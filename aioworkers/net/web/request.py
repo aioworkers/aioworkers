@@ -4,6 +4,7 @@ from .exceptions import HttpException
 
 class Request:
     def __init__(self, url, method, *,
+                 body_future=None,
                  headers=(), transport=None,
                  context=None):
         self.url = url
@@ -15,11 +16,12 @@ class Request:
         for k, v in headers:
             if k.lower() == 'content-length':
                 self.content_length = int(v)
-        self._body = None
+        self._body_future = body_future
         self._finised = False
 
-    async def read(self):
+    def read(self):
         self.transport.resume_reading()
+        return self._body_future
 
     def response(
         self, data=None, status=200, reason='',

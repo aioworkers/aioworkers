@@ -1,3 +1,7 @@
+import logging
+
+access_logger = logging.getLogger(__name__ + '.access')
+
 
 def get_config():
     return dict(
