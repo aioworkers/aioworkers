@@ -18,6 +18,7 @@ python_version = "3.6"
 
 async-timeout = "==3.0.0"
 pytest = "*"
+pycodestyle = "*"
 pytest-aiohttp = "*"
 pytest-mock = "*"
 pytest-cov = "*"
