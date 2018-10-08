@@ -48,7 +48,7 @@ def import_name(stref: str):
             h += '.' + i
             m = importlib.import_module(h)
 
-    logger.debug('Imported "{}" as {}'.format(stref, h))
+    logger.debug('Imported "%s" as %r', stref, m)
     return m
 
 
