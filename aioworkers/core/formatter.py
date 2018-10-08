@@ -1,5 +1,6 @@
 import os
 from abc import abstractmethod
+from typing import Tuple
 
 from ..utils import import_name
 from .base import AbstractEntity
@@ -111,7 +112,7 @@ class NewLineFormatter(BaseFormatter):
 
 class BytesNewLineFormatter(NewLineFormatter):
     name = 'bnewline'
-    linesep = os.linesep.encode()
+    linesep: bytes = os.linesep.encode()
 
 
 class PickleFormatter(BaseFormatter):
@@ -131,7 +132,7 @@ class PickleFormatter(BaseFormatter):
 
 class JsonFormatter(BaseFormatter):
     name = 'json'
-    mimetypes = ('application/json',)
+    mimetypes: Tuple = ('application/json',)
     converters = [
         (0, 'aioworkers.core.config.ValueExtractor', dict),
     ]

@@ -114,7 +114,7 @@ class Worker(AbstractWorker):
         finally:
             self._stopped_at = datetime.datetime.now()
 
-    async def run(self, value=None):
+    async def run(self, value=None):  # type: ignore
         raise NotImplementedError()
 
     def __call__(self, *args, **kwargs):

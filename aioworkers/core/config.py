@@ -7,7 +7,7 @@ import re
 from abc import abstractmethod
 from collections import ChainMap, Mapping, MutableMapping
 from pathlib import Path
-from typing import Iterator
+from typing import Callable, Iterator, Tuple
 
 from .. import humanize, utils
 from ..http import URL
@@ -133,8 +133,8 @@ def merge(source: Mapping, destination: MutableMapping):
 
 
 class ConfigFileLoader:
-    extensions = ()
-    mime_types = ()
+    extensions: Tuple = ()
+    mime_types: Tuple = ()
 
     @abstractmethod  # pragma: no cover
     def load_str(self, s):
@@ -215,7 +215,7 @@ class IntValueMatcher(ValueMatcher):
 
 
 class FloatValueMatcher(IntValueMatcher):
-    fn = float
+    fn: Callable = float
 
 
 class MultilineValueMatcher(ValueMatcher):

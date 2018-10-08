@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 try:  # pragma: no cover
     import yarl
 except ImportError:  # pragma: no cover
-    yarl = None
+    yarl = None  # type: Optional[Module]
 
 
 class _URL(str, abc.ABC):
@@ -29,4 +29,4 @@ if yarl:  # pragma: no cover
     URL = yarl.URL
     _URL.register(yarl.URL)
 else:  # pragma: no cover
-    URL = _URL
+    URL: type = _URL

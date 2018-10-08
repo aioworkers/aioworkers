@@ -64,7 +64,7 @@ class Application(AbstractNamedEntity):
 
 
 class Resources(Iterable):
-    def __init__(self, resources: Mapping):
+    def __init__(self, resources: Mapping) -> None:
         self._resources = resources
         self._prepared = self._sort_resources(resources)
 
