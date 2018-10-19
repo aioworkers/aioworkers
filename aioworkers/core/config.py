@@ -7,7 +7,7 @@ import re
 from abc import abstractmethod
 from collections import ChainMap, Mapping, MutableMapping
 from pathlib import Path
-from typing import Callable, Iterator, Tuple
+from typing import Iterator
 
 from .. import humanize, utils
 from ..http import URL
@@ -133,8 +133,8 @@ def merge(source: Mapping, destination: MutableMapping):
 
 
 class ConfigFileLoader:
-    extensions: Tuple = ()
-    mime_types: Tuple = ()
+    extensions = ()  # type: tuple
+    mime_types = ()  # type: tuple
 
     @abstractmethod  # pragma: no cover
     def load_str(self, s):
@@ -201,7 +201,7 @@ class ValueMatcher:
 
 
 class IntValueMatcher(ValueMatcher):
-    fn = int
+    fn = int  # type: ignore
 
     @classmethod
     def match(cls, value):
@@ -215,7 +215,7 @@ class IntValueMatcher(ValueMatcher):
 
 
 class FloatValueMatcher(IntValueMatcher):
-    fn: Callable = float
+    fn = float  # type: ignore
 
 
 class MultilineValueMatcher(ValueMatcher):
@@ -270,7 +270,7 @@ class IniLoader(StringReplaceLoader):
     def __init__(self, *args, **kwargs):
         self._configparser = __import__('configparser')
 
-    def new_configparser(self, **kwargs) -> 'configparser.ConfigParser':
+    def new_configparser(self, **kwargs):  # type: ignore
         kwargs.setdefault('allow_no_value', True)
         return self._configparser.ConfigParser(**kwargs)
 
@@ -409,7 +409,7 @@ class ValueExtractor(Mapping):
         yield from self._val
 
     def __setstate__(self, state: dict):
-        self.__init__(state)
+        self.__init__(state)  # type: ignore
 
     def __getstate__(self) -> dict:
         return dict(self._val)
@@ -584,7 +584,7 @@ class Config(ValueExtractor):
             return super().__contains__(item)
 
     def __setstate__(self, state: dict):
-        self.__init__(**state)
+        self.__init__(**state)  # type: ignore
 
     def __getstate__(self) -> dict:
         state = super().__getstate__()
