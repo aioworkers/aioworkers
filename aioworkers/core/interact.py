@@ -27,12 +27,12 @@ def shell(run):
 
     def _thread():
         context = _f.result()
-        await = partial(_await, context=context)
+        locals()['await'] = partial(_await, context=context)
         shell(
             header='Welcome to interactive mode of aioworkers. \n'
                    'You available the main context and '
                    'the await function to perform coroutine.')
-        return await(asyncio.coroutine(context.loop.stop)())
+        return locals()['await'](asyncio.coroutine(context.loop.stop)())
 
     thread = Thread(target=_thread)
     thread.start()
