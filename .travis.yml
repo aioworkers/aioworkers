@@ -7,7 +7,7 @@ python:
   # - 3.7-dev
   # - pypy3
 install:
-  - pip install -U pip setuptools pipenv==2018.5.18
+  - pip install -U pip setuptools pipenv==2018.10.13
   - pipenv install -d --skip-lock
   - pip install codecov
 script: pytest --cov=aioworkers
