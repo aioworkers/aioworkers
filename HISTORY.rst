@@ -2,6 +2,19 @@
 History
 =======
 
+0.12 (2018-10-20)
+-----------------
+
+* Cli option --pid-file
+* Extractor env to config (#5)
+* Fix interact await func on py37
+* FileSystemStorage with methods list and length
+* Fix log import_name
+* Drop default run in Subprocess
+* Fix updater
+* Plugin aioworkers.net.web
+
+
 0.11.4 (2018-06-29)
 -------------------
 
