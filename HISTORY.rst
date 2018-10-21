@@ -8,7 +8,7 @@ History
 * Load logging config first (#9)
 * Cli option --pid-file
 * Extractor env to config (#5)
-* Fix interact await func on py37
+* Fix interact await func on py37 (#7)
 * FileSystemStorage with methods list and length
 * Fix log import_name
 * Drop default run in Subprocess
