@@ -5,6 +5,7 @@ History
 0.12 (2018-10-20)
 -----------------
 
+* Load logging config first (#9)
 * Cli option --pid-file
 * Extractor env to config (#5)
 * Fix interact await func on py37
