@@ -16,7 +16,7 @@ python_version = "3.6"
 
 [dev-packages]
 
-pytest = "==3.8.0"
+pytest = "==3.9.1"
 flake8 = "*"
 pytest-aiohttp = "==0.3.0"
 pytest-mock = "==1.10.0"
