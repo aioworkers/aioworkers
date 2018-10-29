@@ -449,7 +449,7 @@ class Config(ValueExtractor):
         elif not mime_type:
             raise LookupError('Not found mime_type %s' % mime_type)
         else:
-            raise NotImplemented
+            raise NotImplementedError
         if response is not None:
             return loader.load_bytes(response.read())
         elif fd is None:
