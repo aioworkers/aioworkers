@@ -7,7 +7,7 @@ from aioworkers.core.config import MergeDict
 from aioworkers.core.context import Context
 
 
-async def coro(context, j: int=5):
+async def coro(context, j: int = 5):
     return context.a.b
 
 
