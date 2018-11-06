@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path, PurePath
 
 from . import StorageError, base
-from .. import humanize, utils
+from .. import humanize
 from ..core.base import AbstractNestedEntity, ExecutorEntity
 from ..core.formatter import FormattedEntity
 
@@ -272,7 +272,6 @@ class BaseFileSystemStorage(
             raise StorageError(str(e)) from e
         await self.next_space_waiter()
 
-    @utils.method_replicate_result(key=lambda self, k: k)
     async def get(self, key):
         k = self.raw_key(key)
         if await k.exists():
