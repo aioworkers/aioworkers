@@ -195,6 +195,8 @@ async def test_fd(loop):
         async with k.open('w') as f:
             await f.write('123')
 
+        assert '123' == await k.read_text()
+
         assert b'123' == await storage.get('1')
         await storage.set('1', None)
 
@@ -232,3 +234,10 @@ async def test_fs_glob(context):
     await s.set('1', b'1')
     assert await s.length()
     assert ['1'] == list(map(str, await s.list()))
+
+
+async def test_async_path(tmp_dir):
+    d = AsyncPath(tmp_dir)
+    f = d / '1'
+    await f.write_text('123')
+    assert '123' == await f.read_text()
