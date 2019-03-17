@@ -40,7 +40,7 @@ def config(config, tmp_dir):
       path: {path}
       executor: executor
     executor: null
-    """.format(path=tmp_dir)))
+    """.format(path=tmp_dir), getattr(yaml, 'CLoader', yaml.Loader)))
     return config
 
 

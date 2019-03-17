@@ -7,12 +7,12 @@ from aioworkers.http import _URL as URL
 from aioworkers.storage import StorageError
 
 
-async def test_set_get(loop, test_client):
+async def test_set_get(loop, aiohttp_client):
     app = web.Application()
     app.router.add_get(
         '/test/1',
         lambda x: web.json_response(["Python"]))
-    client = await test_client(app)
+    client = await aiohttp_client(app)
     url = client.make_url('/')
 
     data = 'Python'
