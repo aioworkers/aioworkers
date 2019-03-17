@@ -4,7 +4,6 @@ from pathlib import PurePath
 from unittest import mock
 
 import pytest
-import yaml
 
 from aioworkers.core.config import Config, MergeDict
 from aioworkers.core.context import Context
@@ -19,8 +18,8 @@ def tmp_dir():
 
 
 @pytest.fixture
-def config(config, tmp_dir):
-    config.update(yaml.load("""
+def config_yaml(tmp_dir):
+    return """
     storage:
       cls: aioworkers.storage.filesystem.FileSystemStorage
       executor: null
@@ -40,8 +39,7 @@ def config(config, tmp_dir):
       path: {path}
       executor: executor
     executor: null
-    """.format(path=tmp_dir), getattr(yaml, 'CLoader', yaml.Loader)))
-    return config
+    """.format(path=tmp_dir)
 
 
 async def test_set_get(context):
