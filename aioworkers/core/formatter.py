@@ -46,6 +46,17 @@ class ChainFormatter(BaseFormatter):
 
 
 class Registry(dict):
+    _parent = None
+
+    @classmethod
+    def new(cls):
+        return cls()
+
+    def new_child(self):
+        instance = self.new()
+        instance._parent = self
+        return instance
+
     def __call__(self, cls):
         name = cls.name
         if not isinstance(name, str):
@@ -65,6 +76,13 @@ class Registry(dict):
             name = name.split(':')
         elif '|' in name:
             name = name.split('|')
+        else:
+            a = self
+            while a._parent is not None:
+                a = a._parent
+                if name in a:
+                    return a[name]()
+            raise KeyError(name)
 
         if isinstance(name, list):
             return ChainFormatter(self.get(i.strip()) for i in name)
@@ -226,9 +244,12 @@ registry(LzmaFormatter)
 
 
 class FormattedEntity(AbstractEntity):
-    async def init(self):
-        await super().init()
-        self._formatter = registry.get(self.config.get('format'))
+    registry = registry
+    _formatter = None
+
+    def set_config(self, config):
+        super().set_config(config)
+        self._formatter = self.registry.get(self.config.get('format'))
 
     def decode(self, b):
         return self._formatter.decode(b)

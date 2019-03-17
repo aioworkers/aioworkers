@@ -13,7 +13,8 @@ class RtsFormatter(StringFormatter):
         return super().encode(b)
 
 
-registry(RtsFormatter)
+r = registry.new_child()
+r(RtsFormatter)
 
 
 @pytest.mark.parametrize('formatter,data', [
@@ -27,7 +28,7 @@ registry(RtsFormatter)
     ('str|lzma', '123'),
 ])
 def test_formatters(formatter, data):
-    f = registry.get(formatter)
+    f = r.get(formatter)
     enc = f.encode(data)
     assert isinstance(enc, bytes)
     assert f.decode(enc) == data
@@ -40,7 +41,7 @@ def test_formatters(formatter, data):
     'str|from_str:str|from_str',
 ])
 def test_chain(f):
-    f = registry.get(f)
+    f = r.get(f)
     a = '1'
     assert f.encode(a) == a
     assert f.decode(a) == a
@@ -48,8 +49,10 @@ def test_chain(f):
 
 def test_registry():
     with pytest.raises(ValueError):
-        registry(RtsFormatter)
+        r(RtsFormatter)
     with pytest.raises(ValueError):
         registry(BaseFormatter)
     with pytest.raises(KeyError):
         registry.get(1)
+    assert RtsFormatter.name not in registry
+    assert RtsFormatter.name in r
