@@ -62,14 +62,28 @@ class AbstractNamedEntity(AbstractEntity):
 
 
 class AbstractNestedEntity(AbstractEntity):
+    cache_factory = dict
+    item_factory = None
+
     def __init__(self, config=None, *, context=None, loop=None):
+        self._children = self.cache_factory()
         super().__init__(config, context=context, loop=loop)
-        self._children = {}
+
+    def set_context(self, context):
+        super().set_context(context)
+        for i in self._children.values():
+            i.set_context(context)
+
+    def set_config(self, config):
+        super().set_config(config)
+        for i in self._children.values():
+            i.set_config(config)
 
     def factory(self, item, config=None):
         if item in self._children:
             return self._children[item]
-        instance = self._children[item] = type(self)()
+        cls = self.item_factory or type(self)
+        instance = self._children[item] = cls()
         if config is None and self._config is not None:
             config = self._config
         if config is not None:
