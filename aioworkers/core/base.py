@@ -63,6 +63,16 @@ class AbstractNamedEntity(AbstractEntity):
         return self._name
 
 
+class AbstractConnector(AbstractEntity):
+    @abstractmethod
+    async def connect(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def disconnect(self):
+        raise NotImplementedError()
+
+
 class AbstractNestedEntity(AbstractEntity):
     cache_factory = dict
     item_factory = None
