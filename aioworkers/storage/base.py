@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import AsyncGenerator
 
 from aioworkers.core.base import AbstractNamedEntity
 
@@ -12,6 +13,12 @@ class AbstractBaseStorage(AbstractNamedEntity):
 class AbstractStorageReadOnly(AbstractBaseStorage):
     @abstractmethod
     async def get(self, key):
+        raise NotImplementedError()
+
+
+class AbstractFindStorage(AbstractBaseStorage):
+    @abstractmethod
+    async def find(self, *args, **kwargs) -> AsyncGenerator:
         raise NotImplementedError()
 
 
