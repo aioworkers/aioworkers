@@ -3,8 +3,8 @@ import inspect
 import logging.config
 from collections import Mapping, MutableMapping, OrderedDict
 
+from .base import AbstractConnector, AbstractEntity
 from ..utils import import_name
-from .base import AbstractEntity
 
 
 class Octopus(MutableMapping):
@@ -286,11 +286,14 @@ class RootContextProcessor(ContextProcessor):
         await self.on_ready.send(self.context._group_resolver)
 
 
-class Context(AbstractEntity, Octopus):
+class Context(AbstractConnector, Octopus):
     def __init__(self, *args, **kwargs):
         self._group_resolver = kwargs.pop('group_resolver', GroupResolver())
+        self._on_connect = Signal(self, name='connect')
         self._on_start = Signal(self, name='start')
         self._on_stop = Signal(self, name='stop')
+        self._on_disconnect = Signal(self, name='disconnect')
+        self._on_cleanup = Signal(self, name='cleanup')
         self.logger = logging.getLogger('aioworkers')
         root_processor = kwargs.pop('root_processor', RootContextProcessor)
         self.processors = root_processor(self)
@@ -305,12 +308,20 @@ class Context(AbstractEntity, Octopus):
         self._loop = loop
 
     @property
+    def on_connect(self):
+        return self._on_connect
+
+    @property
     def on_start(self):
         return self._on_start
 
     @property
     def on_stop(self):
         return self._on_stop
+
+    @property
+    def on_disconnect(self):
+        return self._on_disconnect
 
     async def init(self):
         if self._loop is None:
@@ -326,11 +337,17 @@ class Context(AbstractEntity, Octopus):
             if f.exception():
                 self.logger.exception('ERROR', exc_info=f.exception())
 
+    async def connect(self):
+        await self.on_connect.send(self._group_resolver)
+
     async def start(self):
         await self.on_start.send(self._group_resolver)
 
     async def stop(self):
         await self.on_stop.send(self._group_resolver)
+
+    async def disconnect(self):
+        await self.on_disconnect.send(self._group_resolver)
 
     def run_forever(self, print=print):
         print("======== Running aioworkers ========\n"
@@ -372,19 +389,27 @@ class Context(AbstractEntity, Octopus):
 
     def __enter__(self):
         self.loop.run_until_complete(self.init())
+        self.loop.run_until_complete(self.connect())
         self.loop.run_until_complete(self.start())
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.loop.run_until_complete(self.stop())
+        self.loop.run_until_complete(self.disconnect())
+        self.loop.run_until_complete(
+            self._on_cleanup.send(self._group_resolver)
+        )
 
     async def __aenter__(self):
         await self.init()
+        await self.connect()
         await self.start()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.stop()
+        await self.disconnect()
+        await self._on_cleanup.send(self._group_resolver)
 
     def get_object(self, path):
         if path.startswith('.'):
