@@ -63,6 +63,21 @@ class AbstractNamedEntity(AbstractEntity):
         return self._name
 
 
+class AbstractConnector(AbstractEntity):
+    def set_context(self, context):
+        super().set_context(context)
+        context.on_connect.append(self.connect)
+        context.on_disconnect.append(self.disconnect)
+
+    @abstractmethod
+    async def connect(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def disconnect(self):
+        raise NotImplementedError()
+
+
 class AbstractNestedEntity(AbstractEntity):
     cache_factory = dict
     item_factory = None
@@ -86,6 +101,13 @@ class AbstractNestedEntity(AbstractEntity):
                 continue
             elif isinstance(v, ValueExtractor):
                 self.factory(k, v)
+
+    async def init(self):
+        await super().init()
+        if self._children:
+            await self.context.wait_all(
+                c.init() for c in self._children.values()
+            )
 
     def get_child_config(
         self, item: str, config: Optional[ValueExtractor] = None,
