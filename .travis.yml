@@ -10,7 +10,7 @@ install:
   - pip install -U pip setuptools pipenv==2018.10.13
   - pipenv install -d --skip-lock
   - pip install codecov
-script: pytest --cov=aioworkers
+script: PYTHONPATH=. pytest --cov=aioworkers
 
 after_success:
   - codecov
