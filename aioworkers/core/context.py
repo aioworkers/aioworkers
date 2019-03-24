@@ -323,6 +323,10 @@ class Context(AbstractConnector, Octopus):
     def on_disconnect(self):
         return self._on_disconnect
 
+    @property
+    def on_cleanup(self):
+        return self._on_cleanup
+
     async def init(self):
         if self._loop is None:
             self._loop = asyncio.get_event_loop()

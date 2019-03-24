@@ -68,6 +68,7 @@ class AbstractConnector(AbstractEntity):
         super().set_context(context)
         context.on_connect.append(self.connect)
         context.on_disconnect.append(self.disconnect)
+        context.on_cleanup.append(self.cleanup)
 
     @abstractmethod
     async def connect(self):
@@ -76,6 +77,9 @@ class AbstractConnector(AbstractEntity):
     @abstractmethod
     async def disconnect(self):
         raise NotImplementedError()
+
+    async def cleanup(self):
+        pass
 
 
 class AbstractNestedEntity(AbstractEntity):
