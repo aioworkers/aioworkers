@@ -1,15 +1,11 @@
-import logging
-
 from . import access_logger
-from ...core.base import AbstractNamedEntity
+from ...core.base import AbstractNamedEntity, LoggingEntity
 from ...http import URL
 from .exceptions import HttpException
 from .protocol import Protocol
 
-logger = logging.getLogger(__name__)
 
-
-class WebServer(AbstractNamedEntity):
+class WebServer(LoggingEntity, AbstractNamedEntity):
     async def init(self):
         await super().init()
         self._handler = self.context.get_object(
@@ -37,10 +33,10 @@ class WebServer(AbstractNamedEntity):
             request.response(result)
         except HttpException as e:
             request.response(e, status=500)
-            logger.exception('Server error:')
+            self.logger.exception('Server error:')
         except Exception:
             request.response(b'Internal error', status=500)
-            logger.exception('Server error:')
+            self.logger.exception('Server error:')
         else:
             access_logger.info(
                 "Received request %s %s",

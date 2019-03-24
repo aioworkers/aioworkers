@@ -5,11 +5,11 @@ import logging
 from abc import abstractmethod
 from functools import partial
 
-from ..core.base import AbstractNamedEntity
+from ..core.base import AbstractNamedEntity, LoggingEntity
 from ..utils import import_name
 
 
-class AbstractWorker(AbstractNamedEntity):
+class AbstractWorker(LoggingEntity, AbstractNamedEntity):
     @abstractmethod  # pragma: no cover
     async def start(self):
         raise NotImplementedError()

@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from collections import Mapping
 from functools import partial
@@ -210,3 +211,23 @@ class ExecutorEntity(AbstractEntity):
     @property
     def executor(self):
         return self._executor
+
+
+class NameLogger(logging.LoggerAdapter):
+    @classmethod
+    def from_instance(cls, logger, instance):
+        return cls(logger, {
+            'name': instance.config.name,
+        })
+
+    def process(self, msg, kwargs):
+        return '[{}] {}'.format(self.extra['name'], msg), kwargs
+
+
+class LoggingEntity(AbstractEntity):
+    logging_adapter = NameLogger
+
+    def set_config(self, config):
+        super().set_config(config)
+        logger = logging.getLogger(self.config.get('logger', 'aioworkers'))
+        self.logger = self.logging_adapter.from_instance(logger, self)
