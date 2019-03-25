@@ -28,6 +28,7 @@ setup(
     packages=[i for i in find_packages() if i.startswith('aioworkers')],
     include_package_data=True,
     install_requires=requirements,
+    python_requires='>=3.5.3',
     license="Apache Software License 2.0",
     keywords='aioworkers',
     classifiers=[
