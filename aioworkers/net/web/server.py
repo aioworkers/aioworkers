@@ -1,6 +1,6 @@
-from . import access_logger
 from ...core.base import AbstractNamedEntity, LoggingEntity
 from ...http import URL
+from . import access_logger
 from .exceptions import HttpException
 from .protocol import Protocol
 

@@ -3,8 +3,8 @@ import inspect
 import logging.config
 from collections import Mapping, MutableMapping, OrderedDict
 
-from .base import AbstractConnector, AbstractEntity
 from ..utils import import_name
+from .base import AbstractConnector, AbstractEntity
 
 
 class Octopus(MutableMapping):

@@ -1,7 +1,7 @@
 import pytest
 
 from aioworkers.core.base import AbstractNestedEntity
-from aioworkers.queue.base import Queue, PriorityQueue
+from aioworkers.queue.base import PriorityQueue, Queue
 
 
 @pytest.fixture

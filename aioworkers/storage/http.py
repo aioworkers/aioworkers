@@ -5,8 +5,8 @@ from collections import Mapping, Sequence
 
 from aiohttp import ClientOSError, client
 
-from . import StorageError, base
 from ..http import URL
+from . import StorageError, base
 
 
 class RoStorage(base.AbstractStorageReadOnly):
