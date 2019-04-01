@@ -1,15 +1,22 @@
 [[source]]
+
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
+
 [requires]
+
 python_version = "3.6"
+
 
 [packages]
 
+
+
 [dev-packages]
-pytest = "==4.3.1"
+
+pytest = "==4.4.0"
 pytest-aioworkers = "*"
 pytest-cov = "==2.6.1"
 pytest-flake8 = "*"
