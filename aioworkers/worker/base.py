@@ -1,7 +1,6 @@
 import asyncio
 import collections
 import datetime
-import logging
 from abc import abstractmethod
 from functools import partial
 
