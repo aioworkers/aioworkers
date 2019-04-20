@@ -52,16 +52,14 @@ class Worker(AbstractWorker):
         else:
             self._persist = self.config.get('persist')
 
-        self._sleep = self.config.get('sleep')
-        self._sleep_start = self.config.get('sleep_start')
+        self._sleep = self.config.get_duration('sleep', null=True)
+        self._sleep_start = self.config.get_duration('sleep_start', null=True)
 
         self._crontab = self.config.get('crontab')
         if self._crontab:
             CronTab = import_name('crontab.CronTab')
             self._crontab = CronTab(self._crontab)
             self._persist = True
-
-        self.logger = logging.getLogger(self.config.get('logger', __name__))
 
         groups = self.config.get('groups')
         if self.config.get('autorun'):
