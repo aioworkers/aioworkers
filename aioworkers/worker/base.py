@@ -52,8 +52,12 @@ class Worker(AbstractWorker):
         else:
             self._persist = self.config.get('persist')
 
-        self._sleep = self.config.get_duration('sleep', null=True)
-        self._sleep_start = self.config.get_duration('sleep_start', null=True)
+        self._sleep = self.config.get_duration(
+            'sleep', default=None, null=True
+        )
+        self._sleep_start = self.config.get_duration(
+            'sleep_start', default=None, null=True
+        )
 
         self._crontab = self.config.get('crontab')
         if self._crontab:
