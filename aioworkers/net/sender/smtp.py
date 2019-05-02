@@ -7,7 +7,7 @@ from aioworkers.net.sender import AbstractSender
 
 
 class SMTP(ExecutorEntity, LoggingEntity, AbstractSender):
-    _conn: Optional[smtplib.SMTP] = None
+    _conn = None  # type: Optional[smtplib.SMTP]
 
     def set_config(self, config):
         config = config.new_child({self.PARAM_EXECUTOR: 1})
