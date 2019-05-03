@@ -1,5 +1,5 @@
 import smtplib
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 from typing import Optional, Sequence
 
 from aioworkers.core.base import ExecutorEntity, LoggingEntity
@@ -19,17 +19,31 @@ class SMTP(ExecutorEntity, LoggingEntity, AbstractSender):
 
     async def send_message(self, msg):
         await self.connect()
-        m = MIMEText(msg['body'])
+        m = await self.make_message(msg)
+        self.logger.debug('Send message: %s', m['Subject'])
+        await self.run_in_executor(self._conn.send_message, m)
+
+    async def make_message(self, msg):
+        message = EmailMessage()
+        message['From'] = msg.get('from') or self.config.get('from')
+
         mail_to = msg['to']
         if isinstance(mail_to, str):
             pass
         elif isinstance(mail_to, Sequence):
             mail_to = ', '.join(mail_to)
-        m['To'] = mail_to
-        m['Subject'] = msg['subject']
-        m['From'] = msg.get('from') or self.config.get('from')
-        self.logger.debug('Send message: %s', msg['subject'])
-        return await self.run_in_executor(self._conn.send_message, m)
+        message['To'] = mail_to
+
+        message['Subject'] = msg['subject']
+
+        content = msg.get('content')
+        if content is not None:
+            message.set_content(content)
+
+        html = msg.get('html')
+        if html:
+            message.add_alternative(html, subtype='html')
+        return message
 
     def _connect(self):
         if self._conn is not None:

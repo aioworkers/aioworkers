@@ -15,5 +15,6 @@ async def test_smtp(context, mocker):
     await context.smtp.send(
         to='example@example.com',
         subject='test',
-        body='text',
+        content='text',
+        html='<b>text</b>',
     )
