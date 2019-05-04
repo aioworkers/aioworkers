@@ -20,8 +20,8 @@ class SMTP(ExecutorEntity, LoggingEntity, AbstractSender):
     async def send_message(self, msg):
         await self.connect()
         m = await self.make_message(msg)
-        self.logger.debug('Send message: %s', m['Subject'])
         await self.run_in_executor(self._conn.send_message, m)
+        self.logger.debug('Sent message: %s', m['Subject'])
 
     async def make_message(self, msg):
         message = EmailMessage()
