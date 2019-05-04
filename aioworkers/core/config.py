@@ -11,6 +11,7 @@ from typing import Iterator
 
 from .. import humanize, utils
 from ..http import URL
+from ..utils import mapping_repr
 
 logger = logging.getLogger(__name__)
 
@@ -415,6 +416,9 @@ class ValueExtractor(Mapping):
     def __getstate__(self) -> dict:
         return dict(self._val)
 
+    def __repr__(self):
+        return mapping_repr(self._val)
+
 
 class Config(ValueExtractor):
     def __init__(self, search_dirs=(), **kwargs):
@@ -592,3 +596,6 @@ class Config(ValueExtractor):
         if self.logging:
             state['logging'] = self.logging
         return state
+
+    def __repr__(self):
+        return mapping_repr(self._val, logging=self.logging)

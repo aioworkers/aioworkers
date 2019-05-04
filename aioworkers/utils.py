@@ -7,6 +7,7 @@ import struct
 import sys
 import time
 from pathlib import Path
+from typing import Mapping
 
 SIZE = struct.Struct('!I')
 logger = logging.getLogger(__name__)
@@ -137,3 +138,21 @@ def dump_to_fd(fd, data):
     buf = pickle.dumps(data)
     fd.write(SIZE.pack(len(buf)))
     fd.write(buf)
+
+
+def mapping_repr(*maps, indent=0, **kwargs):
+    result = []
+    maps += kwargs,
+
+    for m in maps:
+        for k, v in sorted(m.items()):
+            result.append('  ' * indent)
+            result.append(k)
+            result.append(': ')
+            if isinstance(v, Mapping):
+                result.append('\n')
+                result.append(mapping_repr(v, indent=indent + 1))
+            else:
+                result.append(repr(v))
+                result.append('\n')
+    return ''.join(result)

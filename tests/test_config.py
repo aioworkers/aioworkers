@@ -93,6 +93,7 @@ def test_load_config():
     conf = Config(search_dirs=[p])
     config = conf.load(p / 'conf1.json', 'conf2.json')
     assert config
+    assert repr(config)
 
 
 def test_load_plugins():
@@ -177,6 +178,8 @@ def test_value_extractor():
 
     with pytest.raises(AttributeError):
         getattr(v, '_a')
+
+    assert repr(v)
 
 
 def test_logging():
