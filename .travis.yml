@@ -8,6 +8,7 @@ python:
   # - pypy3
 install:
   - pip install -U pip setuptools pipenv==2018.10.13
+  - pip install -e .
   - pipenv install -d --skip-lock
   - pip install codecov
 script: PYTHONPATH=. pytest --cov=aioworkers
