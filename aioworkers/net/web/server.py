@@ -6,6 +6,8 @@ from .protocol import Protocol
 
 
 class WebServer(LoggingEntity, AbstractNamedEntity):
+    _server = None
+
     async def init(self):
         await super().init()
         self._handler = self.context.get_object(
@@ -24,8 +26,10 @@ class WebServer(LoggingEntity, AbstractNamedEntity):
             factory, self.config.host, self.config.get_int('port'))
 
     async def stop(self):
-        self._server.close()
-        await self._server.wait_closed()
+        if self._server:
+            self._server.close()
+            await self._server.wait_closed()
+            self._server = None
 
     async def handler(self, request):
         try:
