@@ -2,6 +2,20 @@
 History
 =======
 
+0.13a3 (2019-05-06)
+-------------------
+
+* AbstractConnector (#8)
+* new Context signals: connect, disconnect, cleanup
+* Chain from formatter registry (#29)
+* Improve AbstractNestedEntity
+* LoggingEntity
+* Config.__repr__
+* AbstractSender with smtp sender and proxy
+* AbstractFindStorage
+* Multiexecute subprocess (#28)
+
+
 0.12 (2018-10-20)
 -----------------
 
