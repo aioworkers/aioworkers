@@ -2,6 +2,7 @@ import asyncio
 import shlex
 import subprocess
 import sys
+import weakref
 from collections import Mapping, Sequence
 
 from .. import utils
@@ -23,6 +24,17 @@ class Subprocess(FormattedEntity, Worker):
         daemon: true
         format: [json|str|bytes]
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._processes = weakref.WeakValueDictionary()
+        self._cmd = ''
+        self._shell = False
+        self._config_stdin = False
+        self._wait = True
+        self._daemon = False
+        self._keeper = None
+        self.params = {}
 
     async def init(self):
         if self.config.get('stdin'):
@@ -88,7 +100,9 @@ class Subprocess(FormattedEntity, Worker):
 
     @property
     def process(self):
-        return getattr(self, '_process', None)
+        for p in self._processes.values():
+            if p.returncode is None:
+                return p
 
     def make_command(self, value):
         cmd = self._cmd
@@ -128,15 +142,17 @@ class Subprocess(FormattedEntity, Worker):
             value = None
         cmd = self.make_command(value)
         self.logger.info(' '.join(cmd))
-        self._process = await self.create_subprocess(*cmd)
+        process = await self.create_subprocess(*cmd)
+        self._processes[process.pid] = process
         if self._config_stdin:
-            utils.dump_to_fd(
-                self._process.stdin, self.context.config)
-            await self._process.stdin.drain()
+            utils.dump_to_fd(process.stdin, self.context.config)
+            await process.stdin.drain()
         if self._wait:
-            await self._process.wait()
-        if not self._daemon and self._process.stdout is not None:
-            data = await self._process.stdout.read()
+            await process.wait()
+        else:
+            return process
+        if not self._daemon and process.stdout is not None:
+            data = await process.stdout.read()
             return self.decode(data)
 
     async def work(self):
@@ -147,9 +163,9 @@ class Subprocess(FormattedEntity, Worker):
     async def _keep_daemon(self):
         while True:
             try:
-                await self.run_cmd()
+                process = await self.run_cmd()
                 self._event.set()
-                await self._process.wait()
+                await process.wait()
             finally:
                 self._event.clear()
             await asyncio.sleep(1)
@@ -168,14 +184,15 @@ class Subprocess(FormattedEntity, Worker):
             except asyncio.CancelledError:
                 pass
             self._keeper = None
-        process = self.process
-        try:
-            if process is None:
+        for process in self._processes.values():
+            try:
+                if process.returncode is not None:
+                    continue
+                elif force:
+                    process.kill()
+                else:
+                    process.terminate()
+                await process.wait()
+            except ProcessLookupError:
                 pass
-            elif force:
-                process.kill()
-            else:
-                process.terminate()
-        except ProcessLookupError:
-            pass
         await super().stop(force=force)
