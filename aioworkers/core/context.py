@@ -371,9 +371,7 @@ class Context(AbstractConnector, Octopus):
     async def disconnect(self):
         await self.on_disconnect.send(self._group_resolver)
 
-    def run_forever(self, print=print):
-        print("======== Running aioworkers ========\n"
-              "(Press CTRL+C to quit)")
+    def run_forever(self):
         try:
             self.loop.run_forever()
         except KeyboardInterrupt:

@@ -25,9 +25,14 @@ group.add_argument('-g', '--groups', nargs='*', action='append',
                    dest='exclude_groups',
                    metavar='GROUP', help='Run all exclude groups')
 
+parser.add_argument('--multiprocessing', action='store_true')
 parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-I', '--interact-kernel', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
+
+
+PROMPT = "======== Running aioworkers ========\n" \
+    "(Press CTRL+C to quit)"
 
 
 class PidFileType(argparse.FileType):
@@ -101,10 +106,28 @@ def main(*config_files, args=None, config_dirs=(),
             exclude=sum_g(args.exclude_groups),
             all_groups=args.exclude_groups is not None,
             default=True,
-        ), cmds=cmds, argv=argv, ns=args)
+        ), cmds=cmds, argv=argv, ns=args, prompt=PROMPT)
 
     try:
-        if args.interact:
+        if args.multiprocessing:
+            context.set_group_resolver(GroupResolver(all_groups=True))
+            context.build()
+            print(PROMPT)
+            logger = multiprocessing.get_logger()
+            processes = process_iter(config.get('processes', {}))
+            for p in processes:
+                logger.info('Create process %s', p['name'])
+                p['process'] = create_process(p)
+            while True:
+                multiprocessing.connection.wait(map(lambda x: x['process'].sentinel, processes))
+                for p in processes:
+                    proc = p['process']  # type: multiprocessing.Process
+                    if not proc.is_alive():
+                        logger.critical('Recreate process %s', p['name'])
+                        p['process'] = create_process(p)
+                time.sleep(1)
+
+        elif args.interact:
             from .core.interact import shell
             args.print = lambda *args: None
             shell(run)
@@ -113,6 +136,8 @@ def main(*config_files, args=None, config_dirs=(),
             kernel(run)
         else:
             run()
+    except KeyboardInterrupt:
+        pass
     finally:
         sig = signal.SIGTERM
         while multiprocessing.active_children():
@@ -123,13 +148,51 @@ def main(*config_files, args=None, config_dirs=(),
             sig = signal.SIGKILL
 
 
+def process_iter(cfg):
+    result = []
+    for k, v in cfg.items():
+        if 'count' in v:
+            for i in range(v['count']):
+                result.append({
+                    'name': '{}-{}'.format(k, i),
+                    'groups': v.get('groups', ()),
+                })
+        else:
+            result.append({
+                'name': k,
+                'groups': v.get('groups', ()),
+            })
+    return result
+
+
+def create_process(cfg):
+    p = multiprocessing.Process(
+        target=loop_run,
+        kwargs=dict(
+            group_resolver=GroupResolver(
+                include=set(cfg['groups']),
+                exclude=set(),
+                all_groups=False,
+                default=True,
+            ),
+        ),
+        name=cfg['name'],
+        daemon=True,
+    )
+    p.start()
+    return p
+
+
 def loop_run(
     conf=None, future=None,
     group_resolver=None,
     ns=None, cmds=None,
     argv=None, loop=None,
+    prompt=None,
 ):
-    loop = loop or asyncio.get_event_loop()
+    if loop is None:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
     if conf:
         context.set_config(conf)
     if loop is not None:
@@ -137,7 +200,11 @@ def loop_run(
     if group_resolver is not None:
         context.set_group_resolver(group_resolver)
 
-    cmds = cmds or ['run_forever']
+    if not cmds:
+        cmds = ['run_forever']
+        prompt and print(prompt)
+    argv = argv or []
+    ns = ns or argparse.Namespace()
     with utils.monkey_close(loop), context:
         if future is not None:
             future.set_result(context)
