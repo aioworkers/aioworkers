@@ -370,26 +370,12 @@ class Context(AbstractConnector, Octopus):
                 return super().__getitem__(item)
             except Exception:
                 pass
-            try:
-                return self._config[item]
-            except Exception:
-                pass
-            try:
-                return import_name(item)
-            except Exception:
-                pass
         raise KeyError(item)
 
     def __dir__(self):
         r = list(self.config)
         r.extend(super().__dir__())
         return r
-
-    def __getattr__(self, item):
-        try:
-            return self._config[item]
-        except KeyError:
-            raise AttributeError(item)
 
     def __enter__(self):
         self.loop.run_until_complete(self.init())
