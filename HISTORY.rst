@@ -2,7 +2,7 @@
 History
 =======
 
-0.13a3 (2019-05-06)
+0.13a4 (2019-06-03)
 -------------------
 
 * AbstractConnector (#8)
@@ -14,6 +14,9 @@ History
 * AbstractSender with smtp sender and proxy
 * AbstractFindStorage
 * Multiexecute subprocess (#28)
+* Add cli param --multiprocessing
+* Add SocketServer
+* Context.find_iter
 
 
 0.12 (2018-10-20)
