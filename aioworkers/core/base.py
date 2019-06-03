@@ -17,8 +17,6 @@ class AbstractEntity(ABC):
             self.set_context(context)
         if config is not None:
             self.set_config(config)
-        if loop is not None:
-            self._loop = loop
 
     @property
     def config(self):
@@ -48,6 +46,9 @@ class AbstractEntity(ABC):
 
     async def init(self):
         pass
+
+    def _set_loop(self, loop):
+        self._loop = loop
 
     @property
     def loop(self):

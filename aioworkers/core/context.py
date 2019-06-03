@@ -314,6 +314,8 @@ class Context(AbstractConnector, Octopus):
         if self._loop is not None:
             raise RuntimeError('Loop already set')
         self._loop = loop
+        for path, obj in self.find_iter(AbstractEntity):
+            obj._set_loop(loop)
 
     @property
     def on_connect(self):
