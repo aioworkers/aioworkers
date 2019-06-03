@@ -10,6 +10,7 @@ def test_main(mocker):
     ns = mocker.Mock()
     ns.config = ()
     ns.config_stdin = False
+    ns.multiprocessing = False
     ns.groups = None
     ns.exclude_groups = None
     parser.parse_known_args.return_value = ns, ()
