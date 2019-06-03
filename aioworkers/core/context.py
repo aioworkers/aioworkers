@@ -267,6 +267,7 @@ class RootContextProcessor(ContextProcessor):
 
     def __init__(self, context, path=None, value=None):
         super().__init__(context, path, value)
+        self._built = False
         self.on_ready = Signal(context, name='ready')
         self.processors = OrderedDict((i.key, i) for i in self.processors)
 
@@ -287,10 +288,14 @@ class RootContextProcessor(ContextProcessor):
                 if isinstance(v, Mapping):
                     self.processing(v, p)
 
-    async def process(self, config=None):
-        if config:
+    def build(self, config):
+        if not self._built:
             self.value = config
-        self.processing(self.value)
+            self.processing(self.value)
+            self._built = True
+
+    async def process(self, config=None):
+        self.build(config)
         await self.on_ready.send(self.context._group_resolver)
 
 
@@ -316,6 +321,9 @@ class Context(AbstractConnector, Octopus):
         self._loop = loop
         for path, obj in self.find_iter(AbstractEntity):
             obj._set_loop(loop)
+
+    def build(self):
+        self.processors.build(self.config)
 
     @property
     def on_connect(self):
