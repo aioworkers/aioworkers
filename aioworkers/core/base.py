@@ -193,7 +193,7 @@ class ExecutorEntity(AbstractEntity):
         if isinstance(ex, int):
             ex = self.executor_factory(max_workers=ex)
         elif isinstance(ex, str):
-            ex = self._context[ex]
+            ex = self._context.get(ex)
         self._executor = ex
 
     def set_config(self, config):

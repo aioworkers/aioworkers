@@ -318,7 +318,7 @@ class Context(AbstractConnector, Octopus):
     def set_loop(self, loop):
         if self._loop is not None:
             raise RuntimeError('Loop already set')
-        self._loop = loop
+        self._set_loop(loop)
         for path, obj in self.find_iter(AbstractEntity):
             obj._set_loop(loop)
 
@@ -347,7 +347,7 @@ class Context(AbstractConnector, Octopus):
 
     async def init(self):
         if self._loop is None:
-            self._loop = asyncio.get_event_loop()
+            self.set_loop(asyncio.get_event_loop())
         await self.processors.process(self.config)
 
     async def wait_all(self, coros, timeout=None):
@@ -394,6 +394,8 @@ class Context(AbstractConnector, Octopus):
         return r
 
     def __enter__(self):
+        if self._loop is None:
+            self.set_loop(asyncio.get_event_loop())
         self.loop.run_until_complete(self.init())
         self.loop.run_until_complete(self.connect())
         self.loop.run_until_complete(self.start())

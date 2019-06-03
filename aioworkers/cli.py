@@ -119,7 +119,9 @@ def main(*config_files, args=None, config_dirs=(),
                 logger.info('Create process %s', p['name'])
                 p['process'] = create_process(p)
             while True:
-                multiprocessing.connection.wait(map(lambda x: x['process'].sentinel, processes))
+                multiprocessing.connection.wait(
+                    map(lambda x: x['process'].sentinel, processes),
+                )
                 for p in processes:
                     proc = p['process']  # type: multiprocessing.Process
                     if not proc.is_alive():
