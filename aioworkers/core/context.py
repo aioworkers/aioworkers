@@ -80,6 +80,14 @@ class Octopus(MutableMapping):
                 result.append('\n')
         return ''.join(result)
 
+    def find_iter(self, cls):
+        for pp, obj in self.items():
+            if isinstance(obj, Octopus):
+                for pc, obj in obj.find_iter(cls):
+                    yield '.'.join((pp, pc)), obj
+            elif isinstance(obj, cls):
+                yield pp, obj
+
 
 class Signal:
     def __init__(self, context, name=None):
