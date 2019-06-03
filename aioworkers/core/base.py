@@ -17,6 +17,8 @@ class AbstractEntity(ABC):
             self.set_context(context)
         if config is not None:
             self.set_config(config)
+        if loop is not None:
+            self._loop = loop
 
     @property
     def config(self):

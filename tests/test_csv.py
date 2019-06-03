@@ -2,10 +2,8 @@ import tempfile
 
 import pytest
 
-from aioworkers.queue import csv
 
-
-@pytest.yield_fixture
+@pytest.fixture
 def csv_file():
     with tempfile.NamedTemporaryFile() as tmpfile1:
         tmpfile1.write(b'name,uid\nx,3\nf,4')
@@ -13,9 +11,16 @@ def csv_file():
         yield tmpfile1
 
 
-async def test_dictreader(loop, csv_file, config):
-    config.update(file=csv_file.name)
-    reader = csv.DictReader(config, loop=loop)
-    await reader.init()
+@pytest.fixture
+def config_yaml(csv_file):
+    return """
+    reader:
+        cls: aioworkers.queue.csv.DictReader
+        file: {}
+    """.format(csv_file.name)
+
+
+async def test_dictreader(context):
+    reader = context.reader
     assert {'name': 'x', 'uid': '3'} == await reader.get()
     assert {'name': 'f', 'uid': '4'} == await reader.get()

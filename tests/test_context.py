@@ -49,7 +49,7 @@ async def test_context_create(loop):
     c = Context(conf, loop=loop)
     await c.init()
     await c.start()
-    assert c.f.e == 1
+    assert c.config.f.e == 1
     with pytest.raises(AttributeError):
         c.r
     with pytest.raises(KeyError):

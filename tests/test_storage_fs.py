@@ -5,8 +5,6 @@ from unittest import mock
 
 import pytest
 
-from aioworkers.core.config import Config, MergeDict
-from aioworkers.core.context import Context
 from aioworkers.storage.base import FieldStorageMixin
 from aioworkers.storage.filesystem import AsyncPath, FileSystemStorage
 
@@ -23,6 +21,11 @@ def config_yaml(tmp_dir):
     storage:
       cls: aioworkers.storage.filesystem.FileSystemStorage
       executor: null
+      path: {path}
+    field:
+      cls: tests.test_storage_fs.Store
+      executor: null
+      format: json
       path: {path}
     hstore:
       cls: aioworkers.storage.filesystem.HashFileSystemStorage
@@ -149,52 +152,35 @@ class Store(FieldStorageMixin, FileSystemStorage):
     pass
 
 
-async def test_field_storage(loop):
+async def test_field_storage(context):
     key = ('5', '6')
     data = {'f': 3, 'g': 4, 'h': 5}
     fields = ['f', 'g']
-    with tempfile.TemporaryDirectory() as d:
-        config = MergeDict(
-            name='',
-            path=d,
-            format='json',
-            executor=None,
-        )
-        context = Context({}, loop=loop)
-        storage = Store(config, context=context, loop=loop)
-        await storage.init()
-        await storage.set(key, data)
-        assert data == await storage.get(key)
-        assert 5 == await storage.get(key, field='h')
-        await storage.set(key, 6, field='h')
-        assert {'f': 3, 'g': 4} == await storage.get(key, fields=fields)
-        await storage.set(key, {'z': 1, 'y': 6}, fields=['z'])
-        assert {'f': 3, 'g': 4, 'h': 6, 'z': 1} == await storage.get(key)
-        await storage.set(key, None)
+    storage = context.field
+    await storage.set(key, data)
+    assert data == await storage.get(key)
+    assert 5 == await storage.get(key, field='h')
+    await storage.set(key, 6, field='h')
+    assert {'f': 3, 'g': 4} == await storage.get(key, fields=fields)
+    await storage.set(key, {'z': 1, 'y': 6}, fields=['z'])
+    assert {'f': 3, 'g': 4, 'h': 6, 'z': 1} == await storage.get(key)
+    await storage.set(key, None)
 
 
-async def test_fd(loop):
-    with tempfile.TemporaryDirectory() as d:
-        config = MergeDict(
-            name='',
-            path=d,
-            executor=None,
-        )
-        context = Context({}, loop=loop)
-        storage = FileSystemStorage(config, context=context, loop=loop)
-        await storage.init()
-        k = storage.raw_key('1')
-        assert isinstance(k / '2', AsyncPath)
-        assert isinstance('2' / k, AsyncPath)
-        assert isinstance(AsyncPath(k), AsyncPath)
-        assert isinstance(k.parent, AsyncPath)
-        assert k.parent.storage
+async def test_fd(context):
+    storage = context.storage
+    k = storage.raw_key('1')
+    assert isinstance(k / '2', AsyncPath)
+    assert isinstance('2' / k, AsyncPath)
+    assert isinstance(AsyncPath(k), AsyncPath)
+    assert isinstance(k.parent, AsyncPath)
+    assert k.parent.storage
 
-        async with k.open('w') as f:
-            await f.write('123')
+    async with k.open('w') as f:
+        await f.write('123')
 
-        assert b'123' == await storage.get('1')
-        await storage.set('1', None)
+    assert b'123' == await storage.get('1')
+    await storage.set('1', None)
 
 
 async def test_nested(context):
@@ -211,18 +197,9 @@ async def test_nested(context):
 storage = FileSystemStorage()
 
 
-async def test_obj(loop):
-    config = Config()
-    with tempfile.TemporaryDirectory() as d:
-        storage_config = dict(
-            obj='.'.join((__name__, 'storage')),
-            path=d,
-        )
-        config.update({'storage': storage_config})
-        context = Context(config, loop=loop)
-        async with context:
-            await context.storage.a.set('b', b'0')
-            assert b'0' == await context.storage.a.get('b')
+async def test_obj(context):
+    await context.storage.a.set('b', b'0')
+    assert b'0' == await context.storage.a.get('b')
 
 
 async def test_fs_glob(context):
