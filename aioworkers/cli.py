@@ -142,11 +142,13 @@ def main(*config_files, args=None, config_dirs=(),
         pass
     finally:
         sig = signal.SIGTERM
+        msg = ''
         while multiprocessing.active_children():
+            msg and print(msg)
             for p in multiprocessing.active_children():
                 os.kill(p.pid, sig)
             time.sleep(0.3)
-            print('killall children')
+            msg = 'killall children'
             sig = signal.SIGKILL
 
 
