@@ -46,8 +46,21 @@ class AsyncFile:
     def __init__(self, fd, storage=None):
         self.fd = fd
         self.storage = storage
-        for i in ('write', 'read', 'close'):
+        self._closed = False
+        for i in ('write', 'read'):
             setattr(self, i, async_method(self, i, fd))
+
+    async def __aenter__(self):
+        assert not self._closed
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
+    async def close(self):
+        assert not self._closed
+        await self.storage.run_in_executor(self.fd.close)
+        await self.storage.next_space_waiter()
 
 
 class AsyncFileContextManager:
@@ -76,7 +89,9 @@ class AsyncFileContextManager:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.af.close()
         self.af = None
-        await self.path.storage.next_space_waiter()
+
+    def __await__(self):
+        return self.__aenter__().__await__()
 
 
 class AsyncPath(PurePath):
