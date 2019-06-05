@@ -2,7 +2,7 @@
 History
 =======
 
-0.13a4 (2019-06-03)
+0.13a5 (2019-06-05)
 -------------------
 
 * AbstractConnector (#8)
@@ -17,6 +17,7 @@ History
 * Add cli param --multiprocessing
 * Add SocketServer
 * Context.find_iter
+* Improve AsyncPath
 
 
 0.12 (2018-10-20)
