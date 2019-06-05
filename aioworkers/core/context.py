@@ -282,7 +282,10 @@ class RootContextProcessor(ContextProcessor):
                 if m is None:
                     continue
                 if m.process:
-                    self.on_ready.append(m.process)
+                    groups = None
+                    if isinstance(v, Mapping):
+                        groups = v.get('groups')
+                    self.on_ready.append(m.process, groups)
                 break
             else:
                 if isinstance(v, Mapping):
