@@ -62,6 +62,15 @@ class AsyncFile:
         await self.storage.run_in_executor(self.fd.close)
         await self.storage.next_space_waiter()
 
+    async def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        try:
+            return next(self.fd)
+        except StopIteration:
+            raise StopAsyncIteration()
+
 
 class AsyncFileContextManager:
     def __init__(self, path, *args, **kwargs):

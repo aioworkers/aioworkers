@@ -182,6 +182,16 @@ async def test_fd(context):
     assert b'123' == await storage.get('1')
     await storage.set('1', None)
 
+    f = await k.open('w')
+    async with f:
+        await f.write('123')
+
+    async with k.open() as f:
+        async for line in f:
+            assert line == '123'
+
+    await storage.set('1', None)
+
 
 async def test_nested(context):
     storage = context.storage
