@@ -179,6 +179,7 @@ def create_process(cfg):
                 all_groups=False,
                 default=True,
             ),
+            process_name=cfg['name'],
         ),
         name=cfg['name'],
         daemon=True,
@@ -195,7 +196,8 @@ def loop_run(
     prompt=None,
     process_name=None,
 ):
-    utils.setproctitle(process_name)
+    if process_name:
+        utils.setproctitle(process_name)
     if loop is None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
