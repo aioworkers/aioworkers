@@ -9,6 +9,11 @@ import time
 from pathlib import Path
 from typing import Mapping
 
+try:
+    from setproctitle import setproctitle
+except ImportError:
+    setproctitle = lambda title: None  # noqa
+
 SIZE = struct.Struct('!I')
 logger = logging.getLogger(__name__)
 

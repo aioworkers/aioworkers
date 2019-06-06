@@ -32,6 +32,7 @@ Easy configurable workers based on asyncio
   `uvloop <https://pypi.python.org/pypi/uvloop>`_,
   `httptools <https://pypi.python.org/pypi/httptools>`_,
   `crontab <https://pypi.python.org/pypi/crontab>`_ <0.22,
+  `setproctitle <https://pypi.python.org/pypi/setproctitle>`_,
   `jupyter <https://pypi.python.org/pypi/jupyter>`_.
 * Documentation: https://aioworkers.readthedocs.io.
 

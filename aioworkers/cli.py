@@ -193,7 +193,9 @@ def loop_run(
     ns=None, cmds=None,
     argv=None, loop=None,
     prompt=None,
+    process_name=None,
 ):
+    utils.setproctitle(process_name)
     if loop is None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
