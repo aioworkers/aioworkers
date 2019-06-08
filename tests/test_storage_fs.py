@@ -222,3 +222,12 @@ async def test_fs_glob(context):
     await s.set('1', b'1')
     assert await s.length()
     assert ['1'] == list(map(str, await s.list()))
+
+
+async def test_asyncpath_glob(context):
+    s = context.storage
+    await s.set('1/2', b'1')
+    k = s.raw_key('1')
+    async for p in k.glob('*'):
+        assert type(k) is type(p)
+        assert p.name == '2'

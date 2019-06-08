@@ -12,6 +12,14 @@ from ..core.formatter import FormattedEntity
 from . import StorageError, base
 
 
+__all__ = (
+    'AsyncPath',
+    'FileSystemStorage',
+    'HashFileSystemStorage',
+    'NestedFileSystemStorage',
+)
+
+
 def async_method(self, method: str, sync_obj=None):
     if sync_obj is None:
         sync_obj = self
@@ -104,6 +112,23 @@ class AsyncFileContextManager:
         return self.__aenter__().__await__()
 
 
+class AsyncGlob:
+    def __init__(self, path, pattern):
+        self._factory = type(path)
+        self._iter = path.path.glob(pattern)
+        self.storage = path.storage
+
+    async def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        result = await self.storage.run_in_executor(next, self._iter, None)
+        if result is None:
+            raise StopAsyncIteration()
+        else:
+            return self._factory(result, storage=self.storage)
+
+
 class AsyncPath(PurePath):
     def __new__(cls, *args, storage=None):
         if cls is AsyncPath:
@@ -168,6 +193,9 @@ class AsyncPath(PurePath):
         return type(self)(
             os.path.normpath(str(self)),
             storage=self.storage)
+
+    def glob(self, pattern):
+        return AsyncGlob(self, pattern)
 
 
 class AsyncPosixPath(AsyncPath, pathlib.PurePosixPath):
