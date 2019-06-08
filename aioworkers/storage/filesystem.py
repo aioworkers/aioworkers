@@ -146,9 +146,10 @@ class AsyncPath(PurePath):
         return self
 
     def _init(self, storage=None):
-        self.storage = storage
-        if not storage:
-            return
+        if storage:
+            self.storage = storage
+        else:
+            self.storage = ExecutorEntity()
         self.path = Path(self)
         for i in (
             'write_bytes', 'read_bytes',
