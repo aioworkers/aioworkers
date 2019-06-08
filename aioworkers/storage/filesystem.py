@@ -149,7 +149,7 @@ class AsyncPath(PurePath):
         if storage:
             self.storage = storage
         else:
-            self.storage = ExecutorEntity()
+            self.storage = MockFileSystemStorage()
         self.path = Path(self)
         for i in (
             'write_bytes', 'read_bytes',
@@ -205,6 +205,21 @@ class AsyncPosixPath(AsyncPath, pathlib.PurePosixPath):
 
 class AsyncWindowsPath(AsyncPath, pathlib.PureWindowsPath):
     pass
+
+
+class MockFileSystemStorage(ExecutorEntity):
+    def set_config(self, config):
+        cfg = config.new_child(executor=1)
+        super().set_config(cfg)
+
+    @property
+    def loop(self):
+        if self._loop is None:
+            self._loop = __import__('asyncio').get_event_loop()
+        return self._loop
+
+    async def next_space_waiter(self):
+        pass
 
 
 class BaseFileSystemStorage(
