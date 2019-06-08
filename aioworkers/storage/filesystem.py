@@ -66,10 +66,11 @@ class AsyncFile:
         return self
 
     async def __anext__(self):
-        try:
-            return next(self.fd)
-        except StopIteration:
+        result = await self.storage.run_in_executor(next, self.fd, None)
+        if result is None:
             raise StopAsyncIteration()
+        else:
+            return result
 
 
 class AsyncFileContextManager:

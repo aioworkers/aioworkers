@@ -186,6 +186,11 @@ async def test_fd(context):
     async with f:
         await f.write('123')
 
+    f = await k.open()
+    async for line in f:
+        assert line == '123'
+    await f.close()
+
     async with k.open() as f:
         async for line in f:
             assert line == '123'
