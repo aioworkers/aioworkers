@@ -11,7 +11,6 @@ from ..core.base import AbstractNestedEntity, ExecutorEntity
 from ..core.formatter import FormattedEntity
 from . import StorageError, base
 
-
 __all__ = (
     'AsyncPath',
     'FileSystemStorage',
