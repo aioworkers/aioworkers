@@ -1,12 +1,15 @@
-from ...core.base import AbstractNamedEntity, LoggingEntity
+from ...core.base import AbstractNamedEntity
 from ...http import URL
+from ..server import SocketServer
 from . import access_logger
 from .exceptions import HttpException
 from .protocol import Protocol
 
 
-class WebServer(LoggingEntity, AbstractNamedEntity):
-    _server = None
+class WebServer(SocketServer, AbstractNamedEntity):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._servers = []
 
     async def init(self):
         await super().init()
@@ -22,14 +25,15 @@ class WebServer(LoggingEntity, AbstractNamedEntity):
 
     async def start(self):
         factory = Protocol.factory(server=self)
-        self._server = await self.loop.create_server(
-            factory, self.config.host, self.config.get_int('port'))
+        for sock in self._sockets:
+            server = await self.loop.create_server(factory, sock=sock)
+            self._servers.append(server)
 
     async def stop(self):
-        if self._server:
-            self._server.close()
-            await self._server.wait_closed()
-            self._server = None
+        while self._servers:
+            server = self._servers.pop()
+            server.close()
+            await server.wait_closed()
 
     async def handler(self, request):
         try:
