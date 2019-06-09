@@ -12,8 +12,11 @@ class SocketServer(LoggingEntity):
         super().set_config(config)
         port = self.config.get_int('port', null=True)
         if port:
-            host = self.config.get('host')
-            self._sockets.append(self.bind(port, host))
+            self._sockets.append(self.bind(
+                port=port,
+                host=self.config.get('host'),
+                backlog=self.config.get('backlog', 128),
+            ))
 
     def bind(self, port, host=None, backlog=128):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
