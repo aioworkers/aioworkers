@@ -156,7 +156,7 @@ def process_iter(cfg):
     result = []
     for k, v in cfg.items():
         if 'count' in v:
-            for i in range(v['count']):
+            for i in range(v.get_int('count')):
                 result.append({
                     'name': '{}-{}'.format(k, i),
                     'groups': v.get('groups', ()),
