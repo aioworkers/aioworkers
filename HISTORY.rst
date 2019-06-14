@@ -2,8 +2,8 @@
 History
 =======
 
-0.13a5 (2019-06-05)
--------------------
+0.13a (2019-0X-XX)
+------------------
 
 * AbstractConnector (#8)
 * new Context signals: connect, disconnect, cleanup
