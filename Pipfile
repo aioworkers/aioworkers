@@ -16,7 +16,7 @@ python_version = "3.6"
 
 [dev-packages]
 
-pytest = "==4.6.2"
+pytest = "==4.6.3"
 pytest-aioworkers = "*"
 pytest-cov = "==2.7.1"
 pytest-flake8 = "*"
