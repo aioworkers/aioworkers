@@ -1,16 +1,16 @@
+dist: xenial
 language: python
 sudo: false
-services: []
 python:
   - 3.5.3
-  - 3.6
-  # - 3.7-dev
+  - '3.6'
+  - '3.7'
   # - pypy3
 install:
-  - pip install -U pip setuptools pipenv
+  - pip install -U pip setuptools
+  - pip install -U pipenv codecov
   - pip install -e .
   - pipenv install -d --skip-lock --system
-  - pip install codecov
 script: pytest --cov=aioworkers
 
 after_success:
