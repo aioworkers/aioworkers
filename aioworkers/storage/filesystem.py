@@ -154,6 +154,7 @@ class AsyncPath(PurePath):
             'write_bytes', 'read_bytes',
             'write_text', 'read_text',
             'exists', 'mkdir', 'stat',
+            'unlink',
         ):
             setattr(self, i, async_method(self, i, self.path))
 
