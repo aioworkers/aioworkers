@@ -230,9 +230,13 @@ class BaseFileSystemStorage(
 
     PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
 
-    def init(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._space_waiters = []
+        self._limit = None
 
+    def set_config(self, config):
+        super().set_config(config)
         self._limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
         if isinstance(self._limit, int):
             self._limit = self._limit << 20  # int in MB
@@ -241,8 +245,6 @@ class BaseFileSystemStorage(
 
         self._path = AsyncPath(self.config.path, storage=self)
         self._tmp = self.config.get('tmp') or self.config.path
-
-        return super().init()
 
     def factory(self, item, config=None):
         path = self._path.joinpath(*flat(item)).normpath
@@ -379,9 +381,11 @@ class BaseFileSystemStorage(
 
     def __repr__(self):
         cls = type(self)
-        props = [('path', self._path)]
-        if self.config.get('executor'):
-            props.append(('c', self.config.executor))
+        props = []
+        if self.config:
+            props.append(('path', self._path))
+            if self.config.get('executor'):
+                props.append(('c', self.config.executor))
         return '<{}.{} {}>'.format(
             cls.__module__, cls.__qualname__,
             ' '.join(map('{0[0]}={0[1]}'.format, props)))
