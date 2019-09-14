@@ -230,21 +230,17 @@ class BaseFileSystemStorage(
 
     PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._space_waiters = []
-        self._limit = None
-
     def set_config(self, config):
         super().set_config(config)
+        self._space_waiters = []
+        self._path = AsyncPath(self.config.path, storage=self)
+        self._tmp = self.config.get('tmp') or self.config.path
+
         self._limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
         if isinstance(self._limit, int):
             self._limit = self._limit << 20  # int in MB
         elif isinstance(self._limit, str):
             self._limit = humanize.parse_size(self._limit)
-
-        self._path = AsyncPath(self.config.path, storage=self)
-        self._tmp = self.config.get('tmp') or self.config.path
 
     def factory(self, item, config=None):
         path = self._path.joinpath(*flat(item)).normpath
