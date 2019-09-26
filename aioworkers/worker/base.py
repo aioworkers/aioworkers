@@ -96,7 +96,10 @@ class Worker(AbstractWorker):
                 await asyncio.sleep(self._sleep_start, loop=self.loop)
             while True:
                 if self._crontab is not None:
-                    await asyncio.sleep(self._crontab.next(default_utc=True), loop=self.loop)
+                    await asyncio.sleep(
+                        self._crontab.next(default_utc=True),
+                        loop=self.loop,
+                    )
                 try:
                     await self.work()
                 except asyncio.CancelledError:
