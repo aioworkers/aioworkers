@@ -1,21 +1,14 @@
 [[source]]
-
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
-
 [requires]
-
 python_version = "3.6"
-
 
 [packages]
 
-
-
 [dev-packages]
-
 pytest = "==5.2.0"
 pytest-aioworkers = "*"
 pytest-cov = "==2.7.1"
@@ -24,10 +17,10 @@ pytest-isort = "*"
 pytest-mock = "==1.11.0"
 pytest-mypy = "*"
 pytest-sugar = "*"
+pytest-timeout = "*"
 pyyaml = "==5.1.2"
 jupyter = "*"
-crontab = "<0.22"
+crontab = "*"
 httptools = "*"
-isort = "*"
 ipykernel = "*"
 setproctitle = "*"
