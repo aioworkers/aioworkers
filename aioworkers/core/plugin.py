@@ -62,6 +62,10 @@ class Plugin:
     def add_arguments(self, parser):
         pass
 
+    def parse_known_args(self, args, namespace):
+        """argparse method"""
+        return namespace, args
+
 
 class ProxyPlugin(Plugin):
     def __init__(self, original):

@@ -17,3 +17,4 @@ def test_proxy_plugin(name, mocker):
     assert isinstance(p, ProxyPlugin)
     assert p.get_config() == {}
     p.add_arguments(mocker.Mock())
+    p.parse_known_args()

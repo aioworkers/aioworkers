@@ -88,6 +88,7 @@ def main(*config_files, args=None, config_dirs=(),
     config = context.config
     plugins.extend(plugin.search_plugins(*cmds))
     for p in plugins:
+        args, argv = p.parse_known_args(args=argv, namespace=args)
         config.load(*p.configs)
         config.update(p.get_config())
     cmds = [cmd for cmd in cmds if cmd not in sys.modules]
