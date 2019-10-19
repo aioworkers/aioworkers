@@ -1,3 +1,4 @@
+import argparse
 import sys
 
 import pytest
@@ -17,4 +18,4 @@ def test_proxy_plugin(name, mocker):
     assert isinstance(p, ProxyPlugin)
     assert p.get_config() == {}
     p.add_arguments(mocker.Mock())
-    p.parse_known_args()
+    p.parse_known_args(args=[], namespace=argparse.Namespace())
