@@ -2,6 +2,13 @@
 History
 =======
 
+0.14.1 (2019-10-21)
+-------------------
+
+* fix AbstractConnector groups
+* import Crontab in master
+
+
 0.14 (2019-10-20)
 -----------------
 
