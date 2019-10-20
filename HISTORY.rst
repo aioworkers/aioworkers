@@ -2,6 +2,19 @@
 History
 =======
 
+0.14 (2019-10-20)
+-----------------
+
+* fix Crontab FutureWarning (#12)
+* AsyncFile.unlink
+* change SocketServer.bind
+* fix unconfigured BaseFileSystemStorage repr
+* Plugin.parse_known_args
+* fix context param for signal
+* Context.processes with cleanup
+* SocketServer.cleanup
+
+
 0.13 (2019-06-17)
 -----------------
 
