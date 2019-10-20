@@ -68,11 +68,12 @@ class AbstractNamedEntity(AbstractEntity):
 
 
 class AbstractConnector(AbstractEntity):
-    def set_context(self, context):
-        super().set_context(context)
-        context.on_connect.append(self.connect)
-        context.on_disconnect.append(self.disconnect)
-        context.on_cleanup.append(self.cleanup)
+    async def init(self):
+        await super().init()
+        groups = self.config.get('groups')
+        self.context.on_connect.append(self.connect, groups)
+        self.context.on_disconnect.append(self.disconnect, groups)
+        self.context.on_cleanup.append(self.cleanup, groups)
 
     @abstractmethod
     async def connect(self):
