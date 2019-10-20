@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import inspect
 import logging.config
 from collections import Mapping, MutableMapping, OrderedDict
@@ -100,7 +101,7 @@ class Signal:
             groups = {str(g) for g in groups}
         self._signals.append((signal, groups))
 
-    async def send(self, group_resolver):
+    def _send(self, group_resolver):
         coros = []
         for i, g in self._signals:
             if not group_resolver.match(g):
@@ -113,10 +114,22 @@ class Signal:
                     coro = i()
             elif asyncio.iscoroutine(i):
                 coro = i
+            elif callable(i):
+                params = inspect.signature(i).parameters
+                if 'context' in params:
+                    i(self._context)
+                else:
+                    i()
+                continue
             else:
                 continue
             coros.append(coro)
-        await self._context.wait_all(coros)
+        return coros
+
+    def send(self, group_resolver, *, coroutine=True):
+        coros = self._send(group_resolver)
+        if coroutine:
+            return self._context.wait_all(coros)
 
 
 class GroupResolver:
@@ -325,8 +338,13 @@ class Context(AbstractConnector, Octopus):
         for path, obj in self.find_iter(AbstractEntity):
             obj._set_loop(loop)
 
-    def build(self):
+    @contextlib.contextmanager
+    def processes(self):
+        gr = GroupResolver(all_groups=True)
+        self.set_group_resolver(gr)
         self.processors.build(self.config)
+        yield
+        self.on_cleanup.send(gr, coroutine=False)
 
     @property
     def on_connect(self):

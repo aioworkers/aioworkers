@@ -111,24 +111,23 @@ def main(*config_files, args=None, config_dirs=(),
 
     try:
         if args.multiprocessing:
-            context.set_group_resolver(GroupResolver(all_groups=True))
-            context.build()
-            print(PROMPT)
-            logger = multiprocessing.get_logger()
-            processes = process_iter(config.get('processes', {}))
-            for p in processes:
-                logger.info('Create process %s', p['name'])
-                p['process'] = create_process(p)
-            while True:
-                multiprocessing.connection.wait(
-                    map(lambda x: x['process'].sentinel, processes),
-                )
+            with context.processes():
+                print(PROMPT)
+                logger = multiprocessing.get_logger()
+                processes = process_iter(config.get('processes', {}))
                 for p in processes:
-                    proc = p['process']  # type: multiprocessing.Process
-                    if not proc.is_alive():
-                        logger.critical('Recreate process %s', p['name'])
-                        p['process'] = create_process(p)
-                time.sleep(1)
+                    logger.info('Create process %s', p['name'])
+                    p['process'] = create_process(p)
+                while True:
+                    multiprocessing.connection.wait(
+                        map(lambda x: x['process'].sentinel, processes),
+                    )
+                    for p in processes:
+                        proc = p['process']  # type: multiprocessing.Process
+                        if not proc.is_alive():
+                            logger.critical('Recreate process %s', p['name'])
+                            p['process'] = create_process(p)
+                    time.sleep(1)
 
         elif args.interact:
             from .core.interact import shell
