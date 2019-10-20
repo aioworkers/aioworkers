@@ -108,7 +108,7 @@ class Signal:
             if asyncio.iscoroutinefunction(i):
                 params = inspect.signature(i).parameters
                 if 'context' in params:
-                    coro = i(self)
+                    coro = i(self._context)
                 else:
                     coro = i()
             elif asyncio.iscoroutine(i):
