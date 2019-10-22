@@ -115,7 +115,7 @@ class AbstractNestedEntity(AbstractEntity):
         await super().init()
         if self._children:
             await self.context.wait_all(
-                c.init() for c in self._children.values()
+                [c.init() for c in self._children.values()]
             )
 
     def get_child_config(
