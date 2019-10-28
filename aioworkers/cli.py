@@ -66,7 +66,8 @@ def main(*config_files, args=None, config_dirs=(),
     context.config.search_dirs.extend(config_dirs)
 
     plugins = plugin.search_plugins()
-    plugins.extend(plugin.search_plugins(*commands, force=True))
+    if commands:
+        plugins.extend(plugin.search_plugins(*commands, force=True))
     for i in plugins:
         i.add_arguments(parser)
 
