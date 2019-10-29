@@ -8,13 +8,15 @@ import signal
 import sys
 import time
 from functools import partial, reduce
+from pathlib import Path
 from urllib.parse import splittype  # type: ignore
 from urllib.request import urlopen
 
 from . import utils
-from .core import command, plugin
+from .core import command
 from .core.config import Config
 from .core.context import Context, GroupResolver
+from .core.plugin import Plugin, search_plugins
 
 parser = argparse.ArgumentParser(prefix_chars='-+')
 
@@ -65,9 +67,15 @@ def main(*config_files, args=None, config_dirs=(),
         sys.path.insert(0, cwd)
     context.config.search_dirs.extend(config_dirs)
 
-    plugins = plugin.search_plugins()
-    if commands:
-        plugins.extend(plugin.search_plugins(*commands, force=True))
+    if not commands:
+        p = Path(sys.argv[0])
+        if __package__ in (p.parent.name, p.name):
+            commands += __name__,
+        else:
+            commands += p.name,
+
+    plugins = search_plugins()
+    plugins.extend(search_plugins(*commands, force=True))
     for i in plugins:
         i.add_arguments(parser)
 
@@ -88,7 +96,7 @@ def main(*config_files, args=None, config_dirs=(),
         cmds, argv = list(commands), []
 
     config = context.config
-    plugins.extend(plugin.search_plugins(*cmds))
+    plugins.extend(search_plugins(*cmds))
     for p in plugins:
         args, argv = p.parse_known_args(args=argv, namespace=args)
         config.load(*p.configs)
@@ -238,13 +246,30 @@ class UriType(argparse.FileType):
         return urlopen(string)
 
 
+class ExtendAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        getattr(namespace, self.dest).extend(values)
+
+
+class plugin(Plugin):
+    def add_arguments(self, parser):
+        default = []
+        parser.set_defaults(config=default)
+        parser.add_argument(
+            '-c', '--config', nargs='+', action=ExtendAction,
+            type=UriType('r', encoding='utf-8'),
+        )
+        parser.add_argument('--config-stdin', action='store_true')
+
+
 def main_with_conf(*args, **kwargs):
-    parser.add_argument(
-        '-c', '--config', nargs='+',
-        type=UriType('r', encoding='utf-8'))
-    parser.add_argument('--config-stdin', action='store_true')
+    import warnings
+    warnings.warn(
+        'Deprecated main_with_conf, use main',
+        DeprecationWarning, stacklevel=2,
+    )
     main(*args, **kwargs)
 
 
 if __name__ == '__main__':
-    main_with_conf()
+    main()

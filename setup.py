@@ -43,7 +43,7 @@ setup(
     tests_require=test_requirements,
     entry_points={
         'console_scripts': [
-            'aioworkers=aioworkers.cli:main_with_conf'
+            'aioworkers=aioworkers.cli:main'
         ]
     },
 )
