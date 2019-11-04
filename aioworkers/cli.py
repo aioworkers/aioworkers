@@ -71,6 +71,8 @@ def main(*config_files, args=None, config_dirs=(),
         p = Path(sys.argv[0])
         if __package__ in (p.parent.name, p.name):
             commands += __name__,
+        elif p.name.startswith('__'):
+            commands += p.parent.name,
         else:
             commands += p.name,
 
