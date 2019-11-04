@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 import logging.config
-import multiprocessing
+import multiprocessing.connection
 import operator
 import os
 import signal
