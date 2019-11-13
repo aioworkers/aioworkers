@@ -91,7 +91,11 @@ class AbstractHttpStorage(
     async def request(self, url, **kwargs):
         async with self.session.request(url, **kwargs) as response:
             data = await response.read()
-        result = self.decode(data)
+        try:
+            formatter = self.registry.get(response.headers['Content-Type'])
+        except KeyError:
+            formatter = self
+        result = formatter.decode(data)
         if self._return_status:
             return response.status, result
         else:
