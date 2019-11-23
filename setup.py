@@ -8,7 +8,8 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
-    history = history_file.read()
+    history = history_file.read().split('\n\n', 5)
+    history.pop()
 
 requirements = [
 ]
@@ -21,7 +22,7 @@ setup(
     name='aioworkers',
     version=version,
     description="Easy configurable workers based on asyncio",
-    long_description=readme + '\n\n' + history,
+    long_description='\n\n'.join([readme] + history),
     long_description_content_type='text/x-rst',
     author="Alexander Malev",
     author_email='yttrium@somedev.ru',
