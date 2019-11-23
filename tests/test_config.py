@@ -122,10 +122,19 @@ def test_ini():
         list2:[1,2]
         list3=[1,2]
         list4 = [1,2]
+        bool1: true
+        bool2: false
+        bool3: True
+        bool4: False
+        bool5: On
+        bool6: Off
+        bool7: 1
         """)
     for k, v in d['sec'].items():
         if k.startswith('int'):
             assert isinstance(v, int)
+        elif k.startswith('bool'):
+            assert isinstance(v, bool)
         elif k.startswith('float'):
             assert isinstance(v, float)
         elif k.startswith('list'):
