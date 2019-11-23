@@ -22,6 +22,7 @@ setup(
     version=version,
     description="Easy configurable workers based on asyncio",
     long_description=readme + '\n\n' + history,
+    long_description_content_type='text/x-rst',
     author="Alexander Malev",
     author_email='yttrium@somedev.ru',
     url='https://github.com/aioworkers/aioworkers',
