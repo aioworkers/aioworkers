@@ -7,7 +7,7 @@ import re
 from abc import abstractmethod
 from collections import ChainMap, Mapping, MutableMapping
 from pathlib import Path
-from typing import Iterator
+from typing import Callable, Iterator
 
 from .. import humanize, utils
 from ..http import URL
@@ -190,6 +190,8 @@ class JsonLoader(ConfigFileLoader):
 
 
 class ValueMatcher:
+    fn = None  # type: Callable
+
     def __init__(self, value):
         self._value = value
 
@@ -214,6 +216,23 @@ class IntValueMatcher(ValueMatcher):
 
     def get_value(self):
         return self._value
+
+
+class BooleanValueMatcher(IntValueMatcher):
+    true = frozenset({'1', 'true', 'on'})
+    false = frozenset({'0', 'false', 'off'})
+
+    @classmethod
+    def fn(cls, value):
+        if not value:
+            raise ValueError(value)
+        v = value[:5].lower()
+        if v in cls.true:
+            return True
+        elif v in cls.false:
+            return False
+        else:
+            raise ValueError(value)
 
 
 class FloatValueMatcher(IntValueMatcher):
@@ -245,6 +264,7 @@ class ListValueMatcher(ValueMatcher):
 
 class StringReplaceLoader(ConfigFileLoader):
     matchers = (
+        BooleanValueMatcher,
         IntValueMatcher, FloatValueMatcher,
         MultilineValueMatcher, ListValueMatcher,
     )
@@ -333,7 +353,7 @@ registry(IniLoader)
 extractors = {
     'get_int': int,
     'get_float': float,
-    'get_bool': bool,
+    'get_bool': BooleanValueMatcher.fn,
     'get_duration': humanize.parse_duration,
     'get_size': humanize.parse_size,
     'get_url': URL,
