@@ -7,7 +7,7 @@ History
 
 * fix cli multiprocessing
 * fix default command
-* fix get_bool & replacer *.ini
+* fix get_bool & replacer `*.ini`
 
 
 0.14.3 (2019-10-29)
