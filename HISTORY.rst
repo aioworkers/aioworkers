@@ -2,6 +2,14 @@
 History
 =======
 
+0.14.4 (2019-11-23)
+-------------------
+
+* fix cli multiprocessing
+* fix default command
+* fix get_bool & replacer *.ini
+
+
 0.14.3 (2019-10-29)
 -------------------
 
