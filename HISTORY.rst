@@ -43,6 +43,7 @@ History
 * SocketServer.cleanup
 
 
+
 0.13 (2019-06-17)
 -----------------
 
@@ -61,6 +62,7 @@ History
 * Improve AsyncPath
 
 
+
 0.12 (2018-10-20)
 -----------------
 
@@ -73,6 +75,7 @@ History
 * Drop default run in Subprocess
 * Fix updater
 * Plugin aioworkers.net.web
+
 
 
 0.11.4 (2018-06-29)
@@ -115,6 +118,7 @@ History
 * Support run process with ipykernel
 * Dropped module aioworkers.config
 * Dropped deprecated class aioworkers.http.Application
+
 
 
 0.10.2 (2018-03-25)
