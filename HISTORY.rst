@@ -5,6 +5,8 @@ History
 0.15 (2019-11-XX)
 -----------------
 
+* fix Context.__getitem__ for py3.7 & py3.8
+* fix asyncgen glob in filesystem storage for py3.7 & py3.8
 * Impl aioworkers.net.web.client
 * AbstractHttpStorage
 
