@@ -69,7 +69,7 @@ class AsyncFile:
         await self.storage.run_in_executor(self.fd.close)
         await self.storage.next_space_waiter()
 
-    async def __aiter__(self):
+    def __aiter__(self):
         return self
 
     async def __anext__(self):
@@ -117,7 +117,7 @@ class AsyncGlob:
         self._iter = path.path.glob(pattern)
         self.storage = path.storage
 
-    async def __aiter__(self):
+    def __aiter__(self):
         return self
 
     async def __anext__(self):
