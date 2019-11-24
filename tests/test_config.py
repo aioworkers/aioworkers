@@ -5,8 +5,9 @@ from pathlib import Path
 import pytest
 
 from aioworkers import utils
-from aioworkers.core.config import (Config, IniLoader, MergeDict,
-                                    StringReplaceLoader, ValueExtractor)
+from aioworkers.core.config import (
+    Config, IniLoader, MergeDict, StringReplaceLoader, ValueExtractor
+)
 
 
 def test_dict_create():
