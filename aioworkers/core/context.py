@@ -24,10 +24,7 @@ class Octopus(MutableMapping):
             v = self._create_item()
             self[k] = v
         else:
-            try:
-                v = self[k]
-            except Exception:
-                raise KeyError(key)
+            raise KeyError(key)
         if len(sp) == 1:
             return v
         if isinstance(v, Octopus):
