@@ -8,7 +8,7 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
-    history = history_file.read().split('\n' * 4, 2)
+    history = history_file.read().split('\n' * 4, 4)
     history.pop()
 
 requirements = [
