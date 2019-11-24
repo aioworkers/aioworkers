@@ -1,8 +1,9 @@
 import pytest
 
 from aioworkers.core.config import Config, MergeDict
-from aioworkers.core.context import (Context, EntityContextProcessor,
-                                     GroupResolver, Octopus, Signal)
+from aioworkers.core.context import (
+    Context, EntityContextProcessor, GroupResolver, Octopus, Signal
+)
 
 
 def test_octopus():
