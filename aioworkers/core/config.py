@@ -210,7 +210,7 @@ class IntValueMatcher(ValueMatcher):
     @classmethod
     def match(cls, value):
         try:
-            return cls(cls.fn(value))
+            return cls(cls.fn(value.strip()))
         except ValueError:
             pass
 
@@ -226,7 +226,7 @@ class BooleanValueMatcher(IntValueMatcher):
     def fn(cls, value):
         if not value:
             raise ValueError(value)
-        v = value[:5].lower()
+        v = value.strip()[:5].lower()
         if v in cls.true:
             return True
         elif v in cls.false:
