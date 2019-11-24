@@ -2,6 +2,14 @@
 History
 =======
 
+0.15 (2019-11-XX)
+-----------------
+
+* Impl aioworkers.net.web.client
+* AbstractHttpStorage
+
+
+
 0.14.5 (2019-11-24)
 -------------------
 
