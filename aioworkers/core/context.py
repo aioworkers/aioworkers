@@ -3,9 +3,12 @@ import contextlib
 import inspect
 import logging.config
 from collections import Mapping, MutableMapping, OrderedDict
+from typing import Iterable, Optional, Set, Tuple, Type, TypeVar
 
 from ..utils import import_name
 from .base import AbstractConnector, AbstractEntity
+
+T = TypeVar('T')
 
 
 class Octopus(MutableMapping):
@@ -81,12 +84,23 @@ class Octopus(MutableMapping):
                 result.append('\n')
         return ''.join(result)
 
-    def find_iter(self, cls):
+    def find_iter(
+        self, cls: Type[T], *, exclude: Optional[Set[int]] = None,
+    ) -> Iterable[Tuple[str, T]]:
+        can_add = False
+        if not exclude:
+            can_add = True
+            exclude = {0}
         for pp, obj in self.items():
             if isinstance(obj, Octopus):
-                for pc, obj in obj.find_iter(cls):
+                identy = id(obj)
+                if identy in exclude:
+                    continue
+                if can_add:
+                    exclude.add(identy)
+                for pc, obj in obj.find_iter(cls, exclude=exclude):
                     yield '.'.join((pp, pc)), obj
-            elif isinstance(obj, cls):
+            if isinstance(obj, cls):
                 yield pp, obj
 
 
