@@ -81,9 +81,8 @@ class Octopus(MutableMapping):
                 result.append('\n')
         return ''.join(result)
 
-    def find_iter(
-        self, cls: Type[T], *, exclude: Optional[Set[int]] = None,
-    ) -> Iterable[Tuple[str, T]]:
+    def find_iter(self, cls, *, exclude=None):
+        #  type: (Type[T], Optional[Set[int]]) -> Iterable[Tuple[str, T]]
         can_add = False
         if not exclude:
             can_add = True
