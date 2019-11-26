@@ -3,15 +3,15 @@ name: tests
 on: [push]
 
 jobs:
-  build:
+  build-on-ubuntu:
 
     runs-on: ubuntu-latest
-    strategy:
+    strategy: &strategy
       max-parallel: 4
       matrix:
         python-version: [3.5, 3.6, 3.7, 3.8]
 
-    steps:
+    steps: &steps
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
@@ -26,3 +26,8 @@ jobs:
     - name: Test with pytest
       run: |
         pytest --cov=aioworkers
+
+  build-on-windows:
+    runs-on: windows-latest
+    strategy: *strategy
+    steps: *steps
