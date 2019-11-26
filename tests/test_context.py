@@ -27,6 +27,20 @@ def test_octopus():
     assert not f[None]
 
 
+def test_octopus_iter():
+    f = Octopus()
+    f.r = 1
+    assert f['r'] == 1
+    f['g'] = 2
+    assert f.g == 2
+    f['y.t'] = 3
+    assert f.y.t == 3
+    f['d.w.f'] = 4
+    assert list(f.find_iter(int))
+    f['d.f'] = f
+    assert list(f.find_iter(int))
+
+
 async def test_context_items(loop):
     f = Context({}, loop=loop)
     f.r = 1
