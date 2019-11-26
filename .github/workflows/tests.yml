@@ -3,7 +3,7 @@ name: tests
 on: [push]
 
 jobs:
-  build-on-ubuntu:
+  tests-on-ubuntu:
 
     runs-on: ubuntu-latest
     strategy:
@@ -27,7 +27,7 @@ jobs:
       run: |
         pytest --cov=aioworkers
 
-  build-on-windows:
+  tests-on-windows:
 
     runs-on: windows-latest
     strategy:
@@ -46,7 +46,9 @@ jobs:
           pip install -U pip setuptools
           pip install -U pipenv codecov
           pip install -e .
-          pipenv install --skip-lock --system
+          pip install pyyaml
+          pip install pytest pytest-aioworkers pytest-mock pytest-timeout
+          rm setup.cfg
       - name: Test with pytest
         run: |
-          pytest --cov=aioworkers
+          pytest aioworkers tests
