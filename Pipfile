@@ -7,6 +7,8 @@ verify_ssl = true
 python_version = "3.7"
 
 [packages]
+
+[dev-packages]
 pytest = "*"
 pytest-aioworkers = "*"
 pytest-cov = "*"
@@ -17,8 +19,6 @@ pytest-mypy = "*"
 pytest-sugar = "*"
 pytest-timeout = "*"
 pyyaml = "*"
-
-[dev-packages]
 jupyter = "*"
 crontab = "*"
 httptools = "*"
