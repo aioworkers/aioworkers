@@ -86,7 +86,7 @@ class Octopus(MutableMapping):
         can_add = False
         if not exclude:
             can_add = True
-            exclude = {0}
+            exclude = {id(self)}
         for pp, obj in self.items():
             if isinstance(obj, Octopus):
                 identy = id(obj)
