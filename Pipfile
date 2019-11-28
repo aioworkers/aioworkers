@@ -15,7 +15,6 @@ pytest-timeout = "*"
 pyyaml = "*"
 crontab = "*"
 idna-ssl = "*"
-ipykernel = "*"
 
 [dev-packages]
 pytest-cov = "*"
