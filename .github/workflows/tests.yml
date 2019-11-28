@@ -50,13 +50,12 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -U pip setuptools
-        pip install -U pipenv codecov ipykernel
+        pip install -U pipenv codecov ipykernel httptools
         pip install -e .
         pipenv install --skip-lock --system
     - name: Test with pytest
       run: |
         pytest
-      continue-on-error: true
 
   tests-on-macos:
 
