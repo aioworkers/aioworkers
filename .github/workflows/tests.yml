@@ -55,7 +55,7 @@ jobs:
         pipenv install --skip-lock --system
     - name: Test with pytest
       run: |
-        pytest --cov=aioworkers
+        pytest
 
   tests-on-macos:
 
@@ -76,7 +76,7 @@ jobs:
         pip install -U pip setuptools
         pip install -U pipenv codecov
         pip install -e .
-        pipenv install --skip-lock --system
+        pipenv install -d --skip-lock --system
     - name: Test with pytest
       run: |
         pytest
