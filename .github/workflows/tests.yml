@@ -100,7 +100,9 @@ jobs:
           pip install -U pip setuptools
           pip install -U pipenv codecov
           pip install -e .
+          pip install pytest-aioworkers
           pipenv install --skip-lock --system
+        continue-on-error: true
       - name: Test with pytest
         run: |
           pytest
