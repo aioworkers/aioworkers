@@ -134,7 +134,7 @@ async def test_func(loop):
 
 
 def test_create_entity():
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, TypeError)):
         EntityContextProcessor(None, 'x', {'cls': 'time.time'})
     with pytest.raises(TypeError):
         EntityContextProcessor(None, 'x', {'cls': 'aioworkers.humanize.size'})
