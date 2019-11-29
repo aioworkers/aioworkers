@@ -2,6 +2,13 @@
 History
 =======
 
+0.14.7 (2019-11-30)
+-------------------
+
+* find_iter without self
+* fix prompt_toolkit>=3 + aiocontextvars
+
+
 0.14.6 (2019-11-26)
 -------------------
 
