@@ -14,7 +14,6 @@ pytest-sugar = "*"
 pytest-timeout = "*"
 pyyaml = "*"
 crontab = "*"
-idna-ssl = "*"
 
 [dev-packages]
 pytest-cov = "*"
