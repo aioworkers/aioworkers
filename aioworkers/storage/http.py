@@ -132,6 +132,10 @@ class AbstractHttpStorage(
 
 
 class RoStorage(ExecutorEntity, AbstractHttpStorage):
+    def set_config(self, config):
+        cfg = config.new_parent(executor=config.get_int('conn_limit', 1))
+        super().set_config(cfg)
+
     async def session_factory(self, **kwargs):
         return Session.from_entity(self, **kwargs)
 
