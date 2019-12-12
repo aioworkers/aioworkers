@@ -9,9 +9,10 @@ from . import config, formatter
 logger = logging.getLogger(__name__)
 
 
-def load_plugin(
-    module: str, force: bool = False, *, cache: Dict = {},
-) -> Optional['Plugin']:
+def load_plugin(module: str,
+                force: bool = False,
+                *,
+                cache: Dict = {}) -> Optional['Plugin']:
     if module in cache:
         return cache[module]
     elif force:
