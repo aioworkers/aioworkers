@@ -1,8 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
-from collections import Mapping
 from functools import partial
-from typing import Optional
+from typing import Mapping, Optional
 
 from ..utils import import_name
 from .config import ValueExtractor

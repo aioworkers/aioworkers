@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import importlib
 import inspect
-from collections import Mapping
+from typing import Mapping
 
 
 class CommandNotFound(RuntimeError):

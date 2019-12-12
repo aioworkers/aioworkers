@@ -2,8 +2,10 @@ import asyncio
 import contextlib
 import inspect
 import logging.config
-from collections import Mapping, MutableMapping, OrderedDict
-from typing import Iterable, Optional, Set, Tuple, Type, TypeVar
+from collections import OrderedDict
+from typing import (
+    Iterable, Mapping, MutableMapping, Optional, Set, Tuple, Type, TypeVar
+)
 
 from ..utils import import_name
 from .base import AbstractConnector, AbstractEntity

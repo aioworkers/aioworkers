@@ -1,6 +1,7 @@
 import asyncio
 import inspect
-from collections import Iterable, Mapping, defaultdict, namedtuple
+from collections import defaultdict, namedtuple
+from typing import Iterable, Mapping
 
 from aioworkers.core.base import AbstractNamedEntity
 from aioworkers.net.web.exceptions import HttpException

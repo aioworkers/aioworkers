@@ -3,7 +3,7 @@ import shlex
 import subprocess
 import sys
 import weakref
-from collections import Mapping, Sequence
+from typing import Mapping, Sequence
 
 from .. import utils
 from ..core.formatter import FormattedEntity

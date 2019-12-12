@@ -1,6 +1,6 @@
 import logging
 from abc import abstractmethod
-from collections import Mapping, Sequence
+from typing import Mapping, Sequence
 
 from ..core.base import ExecutorEntity, LoggingEntity
 from ..core.formatter import FormattedEntity
