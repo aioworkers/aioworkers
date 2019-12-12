@@ -6,7 +6,7 @@ def config_yaml():
     return """
     s:
         cls: aioworkers.storage.meta.FutureStorage
-        weak: true
+        weak: false
     s1:
         cls: aioworkers.storage.meta.FutureStorage
     s2:
