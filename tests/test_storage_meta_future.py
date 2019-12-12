@@ -13,7 +13,8 @@ def config_yaml():
         cls: aioworkers.storage.meta.FutureStorage
     s3:
         cls: aioworkers.storage.meta.FutureStorage
-        exists_set: true
+        weak: false
+        exists_set: false
     """
 
 

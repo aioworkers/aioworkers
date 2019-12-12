@@ -1,5 +1,6 @@
 import weakref
 from itertools import cycle
+from typing import Any, Hashable
 
 from . import base
 
@@ -67,24 +68,29 @@ class Cache(base.AbstractStorage):
 
 
 class FutureStorage(base.AbstractStorage):
-    async def init(self):
+    def __init__(self, *args, **kwargs):
+        self._futures = {}
+        super().__init__(*args, **kwargs)
+
+    def set_config(self, config):
+        super().set_config(config)
         if self.config.get('weak', True):
             self._futures = weakref.WeakValueDictionary()
-        else:
-            self._futures = {}
 
-    def raw_key(self, key):
+    def raw_key(self, key: Any) -> Hashable:
         return key
 
-    async def set(self, key, value):
+    async def set(self, key: Hashable, value: Any) -> None:
         raw_key = self.raw_key(key)
-        if raw_key in self._futures:
-            future = self._futures[raw_key]
-        elif self.config.get('exists_set'):
-            future = self._futures.setdefault(
-                raw_key, self.loop.create_future())
-        else:
-            return
+        if raw_key not in self._futures:
+            pass
+        elif not self._futures[raw_key].done():
+            self._futures[raw_key].set_result(value)
+            return None
+        elif not self.config.get('exists_set'):
+            return None
+        future = self.loop.create_future()
+        self._futures[raw_key] = future
         future.set_result(value)
 
     def get(self, key):
