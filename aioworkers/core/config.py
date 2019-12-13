@@ -419,13 +419,15 @@ class ValueExtractor(Mapping):
         converter = extractors[item]
 
         def extractor(key, default=..., *, null=False):
-            if default is ...:
-                v = self._val[key]
+            if default is not ...:
+                val = self._val.get(key, default)
+            elif null:
+                val = self._val.get(key)
             else:
-                v = self._val.get(key, default)
-            if v is None and null:
-                return v
-            return converter(v)
+                val = self._val[key]
+            if val is None and null:
+                return val
+            return converter(val)
         return extractor
 
     def __len__(self) -> int:
