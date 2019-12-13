@@ -224,7 +224,11 @@ class BooleanValueMatcher(IntValueMatcher):
 
     @classmethod
     def fn(cls, value):
-        if not value:
+        if isinstance(value, bool):
+            return value
+        elif not isinstance(value, str):
+            return bool(value)
+        elif not value:
             raise ValueError(value)
         v = value[:5].lower()
         if v in cls.true:
