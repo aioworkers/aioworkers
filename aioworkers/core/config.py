@@ -5,8 +5,9 @@ import mimetypes
 import os
 import re
 from abc import abstractmethod
+from collections import ChainMap
 from pathlib import Path
-from typing import Callable, ChainMap, Iterator, Mapping, MutableMapping
+from typing import Callable, Iterator, Mapping, MutableMapping
 
 from .. import humanize, utils
 from ..http import URL
