@@ -11,6 +11,13 @@ History
 
 
 
+0.14.9 (2019-12-14)
+-------------------
+
+* fix get_bool
+* fix ValueExtractor.extractor null without default
+
+
 0.14.8 (2019-12-08)
 -------------------
 
