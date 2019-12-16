@@ -227,8 +227,9 @@ class NameLogger(logging.LoggerAdapter):
         return '[{}] {}'.format(self.extra['name'], msg), kwargs
 
 
-class LoggingEntity(AbstractEntity):
+class LoggingEntity(AbstractNamedEntity):
     logging_adapter = NameLogger
+    logger = logging.getLogger('aioworkers')
 
     def set_config(self, config):
         super().set_config(config)
