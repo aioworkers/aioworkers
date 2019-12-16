@@ -8,7 +8,7 @@ from typing import (
 )
 
 from ..utils import import_name
-from .base import AbstractConnector, AbstractEntity
+from .base import AbstractEntity
 
 T = TypeVar('T')
 
@@ -327,7 +327,7 @@ class RootContextProcessor(ContextProcessor):
         await self.on_ready.send(self.context._group_resolver)
 
 
-class Context(AbstractConnector, Octopus):
+class Context(AbstractEntity, Octopus):
     def __init__(self, *args, **kwargs):
         self._group_resolver = kwargs.pop('group_resolver', GroupResolver())
         self._on_connect = Signal(self, name='connect')
