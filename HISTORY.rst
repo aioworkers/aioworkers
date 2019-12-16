@@ -8,6 +8,10 @@ History
 * BREAKING CHANGES in aioworkers.storage.http.(Ro)Storage
 * Impl aioworkers.net.web.client
 * AbstractHttpStorage
+* Revert Context inhered from AbstractConnector
+* LoggingEntity based on AbstractNamedEntity
+* AbstractConnector.robust_connect
+* AbstractConnector based on LoggingEntity
 
 
 
