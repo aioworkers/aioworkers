@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from functools import partial
@@ -64,26 +65,6 @@ class AbstractNamedEntity(AbstractEntity):
     @property
     def name(self):
         return self._name
-
-
-class AbstractConnector(AbstractEntity):
-    async def init(self):
-        await super().init()
-        groups = self.config.get('groups')
-        self.context.on_connect.append(self.connect, groups)
-        self.context.on_disconnect.append(self.disconnect, groups)
-        self.context.on_cleanup.append(self.cleanup, groups)
-
-    @abstractmethod
-    async def connect(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def disconnect(self):
-        raise NotImplementedError()
-
-    async def cleanup(self):
-        pass
 
 
 class AbstractNestedEntity(AbstractEntity):
@@ -235,3 +216,36 @@ class LoggingEntity(AbstractNamedEntity):
         super().set_config(config)
         logger = logging.getLogger(self.config.get('logger', 'aioworkers'))
         self.logger = self.logging_adapter.from_instance(logger, self)
+
+
+class AbstractConnector(LoggingEntity):
+    async def init(self):
+        await super().init()
+        groups = self.config.get('groups')
+        self.context.on_connect.append(self.robust_connect, groups)
+        self.context.on_disconnect.append(self.disconnect, groups)
+        self.context.on_cleanup.append(self.cleanup, groups)
+
+    async def robust_connect(self):
+        while True:
+            try:
+                await self.connect()
+            except asyncio.CancelledError:
+                break
+            except Exception:
+                self.logger.exception('Connect error')
+                await asyncio.sleep(3)
+                self.logger.debug('Try reconnect')
+            else:
+                break
+
+    @abstractmethod
+    async def connect(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def disconnect(self):
+        raise NotImplementedError()
+
+    async def cleanup(self):
+        pass
