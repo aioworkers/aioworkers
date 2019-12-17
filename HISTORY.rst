@@ -2,7 +2,7 @@
 History
 =======
 
-0.15 (2019-11-XX)
+0.15 (2019-12-18)
 -----------------
 
 * BREAKING CHANGES in aioworkers.storage.http.(Ro)Storage
