@@ -268,8 +268,9 @@ class ListValueMatcher(ValueMatcher):
 
 class StringReplaceLoader(ConfigFileLoader):
     matchers = (
+        IntValueMatcher,
         BooleanValueMatcher,
-        IntValueMatcher, FloatValueMatcher,
+        FloatValueMatcher,
         MultilineValueMatcher, ListValueMatcher,
     )
 
