@@ -129,7 +129,7 @@ def test_ini():
         bool4: False
         bool5: On
         bool6: Off
-        bool7: 1
+        int7: 1
         """)
     for k, v in d['sec'].items():
         if k.startswith('int'):
