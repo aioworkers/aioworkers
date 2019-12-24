@@ -2,6 +2,13 @@
 History
 =======
 
+0.15.1 (2019-12-24)
+-------------------
+
+* fix StringReplaceLoader.matchers
+* aioworkers.net.web without formatting for bytes and str
+
+
 0.15 (2019-12-18)
 -----------------
 
