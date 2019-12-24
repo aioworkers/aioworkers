@@ -41,7 +41,12 @@ class Request:
         write(b'\nServer: aioworkers')
         for h, v in headers:
             write('\n{}: {}'.format(h, v).encode())
-        if format:
+        if isinstance(data, bytes):
+            pass
+        elif isinstance(data, str):
+            data = data.encode()
+            write(b'\nContent-Type: text/plain')
+        elif format:
             formatter = registry.get(format)
             if formatter.mimetypes:
                 write(b'\nContent-Type: ')
