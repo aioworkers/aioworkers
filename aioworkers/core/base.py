@@ -24,7 +24,7 @@ class AbstractEntity(ABC):
     def config(self):
         return self._config
 
-    def set_config(self, config):
+    def set_config(self, config) -> None:
         if self._config is not None:
             raise RuntimeError('Config already set')
         elif isinstance(config, ValueExtractor):
@@ -34,7 +34,6 @@ class AbstractEntity(ABC):
         else:
             raise TypeError('Config must be instance of ValueExtractor')
         self._config = config
-        return config
 
     @property
     def context(self):
@@ -58,7 +57,7 @@ class AbstractEntity(ABC):
 
 
 class AbstractNamedEntity(AbstractEntity):
-    def set_config(self, config):
+    def set_config(self, config) -> None:
         super().set_config(config)
         self._name = config.name
 
@@ -99,7 +98,7 @@ class AbstractNestedEntity(AbstractEntity):
         for i in self._children.values():
             i.set_context(context)
 
-    def set_config(self, config):
+    def set_config(self, config) -> None:
         super().set_config(config)
         for k, v in self._children.items():
             c = self.get_child_config(k)
@@ -198,7 +197,7 @@ class ExecutorEntity(AbstractEntity):
             ex = self._context.get(ex)
         self._executor = ex
 
-    def set_config(self, config):
+    def set_config(self, config) -> None:
         super().set_config(config)
         self._create_executor()
 
@@ -230,7 +229,7 @@ class NameLogger(logging.LoggerAdapter):
 class LoggingEntity(AbstractEntity):
     logging_adapter = NameLogger
 
-    def set_config(self, config):
+    def set_config(self, config) -> None:
         super().set_config(config)
         logger = logging.getLogger(self.config.get('logger', 'aioworkers'))
         self.logger = self.logging_adapter.from_instance(logger, self)
