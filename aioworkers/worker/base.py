@@ -35,21 +35,21 @@ class Worker(AbstractWorker):
             input: str.path to instance of AbstractReader
             output: str.path to instance of AbstractWriter
     """
-    async def init(self):
-        self._started_at = None
-        self._stopped_at = None
-        self._is_sleep = None
-        self._future = None
-        self.counter = collections.Counter()
+    _crontab = None
+    _sleep = None
+    _sleep_start = None
+    _started_at = None
+    _stopped_at = None
+    _is_sleep = None
+    _future = None
+    _persist = False
 
-        if self.config.get('run'):
-            run = import_name(self.config.run)
-            self.run = partial(run, self)
-
-        if self.input is not None or self.output is not None:
-            self._persist = True
-        else:
-            self._persist = self.config.get('persist')
+    def set_config(self, config):
+        super().set_config(config)
+        crontab = self.config.get('crontab')
+        if crontab:
+            CronTab = import_name('crontab.CronTab')
+            self._crontab = CronTab(crontab)
 
         self._sleep = self.config.get_duration(
             'sleep', default=None, null=True
@@ -58,11 +58,19 @@ class Worker(AbstractWorker):
             'sleep_start', default=None, null=True
         )
 
-        self._crontab = self.config.get('crontab')
-        if self._crontab:
-            CronTab = import_name('crontab.CronTab')
-            self._crontab = CronTab(self._crontab)
+    async def init(self):
+        self.counter = collections.Counter()
+
+        if self.config.get('run'):
+            run = import_name(self.config.run)
+            self.run = partial(run, self)
+
+        if self.input is not None or self.output is not None:
             self._persist = True
+        elif self._crontab is not None:
+            self._persist = True
+        else:
+            self._persist = self.config.get('persist')
 
         groups = self.config.get('groups')
         if self.config.get('autorun'):

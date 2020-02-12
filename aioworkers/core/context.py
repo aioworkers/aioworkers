@@ -1,10 +1,16 @@
 import asyncio
+import contextlib
 import inspect
 import logging.config
-from collections import Mapping, MutableMapping, OrderedDict
+from collections import OrderedDict
+from typing import (
+    Iterable, Mapping, MutableMapping, Optional, Set, Tuple, Type, TypeVar
+)
 
 from ..utils import import_name
-from .base import AbstractConnector, AbstractEntity
+from .base import AbstractEntity
+
+T = TypeVar('T')
 
 
 class Octopus(MutableMapping):
@@ -20,10 +26,7 @@ class Octopus(MutableMapping):
             v = self._create_item()
             self[k] = v
         else:
-            try:
-                v = self[k]
-            except Exception:
-                raise KeyError(key)
+            raise KeyError(key)
         if len(sp) == 1:
             return v
         if isinstance(v, Octopus):
@@ -80,12 +83,22 @@ class Octopus(MutableMapping):
                 result.append('\n')
         return ''.join(result)
 
-    def find_iter(self, cls):
+    def find_iter(self, cls, *, exclude=None):
+        #  type: (Type[T], Optional[Set[int]]) -> Iterable[Tuple[str, T]]
+        can_add = False
+        if not exclude:
+            can_add = True
+            exclude = {id(self)}
         for pp, obj in self.items():
             if isinstance(obj, Octopus):
-                for pc, obj in obj.find_iter(cls):
+                identy = id(obj)
+                if identy in exclude:
+                    continue
+                if can_add:
+                    exclude.add(identy)
+                for pc, obj in obj.find_iter(cls, exclude=exclude):
                     yield '.'.join((pp, pc)), obj
-            elif isinstance(obj, cls):
+            if isinstance(obj, cls):
                 yield pp, obj
 
 
@@ -100,7 +113,7 @@ class Signal:
             groups = {str(g) for g in groups}
         self._signals.append((signal, groups))
 
-    async def send(self, group_resolver):
+    def _send(self, group_resolver):
         coros = []
         for i, g in self._signals:
             if not group_resolver.match(g):
@@ -108,15 +121,27 @@ class Signal:
             if asyncio.iscoroutinefunction(i):
                 params = inspect.signature(i).parameters
                 if 'context' in params:
-                    coro = i(self)
+                    coro = i(self._context)
                 else:
                     coro = i()
             elif asyncio.iscoroutine(i):
                 coro = i
+            elif callable(i):
+                params = inspect.signature(i).parameters
+                if 'context' in params:
+                    i(self._context)
+                else:
+                    i()
+                continue
             else:
                 continue
             coros.append(coro)
-        await self._context.wait_all(coros)
+        return coros
+
+    def send(self, group_resolver, *, coroutine=True):
+        coros = self._send(group_resolver)
+        if coroutine:
+            return self._context.wait_all(coros)
 
 
 class GroupResolver:
@@ -302,7 +327,7 @@ class RootContextProcessor(ContextProcessor):
         await self.on_ready.send(self.context._group_resolver)
 
 
-class Context(AbstractConnector, Octopus):
+class Context(AbstractEntity, Octopus):
     def __init__(self, *args, **kwargs):
         self._group_resolver = kwargs.pop('group_resolver', GroupResolver())
         self._on_connect = Signal(self, name='connect')
@@ -325,8 +350,13 @@ class Context(AbstractConnector, Octopus):
         for path, obj in self.find_iter(AbstractEntity):
             obj._set_loop(loop)
 
-    def build(self):
+    @contextlib.contextmanager
+    def processes(self):
+        gr = GroupResolver(all_groups=True)
+        self.set_group_resolver(gr)
         self.processors.build(self.config)
+        yield
+        self.on_cleanup.send(gr, coroutine=False)
 
     @property
     def on_connect(self):

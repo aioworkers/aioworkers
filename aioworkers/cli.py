@@ -1,20 +1,22 @@
 import argparse
 import asyncio
 import logging.config
-import multiprocessing
+import multiprocessing.connection
 import operator
 import os
 import signal
 import sys
 import time
 from functools import partial, reduce
+from pathlib import Path
 from urllib.parse import splittype  # type: ignore
 from urllib.request import urlopen
 
 from . import utils
-from .core import command, plugin
+from .core import command
 from .core.config import Config
 from .core.context import Context, GroupResolver
+from .core.plugin import Plugin, search_plugins
 
 parser = argparse.ArgumentParser(prefix_chars='-+')
 
@@ -65,7 +67,17 @@ def main(*config_files, args=None, config_dirs=(),
         sys.path.insert(0, cwd)
     context.config.search_dirs.extend(config_dirs)
 
-    plugins = plugin.search_plugins()
+    if not commands:
+        p = Path(sys.argv[0])
+        if __package__ in (p.parent.name, p.name):
+            commands += __name__,
+        elif p.name.startswith('__'):
+            commands += p.parent.name,
+        else:
+            commands += p.name,
+
+    plugins = search_plugins()
+    plugins.extend(search_plugins(*commands, force=True))
     for i in plugins:
         i.add_arguments(parser)
 
@@ -86,8 +98,9 @@ def main(*config_files, args=None, config_dirs=(),
         cmds, argv = list(commands), []
 
     config = context.config
-    plugins.extend(plugin.search_plugins(*cmds))
+    plugins.extend(search_plugins(*cmds))
     for p in plugins:
+        args, argv = p.parse_known_args(args=argv, namespace=args)
         config.load(*p.configs)
         config.update(p.get_config())
     cmds = [cmd for cmd in cmds if cmd not in sys.modules]
@@ -110,24 +123,23 @@ def main(*config_files, args=None, config_dirs=(),
 
     try:
         if args.multiprocessing:
-            context.set_group_resolver(GroupResolver(all_groups=True))
-            context.build()
-            print(PROMPT)
-            logger = multiprocessing.get_logger()
-            processes = process_iter(config.get('processes', {}))
-            for p in processes:
-                logger.info('Create process %s', p['name'])
-                p['process'] = create_process(p)
-            while True:
-                multiprocessing.connection.wait(
-                    map(lambda x: x['process'].sentinel, processes),
-                )
+            with context.processes():
+                print(PROMPT)
+                logger = multiprocessing.get_logger()
+                processes = process_iter(config.get('processes', {}))
                 for p in processes:
-                    proc = p['process']  # type: multiprocessing.Process
-                    if not proc.is_alive():
-                        logger.critical('Recreate process %s', p['name'])
-                        p['process'] = create_process(p)
-                time.sleep(1)
+                    logger.info('Create process %s', p['name'])
+                    p['process'] = create_process(p)
+                while True:
+                    multiprocessing.connection.wait(
+                        map(lambda x: x['process'].sentinel, processes),
+                    )
+                    for p in processes:
+                        proc = p['process']  # type: multiprocessing.Process
+                        if not proc.is_alive():
+                            logger.critical('Recreate process %s', p['name'])
+                            p['process'] = create_process(p)
+                    time.sleep(1)
 
         elif args.interact:
             from .core.interact import shell
@@ -236,13 +248,30 @@ class UriType(argparse.FileType):
         return urlopen(string)
 
 
+class ExtendAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        getattr(namespace, self.dest).extend(values)
+
+
+class plugin(Plugin):
+    def add_arguments(self, parser):
+        default = []
+        parser.set_defaults(config=default)
+        parser.add_argument(
+            '-c', '--config', nargs='+', action=ExtendAction,
+            type=UriType('r', encoding='utf-8'),
+        )
+        parser.add_argument('--config-stdin', action='store_true')
+
+
 def main_with_conf(*args, **kwargs):
-    parser.add_argument(
-        '-c', '--config', nargs='+',
-        type=UriType('r', encoding='utf-8'))
-    parser.add_argument('--config-stdin', action='store_true')
+    import warnings
+    warnings.warn(
+        'Deprecated main_with_conf, use main',
+        DeprecationWarning, stacklevel=2,
+    )
     main(*args, **kwargs)
 
 
 if __name__ == '__main__':
-    main_with_conf()
+    main()

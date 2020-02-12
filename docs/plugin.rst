@@ -13,6 +13,12 @@ The module can be written by defining the plugin class in the module:
        def get_config(self):
            return {}
 
+       def add_arguments(self, parser):
+           pass
+
+       def parse_known_args(self, args, namespace):
+           return namespace, args
+
 
 or module/package contains:
 

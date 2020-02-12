@@ -5,9 +5,9 @@ import mimetypes
 import os
 import re
 from abc import abstractmethod
-from collections import ChainMap, Mapping, MutableMapping
+from collections import ChainMap
 from pathlib import Path
-from typing import Iterator
+from typing import Callable, Iterator, Mapping, MutableMapping
 
 from .. import humanize, utils
 from ..http import URL
@@ -190,6 +190,8 @@ class JsonLoader(ConfigFileLoader):
 
 
 class ValueMatcher:
+    fn = None  # type: Callable
+
     def __init__(self, value):
         self._value = value
 
@@ -208,12 +210,33 @@ class IntValueMatcher(ValueMatcher):
     @classmethod
     def match(cls, value):
         try:
-            return cls(cls.fn(value))
+            return cls(cls.fn(value.strip()))
         except ValueError:
             pass
 
     def get_value(self):
         return self._value
+
+
+class BooleanValueMatcher(IntValueMatcher):
+    true = frozenset({'1', 'true', 'on'})
+    false = frozenset({'0', 'false', 'off'})
+
+    @classmethod
+    def fn(cls, value):
+        if isinstance(value, bool):
+            return value
+        elif not isinstance(value, str):
+            return bool(value)
+        elif not value:
+            raise ValueError(value)
+        v = value.strip()[:5].lower()
+        if v in cls.true:
+            return True
+        elif v in cls.false:
+            return False
+        else:
+            raise ValueError(value)
 
 
 class FloatValueMatcher(IntValueMatcher):
@@ -245,7 +268,9 @@ class ListValueMatcher(ValueMatcher):
 
 class StringReplaceLoader(ConfigFileLoader):
     matchers = (
-        IntValueMatcher, FloatValueMatcher,
+        IntValueMatcher,
+        BooleanValueMatcher,
+        FloatValueMatcher,
         MultilineValueMatcher, ListValueMatcher,
     )
 
@@ -333,7 +358,7 @@ registry(IniLoader)
 extractors = {
     'get_int': int,
     'get_float': float,
-    'get_bool': bool,
+    'get_bool': BooleanValueMatcher.fn,
     'get_duration': humanize.parse_duration,
     'get_size': humanize.parse_size,
     'get_url': URL,
@@ -395,13 +420,15 @@ class ValueExtractor(Mapping):
         converter = extractors[item]
 
         def extractor(key, default=..., *, null=False):
-            if default is ...:
-                v = self._val[key]
+            if default is not ...:
+                val = self._val.get(key, default)
+            elif null:
+                val = self._val.get(key)
             else:
-                v = self._val.get(key, default)
-            if v is None and null:
-                return v
-            return converter(v)
+                val = self._val[key]
+            if val is None and null:
+                return val
+            return converter(val)
         return extractor
 
     def __len__(self) -> int:

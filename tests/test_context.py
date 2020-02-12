@@ -1,8 +1,9 @@
 import pytest
 
 from aioworkers.core.config import Config, MergeDict
-from aioworkers.core.context import (Context, EntityContextProcessor,
-                                     GroupResolver, Octopus, Signal)
+from aioworkers.core.context import (
+    Context, EntityContextProcessor, GroupResolver, Octopus, Signal
+)
 
 
 def test_octopus():
@@ -24,6 +25,20 @@ def test_octopus():
 
     f[None] = True
     assert not f[None]
+
+
+def test_octopus_iter():
+    f = Octopus()
+    f.r = 1
+    assert f['r'] == 1
+    f['g'] = 2
+    assert f.g == 2
+    f['y.t'] = 3
+    assert f.y.t == 3
+    f['d.w.f'] = 4
+    assert list(f.find_iter(int))
+    f['d.f'] = f
+    assert list(f.find_iter(int))
 
 
 async def test_context_items(loop):
@@ -119,7 +134,7 @@ async def test_func(loop):
 
 
 def test_create_entity():
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, TypeError)):
         EntityContextProcessor(None, 'x', {'cls': 'time.time'})
     with pytest.raises(TypeError):
         EntityContextProcessor(None, 'x', {'cls': 'aioworkers.humanize.size'})

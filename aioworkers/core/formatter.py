@@ -64,6 +64,8 @@ class Registry(dict):
         elif name in self:
             raise ValueError('Duplicate name: %s' % name)
         self[name] = cls
+        for mime in cls.mimetypes:
+            self[mime] = cls
 
     def get(self, name):
         if not name or name == 'bytes':

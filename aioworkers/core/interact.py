@@ -21,22 +21,33 @@ def _await(coro, context):
 
 
 def shell(run):
-    from IPython.terminal.embed import InteractiveShellEmbed
-    shell = InteractiveShellEmbed.instance()
-    _f = concurrent.futures.Future()
+    import prompt_toolkit
 
-    def _thread():
-        context = _f.result()
-        locals()['await'] = partial(_await, context=context)
-        shell(
-            header='Welcome to interactive mode of aioworkers. \n'
-                   'You available the main context and '
-                   'the await function to perform coroutine.')
-        return locals()['await'](asyncio.coroutine(context.loop.stop)())
+    if int(prompt_toolkit.__version__.split('.', 1)[0]) < 3:
+        from IPython.terminal.embed import InteractiveShellEmbed
+        shell = InteractiveShellEmbed.instance()
+        _f = concurrent.futures.Future()
 
-    thread = Thread(target=_thread)
-    thread.start()
-    run(future=_f)
+        def _thread():
+            context = _f.result()
+            locals()['await'] = partial(_await, context=context)
+            shell(
+                header='Welcome to interactive mode of aioworkers. \n'
+                       'You available the main context and '
+                       'the await function to perform coroutine.')
+            return locals()['await'](asyncio.coroutine(context.loop.stop)())
+        thread = Thread(target=_thread)
+        thread.start()
+        run(future=_f)
+    else:
+        from IPython import embed
+
+        class PseudoFuture:
+            def set_result(self, context):
+                embed(using='asyncio')
+                context.loop.stop()
+
+        run(future=PseudoFuture())
 
 
 def kernel(run):

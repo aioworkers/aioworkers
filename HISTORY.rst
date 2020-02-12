@@ -2,6 +2,103 @@
 History
 =======
 
+0.15.1 (2019-12-24)
+-------------------
+
+* fix StringReplaceLoader.matchers
+* aioworkers.net.web without formatting for bytes and str
+
+
+0.15 (2019-12-18)
+-----------------
+
+* BREAKING CHANGES in aioworkers.storage.http.(Ro)Storage
+* Impl aioworkers.net.web.client
+* AbstractHttpStorage
+* Revert Context inhered from AbstractConnector
+* LoggingEntity based on AbstractNamedEntity
+* AbstractConnector.robust_connect
+* AbstractConnector based on LoggingEntity
+
+
+
+0.14.9 (2019-12-14)
+-------------------
+
+* fix get_bool
+* fix ValueExtractor.extractor null without default
+
+
+0.14.8 (2019-12-08)
+-------------------
+
+* cache for plugins
+
+
+0.14.7 (2019-11-30)
+-------------------
+
+* find_iter without self
+* fix prompt_toolkit>=3 + aiocontextvars
+
+
+0.14.6 (2019-11-26)
+-------------------
+
+* fix recursive find_iter
+* fix Context.__getitem__ for py3.7 & py3.8
+* fix asyncgen glob in filesystem storage for py3.7 & py3.8
+
+
+0.14.5 (2019-11-24)
+-------------------
+
+* fix break
+
+
+0.14.4 (2019-11-23)
+-------------------
+
+* Break version
+* fix cli multiprocessing
+* fix default command
+* fix get_bool & replacer `*.ini`
+
+
+0.14.3 (2019-10-29)
+-------------------
+
+* fix cli
+* cli as plugin
+
+
+0.14.2 (2019-10-22)
+-------------------
+
+* fix AbstractNestedEntity
+
+
+0.14.1 (2019-10-21)
+-------------------
+
+* fix AbstractConnector groups
+* import Crontab in master
+
+
+0.14 (2019-10-20)
+-----------------
+
+* fix Crontab FutureWarning (#12)
+* AsyncFile.unlink
+* change SocketServer.bind
+* fix unconfigured BaseFileSystemStorage repr
+* Plugin.parse_known_args
+* fix context param for signal
+* Context.processes with cleanup
+* SocketServer.cleanup
+
+
+
 0.13 (2019-06-17)
 -----------------
 
@@ -20,6 +117,7 @@ History
 * Improve AsyncPath
 
 
+
 0.12 (2018-10-20)
 -----------------
 
@@ -32,6 +130,7 @@ History
 * Drop default run in Subprocess
 * Fix updater
 * Plugin aioworkers.net.web
+
 
 
 0.11.4 (2018-06-29)
@@ -74,6 +173,7 @@ History
 * Support run process with ipykernel
 * Dropped module aioworkers.config
 * Dropped deprecated class aioworkers.http.Application
+
 
 
 0.10.2 (2018-03-25)

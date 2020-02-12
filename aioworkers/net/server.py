@@ -16,6 +16,10 @@ class SocketServer(LoggingEntity):
             host=self.config.get('host'),
         ))
 
+    def set_context(self, context):
+        super().set_context(context)
+        context.on_cleanup.append(self.cleanup)
+
     def bind(self, port: int, host: str = None) -> List[socket.socket]:
         if not port:
             return []
@@ -26,3 +30,7 @@ class SocketServer(LoggingEntity):
         sock.bind((host, port))
         sock.setblocking(False)
         return [sock]
+
+    def cleanup(self):
+        for s in self._sockets:
+            s.close()

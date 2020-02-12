@@ -1,5 +1,9 @@
+TARGETS=aioworkers tests
 
 test:
+	isort -rc $(TARGETS)
+	flake8 $(TARGETS)
+	mypy $(TARGETS)
 	pytest
 
 test-all:

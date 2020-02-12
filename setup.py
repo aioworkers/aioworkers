@@ -8,7 +8,8 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
-    history = history_file.read()
+    history = history_file.read().split('\n' * 4, 4)
+    history.pop()
 
 requirements = [
 ]
@@ -21,7 +22,8 @@ setup(
     name='aioworkers',
     version=version,
     description="Easy configurable workers based on asyncio",
-    long_description=readme + '\n\n' + history,
+    long_description='\n\n\n'.join([readme] + history),
+    long_description_content_type='text/x-rst',
     author="Alexander Malev",
     author_email='yttrium@somedev.ru',
     url='https://github.com/aioworkers/aioworkers',
@@ -35,15 +37,18 @@ setup(
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     test_suite='tests',
     tests_require=test_requirements,
     entry_points={
         'console_scripts': [
-            'aioworkers=aioworkers.cli:main_with_conf'
+            'aioworkers=aioworkers.cli:main'
         ]
     },
 )

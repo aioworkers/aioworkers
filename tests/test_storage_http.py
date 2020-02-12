@@ -20,7 +20,7 @@ async def test_set_get(loop, aiohttp_client):
         storage=dict(
             cls='aioworkers.storage.http.Storage',
             prefix=str(url),
-            semaphore=1,
+            headers=[['A', 'b']],
             format='json',
         ))
 
@@ -34,7 +34,6 @@ async def test_set_get(loop, aiohttp_client):
 async def test_format(loop):
     config = Config(storage=dict(
         cls='aioworkers.storage.http.Storage',
-        semaphore=1,
         format='bytes',
     ))
     async with Context(config=config, loop=loop) as context:

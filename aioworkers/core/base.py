@@ -1,8 +1,8 @@
+import asyncio
 import logging
 from abc import ABC, abstractmethod
-from collections import Mapping
 from functools import partial
-from typing import Optional
+from typing import Mapping, Optional
 
 from ..utils import import_name
 from .config import ValueExtractor
@@ -66,25 +66,6 @@ class AbstractNamedEntity(AbstractEntity):
         return self._name
 
 
-class AbstractConnector(AbstractEntity):
-    def set_context(self, context):
-        super().set_context(context)
-        context.on_connect.append(self.connect)
-        context.on_disconnect.append(self.disconnect)
-        context.on_cleanup.append(self.cleanup)
-
-    @abstractmethod
-    async def connect(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def disconnect(self):
-        raise NotImplementedError()
-
-    async def cleanup(self):
-        pass
-
-
 class AbstractNestedEntity(AbstractEntity):
     cache_factory = dict
     item_factory = None
@@ -113,7 +94,7 @@ class AbstractNestedEntity(AbstractEntity):
         await super().init()
         if self._children:
             await self.context.wait_all(
-                c.init() for c in self._children.values()
+                [c.init() for c in self._children.values()]
             )
 
     def get_child_config(
@@ -226,10 +207,44 @@ class NameLogger(logging.LoggerAdapter):
         return '[{}] {}'.format(self.extra['name'], msg), kwargs
 
 
-class LoggingEntity(AbstractEntity):
+class LoggingEntity(AbstractNamedEntity):
     logging_adapter = NameLogger
+    logger = logging.getLogger('aioworkers')
 
     def set_config(self, config) -> None:
         super().set_config(config)
         logger = logging.getLogger(self.config.get('logger', 'aioworkers'))
         self.logger = self.logging_adapter.from_instance(logger, self)
+
+
+class AbstractConnector(LoggingEntity):
+    async def init(self):
+        await super().init()
+        groups = self.config.get('groups')
+        self.context.on_connect.append(self.robust_connect, groups)
+        self.context.on_disconnect.append(self.disconnect, groups)
+        self.context.on_cleanup.append(self.cleanup, groups)
+
+    async def robust_connect(self):
+        while True:
+            try:
+                await self.connect()
+            except asyncio.CancelledError:
+                break
+            except Exception:
+                self.logger.exception('Connect error')
+                await asyncio.sleep(3)
+                self.logger.debug('Try reconnect')
+            else:
+                break
+
+    @abstractmethod
+    async def connect(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def disconnect(self):
+        raise NotImplementedError()
+
+    async def cleanup(self):
+        pass
