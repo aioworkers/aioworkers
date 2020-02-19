@@ -7,7 +7,7 @@ import re
 from abc import abstractmethod
 from collections import ChainMap
 from pathlib import Path
-from typing import Callable, Iterator, Mapping, MutableMapping
+from typing import Callable, Iterator, Mapping, MutableMapping, Set
 
 from .. import humanize, utils
 from ..http import URL
@@ -444,7 +444,7 @@ class ValueExtractor(Mapping):
         if isinstance(self._val, ChainMap):
             maps = iter(reversed(self._val.maps))
             stack = []
-            keys = set()
+            keys = set()  # type: Set[str]
             for m in maps:
                 if isinstance(m, MergeDict):
                     keys.update(m)
