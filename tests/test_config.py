@@ -192,6 +192,13 @@ def test_value_extractor():
     assert repr(v)
 
 
+def test_value_extractor_order_keys():
+    v = ValueExtractor(MergeDict(a=1))
+    assert list(v.new_child(b=1)) == ['a', 'b']
+    assert list(v.new_parent(b=1)) == ['a', 'b']
+    assert list(v.new_parent(b=1).new_child(c=1)) == ['a', 'b', 'c']
+
+
 def test_logging():
     confs = (
         {'logging.disable_existing_loggers': True},

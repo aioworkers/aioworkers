@@ -385,11 +385,17 @@ class ValueExtractor(Mapping):
         super().__setattr__(key, value)
 
     def new_child(self, *mappings, **kwargs):
-        c = ChainMap(*mappings, kwargs, self._val)
+        if isinstance(self._val, ChainMap):
+            c = ChainMap(*mappings, kwargs, *self._val.maps)
+        else:
+            c = ChainMap(*mappings, kwargs, self._val)
         return self._mapping_factory(c)
 
     def new_parent(self, *mappings, **kwargs):
-        c = ChainMap(self._val, *mappings, kwargs)
+        if isinstance(self._val, ChainMap):
+            c = ChainMap(*self._val.maps, *mappings, kwargs)
+        else:
+            c = ChainMap(self._val, *mappings, kwargs)
         return self._mapping_factory(c)
 
     def __getitem__(self, item):
@@ -435,7 +441,25 @@ class ValueExtractor(Mapping):
         return len(self._val)
 
     def __iter__(self) -> Iterator:
-        yield from self._val
+        if isinstance(self._val, ChainMap):
+            maps = iter(reversed(self._val.maps))
+            stack = []
+            keys = set()
+            for m in maps:
+                if isinstance(m, MergeDict):
+                    keys.update(m)
+                    yield from m
+                    break
+                else:
+                    stack.append(m)
+            stack.extend(maps)
+            for m in stack:
+                for k in m:
+                    if k not in keys:
+                        yield k
+                        keys.add(k)
+        else:
+            yield from self._val
 
     def __setstate__(self, state: dict):
         self.__init__(state)  # type: ignore
