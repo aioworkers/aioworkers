@@ -31,6 +31,7 @@ parser.add_argument('--multiprocessing', action='store_true')
 parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-I', '--interact-kernel', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
+parser.add_argument('--shutdown-timeout', type=float, default=60)
 
 
 PROMPT = "======== Running aioworkers ========\n" \
@@ -159,7 +160,7 @@ def main(*config_files, args=None, config_dirs=(),
             msg and print(msg)
             for p in multiprocessing.active_children():
                 os.kill(p.pid, sig)
-            time.sleep(0.3)
+            time.sleep(args.shutdown_timeout)
             msg = 'killall children'
             sig = signal.SIGKILL
 
