@@ -69,4 +69,4 @@ async def test_stop(loop, mocker):
     await q.init()
     q.get()
     await q.put(1, 1)
-    await q.stop()
+    q.cleanup()
