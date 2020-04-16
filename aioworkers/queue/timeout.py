@@ -7,11 +7,9 @@ from .base import AbstractQueue, ScoreQueueMixin
 
 
 class TimeoutItem:
-    def __init__(
-        self, value, *,
-        timeout: float = None,
-        add: float = 0,
-    ):
+    def __init__(self, value, *,
+                 timeout: float = None,
+                 add: float = 0):
         self._value = value
         if timeout is None:
             timeout = time.time()
