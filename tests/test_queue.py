@@ -32,5 +32,5 @@ async def test_score_time(loop):
     a2, t2 = await q.get(score=True)
     assert a1 == 3
     assert a2 == 4
-    assert t1 < t2
+    assert t1 <= t2
     assert not q
