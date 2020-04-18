@@ -1,4 +1,5 @@
 import io
+import os
 from queue import Queue
 
 from aioworkers import utils
@@ -25,10 +26,10 @@ async def test_plq(loop):
     })
 
     async with Context(conf, loop=loop) as ctx:
-        fin = io.BytesIO(b'123\n')
+        fin = io.BytesIO(b'123' + os.linesep)
         fout = io.BytesIO()
         ctx.q.set_reader(fin)
         ctx.q.set_writer(fout)
         assert '123' == await ctx.q.get()
         await ctx.q.put('1')
-        assert b'1\n' == fout.getvalue()
+        assert b'1' + os.linesep == fout.getvalue()

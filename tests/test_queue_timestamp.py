@@ -41,7 +41,7 @@ async def test_timestamp_score(loop, mocker):
     await q.put(1)
     a, ts = await q.get(score=True)
     assert a == 1
-    assert ts < time.time()
+    assert ts <= time.time()
 
 
 async def test_timestamp_await(loop, mocker):
@@ -52,7 +52,7 @@ async def test_timestamp_await(loop, mocker):
     await q.put(1)
     a, ts = await f
     assert a == 1
-    assert t0 < ts < time.time()
+    assert t0 < ts <= time.time()
 
 
 async def test_uniq_score(loop, mocker):
@@ -61,7 +61,7 @@ async def test_uniq_score(loop, mocker):
     await q.put(1)
     a, ts = await q.get(score=True)
     assert a == 1
-    assert ts < time.time()
+    assert ts <= time.time()
 
 
 async def test_stop(loop, mocker):
