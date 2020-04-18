@@ -1,3 +1,4 @@
+import os
 import tempfile
 
 import pytest
@@ -5,10 +6,11 @@ import pytest
 
 @pytest.fixture
 def csv_file():
-    with tempfile.NamedTemporaryFile() as tmpfile1:
+    with tempfile.NamedTemporaryFile(delete=False) as tmpfile1:
         tmpfile1.write(b'name,uid\nx,3\nf,4')
         tmpfile1.flush()
-        yield tmpfile1
+    yield tmpfile1
+    os.unlink(tmpfile1.name)
 
 
 @pytest.fixture

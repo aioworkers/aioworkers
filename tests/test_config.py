@@ -173,6 +173,11 @@ def test_uri_as_key():
 
 def test_value_extractor():
     e = ValueExtractor(os.environ)
+    if os.name == 'nt':
+        os.environ.setdefault(
+            'HOME',
+            os.environ['HOMEDRIVE'] + os.environ['HOMEPATH'],
+        )
     assert isinstance(e.get_path('HOME'), Path)
     v = ValueExtractor({'a': {'b': 1, 'c': None}, 'env': e})
     assert isinstance(v.get('a'), ValueExtractor)
