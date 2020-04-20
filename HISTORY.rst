@@ -2,6 +2,18 @@
 History
 =======
 
+0.16 (2020-04-20)
+-----------------
+
+* ValueExtractor with original order
+* Improve queue.timeout
+* Flag --shutdown-timeout
+* [fea] - maintain set_config return value (#58)
+* cleanup for DictReader
+* improve AsyncPath and AsyncFile
+
+
+
 0.15.1 (2019-12-24)
 -------------------
 
