@@ -19,16 +19,6 @@ __all__ = (
 )
 
 
-def async_method(self, method: str, sync_obj=None):
-    if sync_obj is None:
-        sync_obj = self
-    m = getattr(sync_obj, method)
-
-    def wrap(*args, **kwargs):
-        return self.storage.run_in_executor(m, *args, **kwargs)
-    return wrap
-
-
 def flat(parts):
     if isinstance(parts, str):
         if os.path.isabs(parts):
@@ -54,8 +44,16 @@ class AsyncFile:
         self.fd = fd
         self.storage = storage
         self._closed = False
-        for i in ('write', 'read'):
-            setattr(self, i, async_method(self, i, fd))
+
+    async def read(self, *args, **kwargs):
+        return await self.storage.run_in_executor(
+            self.fd.read, *args, **kwargs
+        )
+
+    async def write(self, *args, **kwargs):
+        return await self.storage.run_in_executor(
+            self.fd.write, *args, **kwargs
+        )
 
     async def __aenter__(self):
         assert not self._closed
@@ -150,13 +148,40 @@ class AsyncPath(PurePath):
         else:
             self.storage = MockFileSystemStorage()
         self.path = Path(self)
-        for i in (
-            'write_bytes', 'read_bytes',
-            'write_text', 'read_text',
-            'exists', 'mkdir', 'stat',
-            'unlink',
-        ):
-            setattr(self, i, async_method(self, i, self.path))
+
+    async def exists(self) -> bool:
+        return await self.storage.run_in_executor(self.path.exists)
+
+    async def mkdir(self, *args, **kwargs):
+        return await self.storage.run_in_executor(
+            self.path.mkdir, *args, **kwargs
+        )
+
+    async def stat(self) -> os.stat_result:
+        return await self.storage.run_in_executor(self.path.stat)
+
+    async def unlink(self):
+        return await self.storage.run_in_executor(self.path.unlink)
+
+    async def read_text(self, *args, **kwargs):
+        return await self.storage.run_in_executor(
+            self.path.read_text, *args, **kwargs
+        )
+
+    async def write_text(self, *args, **kwargs):
+        return await self.storage.run_in_executor(
+            self.path.write_text, *args, **kwargs
+        )
+
+    async def read_bytes(self, *args, **kwargs):
+        return await self.storage.run_in_executor(
+            self.path.read_bytes, *args, **kwargs
+        )
+
+    async def write_bytes(self, *args, **kwargs):
+        return await self.storage.run_in_executor(
+            self.path.write_bytes, *args, **kwargs
+        )
 
     def _make_child(self, args):
         k = super()._make_child(args)
