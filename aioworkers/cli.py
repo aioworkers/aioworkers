@@ -154,15 +154,18 @@ def main(*config_files, args=None, config_dirs=(),
     except KeyboardInterrupt:
         pass
     finally:
-        sig = signal.SIGTERM
-        msg = ''
+        for p in multiprocessing.active_children():
+            os.kill(p.pid, signal.SIGTERM)
+        t = time.monotonic()
+        sentinels = [p.sentinel for p in multiprocessing.active_children()]
+        while sentinels and time.monotonic() - t < args.shutdown_timeout:
+            multiprocessing.connection.wait(sentinels)
+            sentinels = [p.sentinel for p in multiprocessing.active_children()]
         while multiprocessing.active_children():
-            msg and print(msg)
+            print('killall children')
             for p in multiprocessing.active_children():
-                os.kill(p.pid, sig)
-            time.sleep(args.shutdown_timeout)
-            msg = 'killall children'
-            sig = signal.SIGKILL
+                os.kill(p.pid, signal.SIGKILL)
+            time.sleep(0.3)
 
 
 def process_iter(cfg):
@@ -226,7 +229,17 @@ def loop_run(
         prompt and print(prompt)
     argv = argv or []
     ns = ns or argparse.Namespace()
+
+    async def shutdown():
+        await context.__aexit__(None, None, None)
+        if hasattr(loop, 'shutdown_asyncgens'):
+            await loop.shutdown_asyncgens()
+        loop.stop()
+
     with utils.monkey_close(loop), context:
+        context.loop.add_signal_handler(
+            signal.SIGTERM, lambda *args: loop.create_task(shutdown())
+        )
         if future is not None:
             future.set_result(context)
         for cmd in cmds:
@@ -237,7 +250,7 @@ def loop_run(
                 continue
             if result is not None:
                 print('{} => {}'.format(cmd, result))
-        if hasattr(loop, 'shutdown_asyncgens'):
+        if not loop.is_closed() and hasattr(loop, 'shutdown_asyncgens'):
             loop.run_until_complete(loop.shutdown_asyncgens())
 
 

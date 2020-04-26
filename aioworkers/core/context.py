@@ -443,17 +443,14 @@ class Context(AbstractEntity, Octopus):
     def __enter__(self):
         if self._loop is None:
             self.set_loop(asyncio.get_event_loop())
-        self.loop.run_until_complete(self.init())
-        self.loop.run_until_complete(self.connect())
-        self.loop.run_until_complete(self.start())
+        self.loop.run_until_complete(self.__aenter__())
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.loop.run_until_complete(self.stop())
-        self.loop.run_until_complete(self.disconnect())
-        self.loop.run_until_complete(
-            self._on_cleanup.send(self._group_resolver)
-        )
+        if not self.loop.is_closed():
+            self.loop.run_until_complete(
+                self.__aexit__(exc_type, exc_val, exc_tb),
+            )
 
     async def __aenter__(self):
         await self.init()
