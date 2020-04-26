@@ -2,6 +2,14 @@
 History
 =======
 
+0.17 (2020-04-27)
+-----------------
+
+* Graceful shutdown
+* magpack & bson formatters
+
+
+
 0.16 (2020-04-20)
 -----------------
 
