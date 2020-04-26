@@ -33,6 +33,8 @@ Easy configurable workers based on asyncio
   `httptools <https://pypi.python.org/pypi/httptools>`_,
   `crontab <https://pypi.python.org/pypi/crontab>`_,
   `setproctitle <https://pypi.python.org/pypi/setproctitle>`_,
+  `msgpack <https://pypi.python.org/pypi/msgpack>`_,
+  `bson <https://pypi.python.org/pypi/bson>`_,
   `jupyter <https://pypi.python.org/pypi/jupyter>`_.
 * Documentation: https://aioworkers.readthedocs.io.
 

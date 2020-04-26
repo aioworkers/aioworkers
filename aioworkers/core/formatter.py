@@ -233,6 +233,24 @@ class LzmaFormatter(BaseFormatter):
             v, format=FORMAT_RAW, filters=filters)
 
 
+class MsgPackFormatter(BaseFormatter):
+    name = 'msgpack'
+
+    def __init__(self):
+        msgpack = __import__('msgpack')
+        self.decode = msgpack.loads
+        self.encode = msgpack.dumps
+
+
+class BsonFormatter(BaseFormatter):
+    name = 'bson'
+
+    def __init__(self):
+        bson = __import__('bson')
+        self.decode = bson.loads
+        self.encode = bson.dumps
+
+
 registry = Registry()
 registry(StringFormatter)
 registry(FromStringFormatter)
@@ -243,6 +261,8 @@ registry(JsonFormatter)
 registry(YamlFormatter)
 registry(ZLibFormatter)
 registry(LzmaFormatter)
+registry(MsgPackFormatter)
+registry(BsonFormatter)
 
 
 class FormattedEntity(AbstractEntity):

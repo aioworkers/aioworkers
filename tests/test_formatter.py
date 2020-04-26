@@ -26,6 +26,8 @@ r(RtsFormatter)
     ('str|bnewline', '123'),
     ('str|zlib', '123'),
     ('str|lzma', '123'),
+    ('msgpack', {'b': b'123', 's': '123', 'i': 123}),
+    ('bson', {'f': 4}),
 ])
 def test_formatters(formatter, data):
     f = r.get(formatter)
