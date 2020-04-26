@@ -6,7 +6,7 @@ History
 -----------------
 
 * Graceful shutdown
-* magpack & bson formatters
+* msgpack & bson formatters
 
 
 
