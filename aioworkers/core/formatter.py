@@ -1,5 +1,6 @@
 import os
 from abc import abstractmethod
+from typing import Tuple
 
 from ..utils import import_name
 from .base import AbstractEntity
@@ -7,7 +8,7 @@ from .base import AbstractEntity
 
 class BaseFormatter:
     name = NotImplemented
-    mimetypes = ()
+    mimetypes = ()  # type: Tuple[str, ...]
 
     @abstractmethod  # pragma: no cover
     def decode(self, value):
@@ -151,7 +152,7 @@ class PickleFormatter(BaseFormatter):
 
 class JsonFormatter(BaseFormatter):
     name = 'json'
-    mimetypes = ('application/json',)  # type: ignore
+    mimetypes = ('application/json',)
     converters = [
         (0, 'aioworkers.core.config.ValueExtractor', dict),
     ]
@@ -199,6 +200,7 @@ class JsonFormatter(BaseFormatter):
 
 class YamlFormatter(JsonFormatter):
     name = 'yaml'
+    mimetypes = ('application/x-yaml',)
 
     def __init__(self):
         import yaml
