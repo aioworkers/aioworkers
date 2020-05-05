@@ -1,5 +1,6 @@
 import re
 from math import log2
+from typing import Union
 
 
 def size(value: int, suffixes: list = None) -> str:
@@ -26,7 +27,7 @@ for k, v in size_levels.copy().items():
     size_levels[k[0]] = v
 
 
-def parse_size(value):
+def parse_size(value: Union[int, float, str]) -> Union[int, float]:
     """
     >>> parse_size('1M')
     1048576
@@ -65,7 +66,7 @@ durations = {
 }
 
 
-def parse_duration(value):
+def parse_duration(value: Union[int, float, str]) -> Union[int, float]:
     """
     >>> parse_duration('1h')
     3600
