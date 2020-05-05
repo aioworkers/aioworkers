@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 
+from aioworkers.core.context import Context
 from aioworkers.storage.base import FieldStorageMixin
 from aioworkers.storage.filesystem import AsyncPath, FileSystemStorage
 
@@ -246,3 +247,8 @@ async def test_standalone(tmp_dir):
     s = FileSystemStorage(path=tmp_dir, format='json')
     await s.set('a', 1)
     assert 1 == await s.get('a')
+    c = Context()
+    c.storage = s
+    assert s.context is c
+    async with c:
+        assert 1 == await c.storage.get('a')
