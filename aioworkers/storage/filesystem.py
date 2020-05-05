@@ -5,6 +5,7 @@ import shutil
 import tempfile
 from functools import partial
 from pathlib import Path, PurePath
+from typing import Mapping, Union
 
 from .. import humanize
 from ..core.base import AbstractNestedEntity, ExecutorEntity
@@ -255,17 +256,29 @@ class BaseFileSystemStorage(
 
     PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
 
+    def __init__(self, *args, **kwargs):
+        self._space_waiters = []
+        path = kwargs.get('path', '.')
+        self._path = AsyncPath(path, storage=self)
+        self._tmp = kwargs.get('tmp') or path
+        self._limit = self._get_limit_free_space(kwargs)
+        super().__init__(*args, **kwargs)
+
+    def _get_limit_free_space(self, cfg: Mapping) -> Union[int, float, None]:
+        result = cfg.get(self.PARAM_LIMIT_FREE_SPACE)
+        if isinstance(result, int):
+            result <<= 20  # int in MB
+        elif isinstance(result, float):
+            result *= 2 ** 20  # float in MB
+        elif isinstance(result, str):
+            result = humanize.parse_size(result)
+        return result
+
     def set_config(self, config):
         super().set_config(config)
-        self._space_waiters = []
         self._path = AsyncPath(self.config.path, storage=self)
         self._tmp = self.config.get('tmp') or self.config.path
-
-        self._limit = self._config.get(self.PARAM_LIMIT_FREE_SPACE)
-        if isinstance(self._limit, int):
-            self._limit = self._limit << 20  # int in MB
-        elif isinstance(self._limit, str):
-            self._limit = humanize.parse_size(self._limit)
+        self._limit = self._get_limit_free_space(self._config)
 
     def factory(self, item, config=None):
         path = self._path.joinpath(*flat(item)).normpath

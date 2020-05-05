@@ -9,31 +9,27 @@ from .config import ValueExtractor
 
 
 class AbstractEntity(ABC):
-    def __init__(self, config=None, *, context=None, loop=None):
-        self._config = None
+    def __init__(self, config=None, *, context=None, **kwargs):
+        self._loop = kwargs.pop('loop', None)
+        self._config = ValueExtractor(kwargs)
         self._context = None
-        self._loop = None
         if context is not None:
             self.set_context(context)
         if config is not None:
             self.set_config(config)
-        if loop is not None:
-            self._loop = loop
 
     @property
     def config(self):
         return self._config
 
     def set_config(self, config) -> None:
-        if self._config is not None:
-            raise RuntimeError('Config already set')
-        elif isinstance(config, ValueExtractor):
+        if isinstance(config, ValueExtractor):
             pass
         elif isinstance(config, Mapping):
             config = ValueExtractor(config)
         else:
             raise TypeError('Config must be instance of ValueExtractor')
-        self._config = config
+        self._config = config.new_parent(self._config)
 
     @property
     def context(self):
@@ -70,9 +66,9 @@ class AbstractNestedEntity(AbstractEntity):
     cache_factory = dict
     item_factory = None
 
-    def __init__(self, config=None, *, context=None, loop=None):
+    def __init__(self, config=None, **kwargs):
         self._children = self.cache_factory()
-        super().__init__(config, context=context, loop=loop)
+        super().__init__(config, **kwargs)
 
     def set_context(self, context):
         super().set_context(context)
@@ -163,6 +159,12 @@ class ExecutorEntity(AbstractEntity):
     def __init__(self, *args, **kwargs):
         self._executor = None
         super().__init__(*args, **kwargs)
+
+    @property
+    def loop(self):
+        if not self._loop:
+            self._loop = asyncio.get_event_loop()
+        return self._loop
 
     def executor_factory(self, *args, **kwargs):
         from concurrent.futures import ThreadPoolExecutor

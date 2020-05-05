@@ -48,7 +48,7 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
         self._future = None
         self._queue = []
         self._waiters = collections.deque()
-        self._add_score = 0
+        self._add_score = kwargs.pop('add_score', 0)
         super().__init__(*args, **kwargs)
 
     def set_config(self, config):
@@ -70,6 +70,12 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
 
     def __len__(self):
         return len(self._queue)
+
+    @property
+    def loop(self) -> asyncio.AbstractEventLoop:
+        if not self._loop:
+            self._loop = asyncio.get_event_loop()
+        return self._loop
 
     def get(self, score: bool = False):
         waiter = self.loop.create_future()

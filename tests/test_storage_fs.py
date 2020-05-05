@@ -240,3 +240,9 @@ async def test_async_path(tmp_dir):
     f = d / '1'
     await f.write_text('123')
     assert '123' == await f.read_text()
+
+
+async def test_standalone(tmp_dir):
+    s = FileSystemStorage(path=tmp_dir, format='json')
+    await s.set('a', 1)
+    assert 1 == await s.get('a')

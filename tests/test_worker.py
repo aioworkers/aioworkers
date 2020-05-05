@@ -73,6 +73,4 @@ async def test_set_context(loop):
     worker.set_config(config)
     worker.set_context(context)
     with pytest.raises(RuntimeError):
-        worker.set_config(config)
-    with pytest.raises(RuntimeError):
         worker.set_context(context)
