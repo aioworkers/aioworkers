@@ -5,9 +5,9 @@ import mimetypes
 import os
 import re
 from abc import abstractmethod
-from collections import ChainMap
+from collections import ChainMap, OrderedDict
 from pathlib import Path
-from typing import Callable, Iterator, Mapping, MutableMapping, Set
+from typing import Callable, Dict, Iterator, Mapping, MutableMapping, Set
 
 from .. import humanize, utils
 from ..http import URL
@@ -369,34 +369,37 @@ extractors = {
 
 class ValueExtractor(Mapping):
     def __init__(self, mapping):
-        self._val = mapping
+        if isinstance(mapping, ValueExtractor):
+            self._val = mapping._val
+        else:
+            self._val = mapping
         self._setattr = False
 
     @classmethod
-    def _mapping_factory(cls, mapping):
-        if not isinstance(mapping, ValueExtractor) \
-                and isinstance(mapping, Mapping):
-            return ValueExtractor(mapping)
-        return mapping
+    def _mapping_factory(cls, *mappings) -> 'ValueExtractor':
+        maps = OrderedDict()  # type: Dict[int, Mapping]
+        for m in mappings:
+            if isinstance(m, ValueExtractor):
+                m = m._val
+            if isinstance(m, ChainMap):
+                for m in m.maps:
+                    maps[id(m)] = m
+            elif not isinstance(m, Mapping):
+                raise ValueError(m)
+            else:
+                maps[id(m)] = m
+        return ValueExtractor(ChainMap(*maps.values()))
 
     def __setattr__(self, key, value):
         if not self.__dict__.get('_setattr', True):
             raise RuntimeError('Set attribute not supported')
         super().__setattr__(key, value)
 
-    def new_child(self, *mappings, **kwargs):
-        if isinstance(self._val, ChainMap):
-            c = ChainMap(*mappings, kwargs, *self._val.maps)
-        else:
-            c = ChainMap(*mappings, kwargs, self._val)
-        return self._mapping_factory(c)
+    def new_child(self, *mappings, **kwargs) -> 'ValueExtractor':
+        return self._mapping_factory(*mappings, kwargs, self._val)
 
-    def new_parent(self, *mappings, **kwargs):
-        if isinstance(self._val, ChainMap):
-            c = ChainMap(*self._val.maps, *mappings, kwargs)
-        else:
-            c = ChainMap(self._val, *mappings, kwargs)
-        return self._mapping_factory(c)
+    def new_parent(self, *mappings, **kwargs) -> 'ValueExtractor':
+        return self._mapping_factory(self._val, *mappings, kwargs)
 
     def __getitem__(self, item):
         v = self._val[item]
