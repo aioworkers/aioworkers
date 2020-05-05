@@ -269,7 +269,10 @@ registry(BsonFormatter)
 
 class FormattedEntity(AbstractEntity):
     registry = registry
-    _formatter = None
+
+    def __init__(self, *args, **kwargs):
+        self._formatter = self.registry.get(kwargs.get('format'))
+        super().__init__(*args, **kwargs)
 
     def set_config(self, config):
         super().set_config(config)

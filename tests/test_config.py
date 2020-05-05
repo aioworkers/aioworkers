@@ -182,7 +182,7 @@ def test_value_extractor():
     v = ValueExtractor({'a': {'b': 1, 'c': None}, 'env': e})
     assert isinstance(v.get('a'), ValueExtractor)
     assert v.a.get_int('b') is v.a.b
-    assert v.env is e
+    assert v.env._val == e._val
 
     with pytest.raises(RuntimeError):
         v.x = 1

@@ -4,13 +4,16 @@ import inspect
 import logging.config
 from collections import OrderedDict
 from typing import (
-    Iterable, Mapping, MutableMapping, Optional, Set, Tuple, Type, TypeVar
+    Iterable, List, Mapping, MutableMapping, Optional, Set, Tuple, Type,
+    TypeVar
 )
 
 from ..utils import import_name
 from .base import AbstractEntity
+from .config import ValueExtractor
 
 T = TypeVar('T')
+DOT = '.'
 
 
 class Octopus(MutableMapping):
@@ -18,7 +21,7 @@ class Octopus(MutableMapping):
         return Octopus()
 
     def _get_item(self, key, create):
-        sp = key.split('.', 1)
+        sp = key.split(DOT, 1)
         k = sp[0]
         if k in self.__dict__:
             v = self.__dict__[k]
@@ -47,7 +50,7 @@ class Octopus(MutableMapping):
     def __setitem__(self, key, value):
         if not isinstance(key, str):
             return
-        sp = key.rsplit('.', 1)
+        sp = key.rsplit(DOT, 1)
         if len(sp) == 2:
             f = self._get_item(sp[0], True)
         else:
@@ -97,7 +100,7 @@ class Octopus(MutableMapping):
                 if can_add:
                     exclude.add(identy)
                 for pc, obj in obj.find_iter(cls, exclude=exclude):
-                    yield '.'.join((pp, pc)), obj
+                    yield DOT.join((pp, pc)), obj
             if isinstance(obj, cls):
                 yield pp, obj
 
@@ -173,13 +176,13 @@ class GroupResolver:
 
 
 class ContextProcessor:
-    def __init__(self, context, path, value):
+    def __init__(self, context: 'Context', path: str, value: ValueExtractor):
         self.context = context
         self.path = path
         self.value = value
 
     @classmethod
-    def match(cls, context, path, value):
+    def match(cls, context: 'Context', path: str, value: ValueExtractor):
         raise NotImplementedError
 
     async def process(self):
@@ -217,10 +220,12 @@ class GroupsContextProcessor(ContextProcessor):
 class EntityContextProcessor(ContextProcessor):
     key = 'cls'
 
-    def __init__(self, context, path, value):
+    def __init__(self, context: 'Context', path: str, value: ValueExtractor):
         super().__init__(context, path, value)
         cls = import_name(value[self.key])
-        if not isinstance(cls, AbstractEntity):
+        if issubclass(cls, AbstractEntity):
+            entity = cls(None)
+        else:
             try:
                 signature = inspect.signature(cls)
                 signature.bind(config=None, context=None, loop=None)
@@ -232,8 +237,7 @@ class EntityContextProcessor(ContextProcessor):
                 raise ValueError(
                     'Error while checking entity on {} from {}: {}'.format(
                         path, value[self.key], e))
-        value = value.new_parent(name=path)
-        entity = cls(value, context=context, loop=context.loop)
+            entity = cls(value, context=context, loop=context.loop)
         context[path] = entity
         self.entity = entity
 
@@ -249,15 +253,22 @@ class EntityContextProcessor(ContextProcessor):
 class InstanceEntityContextProcessor(EntityContextProcessor):
     key = 'obj'
 
-    def __init__(self, context, path, value):
+    def __init__(self, context: 'Context', path: str, value: ValueExtractor):
         ContextProcessor.__init__(self, context, path, value)
-        entity = import_name(value[self.key])
-        if isinstance(entity, AbstractEntity):
-            value = value.new_parent(name=path)
-            entity.set_config(value)
-            entity.set_context(context)
-        context[path] = entity
-        self.entity = entity
+        self.entity = getattr(context, path, None)
+        if isinstance(self.entity, AbstractEntity):
+            self.entity.set_config(value.new_parent(name=path))
+        elif not isinstance(self.entity, Mapping):
+            entity = import_name(value[self.key])
+            context[path] = entity
+
+    @classmethod
+    def match(cls, context, path, value):
+        e = context[path]
+        if isinstance(e, AbstractEntity):
+            return cls(context, path, value)
+        else:
+            return super().match(context, path, value)
 
     async def process(self):
         if isinstance(self.entity, AbstractEntity):
@@ -318,6 +329,8 @@ class RootContextProcessor(ContextProcessor):
 
     def build(self, config):
         if not self._built:
+            if config is None:
+                raise RuntimeError('Config is empty')
             self.value = config
             self.processing(self.value)
             self._built = True
@@ -342,6 +355,9 @@ class Context(AbstractEntity, Octopus):
 
     def set_group_resolver(self, gr):
         self._group_resolver = gr
+
+    def set_config(self, config) -> None:
+        self._config = config
 
     def set_loop(self, loop):
         if self._loop is not None:
@@ -411,6 +427,18 @@ class Context(AbstractEntity, Octopus):
             pass
         self.loop.close()
 
+    def __dir__(self) -> List[str]:
+        result = []
+        if self.config:
+            result.extend(self.config)
+            result.extend(
+                k for k in super().__dir__()
+                if k not in self.config
+            )
+        else:
+            result.extend(super().__dir__())
+        return result
+
     def __getitem__(self, item):
         if item is None:
             return
@@ -429,10 +457,22 @@ class Context(AbstractEntity, Octopus):
                 pass
         raise KeyError(item)
 
-    def __dir__(self):
-        r = list(self.config)
-        r.extend(super().__dir__())
-        return r
+    def _setattr(self, key, value, method):
+        if isinstance(value, AbstractEntity):
+            value.set_context(self)
+            if self.config and self.config.get(key):
+                config = self.config[key].new_parent(name=key)
+                value.set_config(config)
+        if isinstance(key, str) and DOT not in key:
+            self.__dict__[key] = value
+        else:
+            return method(key, value)
+
+    def __setitem__(self, key, value):
+        self._setattr(key, value, super().__setitem__)
+
+    def __setattr__(self, key, value):
+        self._setattr(key, value, super().__setattr__)
 
     def __getattr__(self, item):
         try:
