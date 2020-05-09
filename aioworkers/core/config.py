@@ -263,7 +263,10 @@ class ListValueMatcher(ValueMatcher):
             return cls(value[1:-1])
 
     def get_value(self):
-        return self._value.split(',')
+        if self._value:
+            return self._value.split(',')
+        else:
+            return []
 
 
 class StringReplaceLoader(ConfigFileLoader):

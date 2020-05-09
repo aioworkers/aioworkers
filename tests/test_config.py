@@ -147,9 +147,9 @@ def test_ini():
 
 def test_string_replacer():
     c = StringReplaceLoader()
-    conf = {'a': '1', 'b': ['2'], 'c': {'d': '3'}}
+    conf = {'a': '1', 'b': ['2'], 'c': {'d': '3'}, 'e': '[]'}
     c._replace(conf)
-    assert conf == {'a': 1, 'b': [2], 'c': {'d': 3}}
+    assert conf == {'a': 1, 'b': [2], 'c': {'d': 3}, 'e': []}
 
 
 def test_md_magic():
