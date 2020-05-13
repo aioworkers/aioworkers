@@ -44,13 +44,13 @@ def run(cmd, context, loop=None, ns=None, argv=None):
 
     cmdl = cmd.split('.')
     obj = context
-    for l in cmdl:
-        r = getattr(obj, l, None)
+    for a in cmdl:
+        r = getattr(obj, a, None)
         if r is not None:
             obj = r
             continue
         if isinstance(obj, Mapping):
-            obj = obj.get(l)
+            obj = obj.get(a)
             if obj is None:
                 break
         else:
@@ -78,8 +78,8 @@ def run(cmd, context, loop=None, ns=None, argv=None):
                 break
     if obj is not None:
         cmdl.reverse()
-        for l in cmdl:
-            obj = getattr(obj, l, None)
+        for a in cmdl:
+            obj = getattr(obj, a, None)
             if obj is None:
                 break
         else:
