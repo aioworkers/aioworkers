@@ -98,7 +98,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools
-          pip install -U pipenv codecov
+          pip install -U pipenv codecov bson msgpack
           pip install -e .
           pip install pytest-aioworkers
           pipenv install --skip-lock --system
