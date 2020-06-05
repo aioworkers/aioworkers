@@ -44,6 +44,10 @@ class Worker(AbstractWorker):
     _future = None
     _persist = False
 
+    def __init__(self, *args, **kwargs):
+        self.counter = collections.Counter()
+        super().__init__(*args, **kwargs)
+
     def set_config(self, config):
         super().set_config(config)
         crontab = self.config.get('crontab')
@@ -59,7 +63,7 @@ class Worker(AbstractWorker):
         )
 
     async def init(self):
-        self.counter = collections.Counter()
+        await super().init()
 
         if self.config.get('run'):
             run = import_name(self.config.run)
