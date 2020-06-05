@@ -2,10 +2,11 @@
 History
 =======
 
-0.18 (2020-05-06)
+0.18 (2020-06-05)
 -----------------
 
 * AbstractEntity.__init__ with kwargs (#61)
+* Improve supervisor
 
 
 
