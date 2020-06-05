@@ -12,7 +12,7 @@ super.queue:
     autorun: true
     input: q1
     output: q2
-    children: 1
+    children: [a]
     cls: aioworkers.worker.supervisor.Supervisor
     child:
       cls: aioworkers.worker.base.Worker

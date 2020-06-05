@@ -29,6 +29,6 @@ async def test_super_queue(loop):
 
 async def test_super_crash(loop):
     async with Context(config.super.queue, loop=loop) as ctx:
-        ctx.sv._children[0]._future.cancel()
+        ctx.sv['a']._future.cancel()
         await ctx.q1.put(1)
         await ctx.q2.get()
