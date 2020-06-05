@@ -134,7 +134,10 @@ class Worker(AbstractWorker):
         raise NotImplementedError()
 
     def __call__(self, *args, **kwargs):
-        return self.run(*args, **kwargs)
+        if self.input is None:
+            return self.run(*args, **kwargs)
+        else:
+            return self.input.put(*args, **kwargs)
 
     @property
     def started_at(self):

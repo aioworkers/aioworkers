@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 
 from .base import Worker
 
@@ -35,6 +36,13 @@ class Supervisor(Worker):
     def _wait(self, lmbd, children=()):
         children = children or self._children.values()
         return self.context.wait_all([lmbd(w) for w in children])
+
+    def __call__(self, *args, **kwargs):
+        if self.input is None:
+            vs = random.choice(list(self._children.values()))
+            return vs(*args, **kwargs)
+        else:
+            return self.input.put(*args, **kwargs)
 
     def gen_child_params(self):
         children = self.config.children

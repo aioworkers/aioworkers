@@ -14,6 +14,7 @@ async def test_autorun(loop):
         assert not ctx.sv.running()
         await ctx.sv.stop()
         assert await ctx.sv.status()
+        assert 2 == await ctx.sv(2)
 
 
 async def run(w, value):
@@ -25,6 +26,9 @@ async def test_super_queue(loop):
         await ctx.q1.put(1)
         result = await ctx.q2.get()
         assert result == 1
+        await ctx.sv(2)
+        result = await ctx.q2.get()
+        assert result == 2
 
 
 async def test_super_crash(loop):

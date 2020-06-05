@@ -5,6 +5,7 @@ autorun:
     children: 1
     child:
       cls: aioworkers.worker.base.Worker
+      run: tests.test_worker_supervisor.run
 
 super.queue:
   cls: aioworkers.core.context.Context
