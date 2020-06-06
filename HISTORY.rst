@@ -2,11 +2,13 @@
 History
 =======
 
-0.18 (2020-06-05)
+0.18 (2020-06-06)
 -----------------
 
 * AbstractEntity.__init__ with kwargs (#61)
+* fix empty list ListValueMatcher.get_value
 * Improve supervisor
+* change Supervisor.__call__ & Worker.__call__
 
 
 
