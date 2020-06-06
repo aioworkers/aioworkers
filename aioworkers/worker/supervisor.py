@@ -25,7 +25,7 @@ class Supervisor(Worker):
 
     async def init(self):
         self.context.on_stop.append(self.stop)
-        for p in self.gen_child_params():
+        for p in self._gen_child_params():
             name = p['name']
             if name in self._children:
                 raise RuntimeError('Duplicate child name %s' % name)
@@ -44,7 +44,7 @@ class Supervisor(Worker):
         else:
             return self.input.put(*args, **kwargs)
 
-    def gen_child_params(self):
+    def _gen_child_params(self):
         children = self.config.children
         if isinstance(children, int):
             for i in range(children):
