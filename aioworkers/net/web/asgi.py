@@ -26,7 +26,9 @@ class AsgiMiddleware:
         extension = {'context': self.context}
         scope.setdefault('extensions', {}).setdefault('aioworkers', extension)
         if scope['type'] == 'lifespan':
-            receive = functools.partial(self.lifespan, receive=receive, send=send)
+            receive = functools.partial(
+                self.lifespan, receive=receive, send=send,
+            )
             try:
                 await self.app(scope, receive, send)
             except Exception:
