@@ -1,0 +1,44 @@
+Support asgi
+============
+
+Supported run:
+
+* aioworkers over asgi
+
+
+.. code-block:: python
+
+  from aioworkers.net.web.asgi import AsgiMiddleware
+  from aioworkers.storage.filesystem import FileSystemStorage
+
+
+  async def asgi_app(scope, receive, send):
+      assert scope["type"] == "http"
+      ctx = scope['extensions']['aioworkers']['context']
+      content = await ctx.storage.get(scope['path'].lstrip('/'))
+
+      if content is None:
+          await send({
+              "type": "http.response.start",
+              "status": 404,
+          })
+      else:
+          await send({
+              "type": "http.response.start",
+              "status": 200,
+              "headers": [
+                  [b"content-type", b"text/plain"],
+              ]
+          })
+      await send({
+          "type": "http.response.body",
+          "body": content or b"",
+      })
+
+  asgi_app = AsgiMiddleware(
+      app=asgi_app,  # wrap you asgi application
+      plugin=__name__,  # you main plugin for aioworkers
+  )
+
+  # For example context with storage
+  asgi_app.context.storage = FileSystemStorage(path='.')
