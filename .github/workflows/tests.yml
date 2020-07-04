@@ -3,7 +3,7 @@ name: Tests
 on: [push]
 
 jobs:
-  tests-on-python3.5:
+  tests-on-python35:
 
     runs-on: ubuntu-latest
 
