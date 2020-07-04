@@ -3,13 +3,50 @@ name: Tests
 on: [push]
 
 jobs:
+  tests-on-python3.5:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.5
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.5
+    - name: Install dependencies
+      run: |
+        pip install -U pip setuptools
+        pip install -U pipenv codecov
+        pip install -e .
+        pipenv install -d --skip-lock --system
+    - name: isort
+      run: |
+        isort -c aioworkers tests
+    - name: flake8
+      run: |
+        flake8 aioworkers tests
+    - name: mypy
+      run: |
+        mypy aioworkers tests
+    - name: Test with pytest
+      run: |
+        pytest --cov=aioworkers --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+
   tests-on-ubuntu:
 
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
+      max-parallel: 3
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
     - uses: actions/checkout@v1
@@ -20,18 +57,12 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -U pip setuptools
-        pip install -U pipenv codecov
+        pip install -U pipenv
         pip install -e .
         pipenv install -d --skip-lock --system
-    - name: flake8
-      run: |
-        flake8 aioworkers tests
-    - name: mypy
-      run: |
-        mypy aioworkers tests
     - name: Test with pytest
       run: |
-        pytest --cov=aioworkers
+        pytest
 
   tests-on-pypy:
 
