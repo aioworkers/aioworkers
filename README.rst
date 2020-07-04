@@ -5,8 +5,8 @@ aioworkers
 .. image:: https://img.shields.io/pypi/v/aioworkers.svg
   :target: https://pypi.python.org/pypi/aioworkers
 
-.. image:: https://img.shields.io/travis/aioworkers/aioworkers.svg
-  :target: https://travis-ci.org/aioworkers/aioworkers
+.. image:: https://github.com/aioworkers/aioworkers/workflows/Tests/badge.svg
+  :target: https://github.com/aioworkers/aioworkers/actions?query=workflow%3ATests
 
 .. image:: https://codecov.io/gh/aioworkers/aioworkers/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/aioworkers/aioworkers
