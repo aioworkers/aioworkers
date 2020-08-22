@@ -6,7 +6,11 @@ import pytest
 
 from aioworkers import utils
 from aioworkers.core.config import (
-    Config, IniLoader, MergeDict, StringReplaceLoader, ValueExtractor
+    Config,
+    IniLoader,
+    MergeDict,
+    StringReplaceLoader,
+    ValueExtractor,
 )
 
 

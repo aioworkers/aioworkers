@@ -2,7 +2,11 @@ import pytest
 
 from aioworkers.core.config import Config, MergeDict
 from aioworkers.core.context import (
-    Context, EntityContextProcessor, GroupResolver, Octopus, Signal
+    Context,
+    EntityContextProcessor,
+    GroupResolver,
+    Octopus,
+    Signal,
 )
 
 

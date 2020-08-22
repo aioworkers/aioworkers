@@ -4,8 +4,15 @@ import inspect
 import logging.config
 from collections import OrderedDict
 from typing import (
-    Iterable, List, Mapping, MutableMapping, Optional, Set, Tuple, Type,
-    TypeVar
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
 )
 
 from ..utils import import_name
