@@ -57,7 +57,7 @@ or:
   a.b:
     c: 2
 
-Advanced confugure
+Advanced configure
 ------------------
 
 .. code-block:: yaml
