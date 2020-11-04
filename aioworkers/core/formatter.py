@@ -7,7 +7,7 @@ from .base import AbstractEntity
 
 
 class BaseFormatter:
-    name = NotImplemented
+    name = NotImplemented  # type: str
     mimetypes = ()  # type: Tuple[str, ...]
 
     @abstractmethod  # pragma: no cover
