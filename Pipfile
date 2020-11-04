@@ -17,6 +17,7 @@ crontab = "*"
 
 [dev-packages]
 isort = "*"
+flake8 = "*"
 mypy = "*"
 pytest-cov = "*"
 jupyter = "*"
