@@ -136,6 +136,7 @@ def merge(source: Mapping, destination: MutableMapping):
 class ConfigFileLoader:
     extensions = ()  # type: tuple
     mime_types = ()  # type: tuple
+    _cache = {}  # type: Dict
 
     @abstractmethod  # pragma: no cover
     def load_str(self, s):
@@ -150,8 +151,12 @@ class ConfigFileLoader:
     def load_path(self, path):
         if isinstance(path, str):
             path = Path(path)
+        if path in self._cache:
+            return self._cache[path]
         with path.open('rt') as fd:
-            return self.load_fd(fd)
+            result = self.load_fd(fd)
+        self._cache[path] = result
+        return result
 
     def load_url(self, url):
         from urllib.request import urlopen
