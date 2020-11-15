@@ -36,6 +36,7 @@ setup(
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
+        'Framework :: AsyncIO',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3',
