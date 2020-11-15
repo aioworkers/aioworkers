@@ -34,7 +34,7 @@ setup(
     license="Apache Software License 2.0",
     keywords='aioworkers',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Framework :: AsyncIO',
         'License :: OSI Approved :: Apache Software License',
