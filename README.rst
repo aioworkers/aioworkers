@@ -15,10 +15,6 @@ aioworkers
   :target: https://aioworkers.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/aioworkers/aioworkers/shield.svg
-  :target: https://pyup.io/repos/github/aioworkers/aioworkers/
-  :alt: Updates
-
 .. image:: https://img.shields.io/pypi/pyversions/aioworkers.svg
   :target: https://pypi.python.org/pypi/aioworkers
 
