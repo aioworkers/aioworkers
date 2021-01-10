@@ -16,7 +16,10 @@ aioworkers
   :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/pyversions/aioworkers.svg
-  :target: https://pypi.python.org/pypi/aioworkers
+  :target: https://pypi.org/project/aioworkers
+
+.. image:: https://img.shields.io/pypi/dm/aioworkers.svg
+    :target: https://pypi.org/project/aioworkers
 
 
 Easy configurable workers based on asyncio
