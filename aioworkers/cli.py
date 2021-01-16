@@ -145,6 +145,7 @@ def main(*config_files, args=None, config_dirs=(),
         elif args.interact:
             from .core.interact import shell
             args.print = lambda *args: None
+            os.environ['AIOWORKERS_MODE'] = 'console'
             shell(run)
         elif args.interact_kernel:
             from .core.interact import kernel

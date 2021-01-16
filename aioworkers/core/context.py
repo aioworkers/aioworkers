@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import inspect
 import logging.config
+import os
 from collections import OrderedDict
 from typing import (
     Iterable,
@@ -74,6 +75,16 @@ class Octopus(MutableMapping):
         return len(self.__dict__)
 
     def __repr__(self, *, indent=1, header=False):
+        if os.environ.get('AIOWORKERS_MODE') != 'console':
+            return '{cls}({id}, attrs=[{attrs}])'.format(
+                cls=self.__class__.__name__,
+                id=id(self),
+                attrs=', '.join(
+                    x for x in self.__dict__
+                    if not x.startswith('_')
+                ),
+            )
+
         result = []
         if header:
             result.extend(['  ' * indent, '<', self.__class__.__name__, '>\n'])
