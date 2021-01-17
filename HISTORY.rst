@@ -2,6 +2,15 @@
 History
 =======
 
+0.19b1 (2021-01-17)
+-------------------
+
+* Support run aioworkers over asgi
+* Cache for ConfigFileLoader
+* Simple repr(Context) for not interact mode
+* Support py3.9
+
+
 0.18 (2020-06-06)
 -----------------
 
