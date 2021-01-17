@@ -260,9 +260,11 @@ class EntityContextProcessor(ContextProcessor):
         self.entity = entity
 
     @classmethod
-    def match(cls, context, path, value):
+    def match(cls, context: 'Context', path: str,
+              value: ValueExtractor) -> Optional[ContextProcessor]:
         if isinstance(value, Mapping) and cls.key in value:
             return cls(context, path, value)
+        return None
 
     async def process(self):
         await self.entity.init()
@@ -281,7 +283,8 @@ class InstanceEntityContextProcessor(EntityContextProcessor):
             context[path] = entity
 
     @classmethod
-    def match(cls, context, path, value):
+    def match(cls, context: 'Context', path: str,
+              value: ValueExtractor) -> Optional[ContextProcessor]:
         e = context[path]
         if isinstance(e, AbstractEntity):
             return cls(context, path, value)
@@ -297,7 +300,7 @@ class FuncContextProcessor(ContextProcessor):
     key = 'func'
     process = None
 
-    def __init__(self, context, path, value):
+    def __init__(self, context: 'Context', path: str, value: ValueExtractor):
         super().__init__(context, path, value)
         func = import_name(value[self.key])
         args = value.get('args', ())
@@ -305,9 +308,11 @@ class FuncContextProcessor(ContextProcessor):
         context[path] = func(*args, **kwargs)
 
     @classmethod
-    def match(cls, context, path, value):
+    def match(cls, context: 'Context', path: str,
+              value: ValueExtractor) -> Optional[ContextProcessor]:
         if isinstance(value, Mapping) and cls.key in value:
             return cls(context, path, value)
+        return None
 
 
 class RootContextProcessor(ContextProcessor):
