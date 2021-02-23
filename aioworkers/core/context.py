@@ -4,23 +4,30 @@ import inspect
 import logging.config
 import os
 from collections import OrderedDict
+from functools import wraps
 from typing import (
+    Awaitable,
+    Callable,
+    FrozenSet,
     Iterable,
     List,
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Type,
     TypeVar,
+    Union,
 )
 
 from ..utils import import_name
-from .base import AbstractEntity
+from .base import AbstractEntity, NameLogger
 from .config import ValueExtractor
 
 T = TypeVar('T')
+TSeq = Union[Sequence, Set, FrozenSet]
 DOT = '.'
 
 
@@ -124,35 +131,65 @@ class Octopus(MutableMapping):
 
 
 class Signal:
-    def __init__(self, context, name=None):
-        self._signals = []
-        self._context = context
-        self._name = name
+    LOG_RUN = 'To emit in %s'
+    LOG_END = 'End for %s'
 
-    def append(self, signal, groups=None):
+    def __init__(self, context: 'Context', name: str = None):
+        self._signals: List = []
+        self._context = context
+        self._name = name or str(id(self))
+        self._logger = NameLogger(
+            logging.getLogger('aioworkers.signals'),
+            {
+                'name': '.'.join([
+                    'aioworkers.signals', self._name,
+                ]),
+            }
+        )
+
+    def append(self, signal: Callable, groups: TSeq = ()):
         if groups:
             groups = {str(g) for g in groups}
         self._signals.append((signal, groups))
 
-    def _send(self, group_resolver):
-        coros = []
+    async def _run_async(self, name: str, awaitable: Awaitable) -> None:
+        self._logger.info(self.LOG_RUN, name)
+        await awaitable
+        self._logger.info(self.LOG_END, name)
+
+    def _run_sync(self, name: str, func: Callable) -> None:
+        params = inspect.signature(func).parameters
+        self._logger.info(self.LOG_RUN, name)
+        try:
+            if 'context' in params:
+                func(self._context)
+            else:
+                func()
+            self._logger.info(self.LOG_END, name)
+        except Exception:
+            self._logger.exception('Error on run signal %s', self._name)
+
+    def _send(self, group_resolver: 'GroupResolver') -> List[Awaitable]:
+        coros: List = []
         for i, g in self._signals:
             if not group_resolver.match(g):
                 continue
+            instance = getattr(i, '__self__', None)
+            name = instance and repr(instance) or repr(i)
+            if isinstance(instance, AbstractEntity):
+                name = instance.config.get('name') or repr(instance)
             if asyncio.iscoroutinefunction(i):
                 params = inspect.signature(i).parameters
                 if 'context' in params:
-                    coro = i(self._context)
+                    awaitable = i(self._context)
                 else:
-                    coro = i()
+                    awaitable = i()
+                awaitable = self._run_async(name, awaitable)
+                coro = wraps(i)(lambda x: x)(awaitable)
             elif asyncio.iscoroutine(i):
-                coro = i
+                coro = self._run_async(name, i)
             elif callable(i):
-                params = inspect.signature(i).parameters
-                if 'context' in params:
-                    i(self._context)
-                else:
-                    i()
+                self._run_sync(name, i)
                 continue
             else:
                 continue
