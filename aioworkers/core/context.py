@@ -170,7 +170,7 @@ class Signal:
             self._logger.exception('Error on run signal %s', self._name)
 
     def _send(self, group_resolver: 'GroupResolver') -> List[Awaitable]:
-        coros: List = []
+        coros = []  # type: List
         for i, g in self._signals:
             if not group_resolver.match(g):
                 continue
