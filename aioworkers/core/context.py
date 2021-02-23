@@ -135,7 +135,7 @@ class Signal:
     LOG_END = 'End for %s'
 
     def __init__(self, context: 'Context', name: str = None):
-        self._signals: List = []
+        self._signals = []  # type: List
         self._context = context
         self._name = name or str(id(self))
         self._logger = NameLogger(
