@@ -132,9 +132,10 @@ class Octopus(MutableMapping):
 
 class Signal:
     LOG_RUN = 'To emit in %s'
-    LOG_END = 'End for %s'
+    LOG_END = '[%s/%s] End for %s'
 
     def __init__(self, context: 'Context', name: str = None):
+        self._counter = 0
         self._signals = []  # type: List
         self._context = context
         self._name = name or str(id(self))
@@ -155,7 +156,8 @@ class Signal:
     async def _run_async(self, name: str, awaitable: Awaitable) -> None:
         self._logger.info(self.LOG_RUN, name)
         await awaitable
-        self._logger.info(self.LOG_END, name)
+        self._counter += 1
+        self._logger.info(self.LOG_END, self._counter, len(self._signals), name)
 
     def _run_sync(self, name: str, func: Callable) -> None:
         params = inspect.signature(func).parameters
@@ -165,11 +167,13 @@ class Signal:
                 func(self._context)
             else:
                 func()
-            self._logger.info(self.LOG_END, name)
+            self._counter += 1
+            self._logger.info(self.LOG_END, self._counter, len(self._signals), name)
         except Exception:
             self._logger.exception('Error on run signal %s', self._name)
 
     def _send(self, group_resolver: 'GroupResolver') -> List[Awaitable]:
+        self._counter = 0
         coros = []  # type: List
         for i, g in self._signals:
             if not group_resolver.match(g):
