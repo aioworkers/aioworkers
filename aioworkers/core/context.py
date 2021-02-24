@@ -157,7 +157,11 @@ class Signal:
         self._logger.info(self.LOG_RUN, name)
         await awaitable
         self._counter += 1
-        self._logger.info(self.LOG_END, self._counter, len(self._signals), name)
+        self._logger.info(
+            self.LOG_END,
+            self._counter, len(self._signals),
+            name,
+        )
 
     def _run_sync(self, name: str, func: Callable) -> None:
         params = inspect.signature(func).parameters
@@ -168,7 +172,11 @@ class Signal:
             else:
                 func()
             self._counter += 1
-            self._logger.info(self.LOG_END, self._counter, len(self._signals), name)
+            self._logger.info(
+                self.LOG_END,
+                self._counter, len(self._signals),
+                name,
+            )
         except Exception:
             self._logger.exception('Error on run signal %s', self._name)
 
