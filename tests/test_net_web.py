@@ -8,8 +8,9 @@ def aioworkers(aioworkers):
 
 
 @pytest.fixture
-def config_yaml():
+def config_yaml(unused_port):
     return """
+    http.port: {port}
     app.resources:
         /api:
             get: .data
@@ -20,7 +21,7 @@ def config_yaml():
     data: 1
     str_data: asdf
     storage.cls: aioworkers.storage.http.Storage
-    """
+    """.format(port=unused_port())
 
 
 @pytest.fixture
