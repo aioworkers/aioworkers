@@ -10,6 +10,7 @@ History
 * Simple repr(Context) for not interact mode
 * Signal logs (#70)
 * Support py3.9
+* MultiExecutorEntity
 
 
 
