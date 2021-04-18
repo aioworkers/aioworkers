@@ -198,6 +198,39 @@ class ExecutorEntity(AbstractEntity):
         return self._executor
 
 
+class MultiExecutorEntity(AbstractEntity):
+    def __init__(self, *args, **kwargs):
+        self._executors = {}
+        super().__init__(*args, **kwargs)
+
+    @property
+    def loop(self):
+        if not self._loop:
+            self._loop = asyncio.get_event_loop()
+        return self._loop
+
+    def executor_factory(self, *args, **kwargs):
+        from concurrent.futures import ThreadPoolExecutor
+        return ThreadPoolExecutor(*args, **kwargs)
+
+    async def init(self):
+        executors_params = self.config.get('executors', default={})
+        for executor_name, p in executors_params.items():
+            if isinstance(p, int):
+                ex = self.executor_factory(max_workers=p)
+            elif isinstance(p, str):
+                ex = self._context.get(p)
+            else:
+                ex = self.executor_factory()
+            self._executors[executor_name] = ex
+
+    def run_in_executor(self, name: str, f, *args, **kwargs):
+        executor = self._executors[name]
+        if kwargs:
+            f = partial(f, **kwargs)
+        return self.loop.run_in_executor(executor, f, *args)
+
+
 class NameLogger(logging.LoggerAdapter):
     @classmethod
     def from_instance(cls, logger, instance):
