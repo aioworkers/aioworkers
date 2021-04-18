@@ -2,7 +2,7 @@
 History
 =======
 
-0.19b2 (2021-02-24)
+0.19b3 (2021-04-18)
 -------------------
 
 * Support run aioworkers over asgi
@@ -11,6 +11,7 @@ History
 * Signal logs (#70)
 * Support py3.9
 * MultiExecutorEntity
+* setdefault logging.version
 
 
 

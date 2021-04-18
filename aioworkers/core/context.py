@@ -268,7 +268,10 @@ class LoggingContextProcessor(ContextProcessor):
             return m
 
     def configure(self, value):
-        logging.config.dictConfig(value)
+        if value:
+            cfg = dict(value)
+            cfg.setdefault('version', 1)
+            logging.config.dictConfig(cfg)
 
 
 class GroupsContextProcessor(ContextProcessor):
