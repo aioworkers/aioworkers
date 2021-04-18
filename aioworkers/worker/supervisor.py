@@ -24,14 +24,15 @@ class Supervisor(Worker):
         return self._children[item]
 
     async def init(self):
-        self.context.on_stop.append(self.stop)
+        children = [super()]
         for p in self._gen_child_params():
             name = p['name']
             if name in self._children:
                 raise RuntimeError('Duplicate child name %s' % name)
-            self._children[name] = self.create_child(p)
-        await super().init()
-        await self._wait(lambda w: w.init())
+            child = self.create_child(p)
+            self._children[name] = child
+            children.append(child)
+        await self._wait(lambda w: w.init(), children)
 
     def _wait(self, lmbd, children=()):
         children = children or self._children.values()

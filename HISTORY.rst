@@ -12,6 +12,7 @@ History
 * Support py3.9
 * MultiExecutorEntity
 * setdefault logging.version
+* fix concurrent supervisor.init
 
 
 
