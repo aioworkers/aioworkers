@@ -2,8 +2,8 @@
 History
 =======
 
-0.19b3 (2021-04-18)
--------------------
+0.19 (2021-05-03)
+-----------------
 
 * Support run aioworkers over asgi
 * Cache for ConfigFileLoader
