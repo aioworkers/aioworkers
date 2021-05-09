@@ -387,6 +387,8 @@ class RootContextProcessor(ContextProcessor):
 
     def processing(self, config, path=None):
         for k, v in config.items():
+            if '/' in k:
+                continue
             p = '.'.join(i for i in (path, k) if i)
             for processor in self:
                 m = processor.match(self.context, p, v)
