@@ -2,6 +2,13 @@
 History
 =======
 
+0.19.2 (2021-05-19)
+-------------------
+
+* Fix match processing key with url
+* Fix FileSystemStorage create dir
+
+
 0.19.1 (2021-05-09)
 -------------------
 
