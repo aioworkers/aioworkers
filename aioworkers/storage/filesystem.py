@@ -339,7 +339,7 @@ class BaseFileSystemStorage(
         elif value is None:
             return
         else:
-            d.mkdir(parents=True)
+            d.mkdir(parents=True, exist_ok=True)
         if value is not None:
             with tempfile.NamedTemporaryFile(
                     dir=self._tmp,
