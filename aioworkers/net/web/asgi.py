@@ -1,10 +1,8 @@
 import functools
 import logging
-
 import typing
 
 from aioworkers.core.plugin import search_plugins
-
 
 logger = logging.getLogger(__name__)
 
