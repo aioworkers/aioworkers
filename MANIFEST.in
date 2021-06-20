@@ -1,5 +1,6 @@
 include HISTORY.rst
 include README.rst
 
+global-include aioworkers *.pyi
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
