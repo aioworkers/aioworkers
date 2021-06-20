@@ -30,7 +30,7 @@ setup(
     packages=[i for i in find_packages() if i.startswith('aioworkers')],
     include_package_data=True,
     install_requires=requirements,
-    python_requires='>=3.5.3',
+    python_requires='>=3.6',
     license="Apache Software License 2.0",
     keywords='aioworkers',
     classifiers=[
@@ -40,7 +40,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
