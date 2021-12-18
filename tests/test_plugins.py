@@ -14,7 +14,7 @@ class plugin:
 def test_proxy_plugin(name, mocker):
     del sys.modules[name]
     assert name not in sys.modules
-    p, = search_plugins(name)
+    (p,) = search_plugins(name)
     assert isinstance(p, ProxyPlugin)
     assert p.get_config() == {}
     p.add_arguments(mocker.Mock())

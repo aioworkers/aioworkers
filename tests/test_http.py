@@ -15,12 +15,15 @@ def test_div_err():
         assert url / 1
 
 
-@pytest.mark.parametrize('a', [
-    '/api/',
-    '/api',
-    '/api/..',
-    'http://aioworkers/api/',
-    'http://aioworkers/api',
-])
+@pytest.mark.parametrize(
+    'a',
+    [
+        '/api/',
+        '/api',
+        '/api/..',
+        'http://aioworkers/api/',
+        'http://aioworkers/api',
+    ],
+)
 def test_yarl_compat(a):
     assert str(URL(a) / '1') == str(yarl.URL(a) / '1')

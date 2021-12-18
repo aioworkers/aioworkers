@@ -36,8 +36,8 @@ def flat(parts):
             yield from flat(p)
     else:
         raise TypeError(
-            'Key must be relative path [str or Path]. '
-            'But {}'.format(parts))
+            'Key must be relative path [str or Path]. ' 'But {}'.format(parts)
+        )
 
 
 class AsyncFile:
@@ -133,8 +133,9 @@ class AsyncPath(PurePath):
             cls = AsyncWindowsPath if os.name == 'nt' else AsyncPosixPath
         self = cls._from_parts(args, init=False)
         if not self._flavour.is_supported:
-            raise NotImplementedError("cannot instantiate %r on your system"
-                                      % (cls.__name__,))
+            raise NotImplementedError(
+                "cannot instantiate %r on your system" % (cls.__name__,)
+            )
         if storage is None:
             for i in args:
                 if isinstance(i, AsyncPath):
@@ -249,10 +250,11 @@ class MockFileSystemStorage(ExecutorEntity):
 
 
 class BaseFileSystemStorage(
-        AbstractNestedEntity,
-        ExecutorEntity,
-        FormattedEntity,
-        base.AbstractStorage):
+    AbstractNestedEntity,
+    ExecutorEntity,
+    FormattedEntity,
+    base.AbstractStorage,
+):
 
     PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
 
@@ -402,15 +404,23 @@ class BaseFileSystemStorage(
     def copy(self, key_source, storage_dest, key_dest):
         if isinstance(storage_dest, FileSystemStorage):
             return self.run_in_executor(
-                self._copy, key_source,
-                storage_dest, key_dest, shutil.copy)
+                self._copy,
+                key_source,
+                storage_dest,
+                key_dest,
+                shutil.copy,
+            )
         return super().copy(key_source, storage_dest, key_dest)
 
     def move(self, key_source, storage_dest, key_dest):
         if isinstance(storage_dest, FileSystemStorage):
             return self.run_in_executor(
-                self._copy, key_source,
-                storage_dest, key_dest, shutil.move)
+                self._copy,
+                key_source,
+                storage_dest,
+                key_dest,
+                shutil.move,
+            )
         return super().move(key_source, storage_dest, key_dest)
 
     def __repr__(self):
@@ -421,19 +431,22 @@ class BaseFileSystemStorage(
             if self.config.get('executor'):
                 props.append(('c', self.config.executor))
         return '<{}.{} {}>'.format(
-            cls.__module__, cls.__qualname__,
-            ' '.join(map('{0[0]}={0[1]}'.format, props)))
+            cls.__module__,
+            cls.__qualname__,
+            ' '.join(map('{0[0]}={0[1]}'.format, props)),
+        )
 
 
 class FileSystemStorage(
-        BaseFileSystemStorage,
-        base.AbstractListedStorage):
-
+    BaseFileSystemStorage,
+    base.AbstractListedStorage,
+):
     def list(self, glob='*'):
         base = self._path
         g = base.path.glob(glob)
         return self.run_in_executor(
-            list, map(lambda x: x.relative_to(base), g)
+            list,
+            map(lambda x: x.relative_to(base), g),
         )
 
     async def length(self, glob='*'):

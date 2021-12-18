@@ -23,18 +23,19 @@ class AbstractWorker(LoggingEntity, AbstractNamedEntity):
 
 
 class Worker(AbstractWorker):
-    """ Worker
-        config:
-            run: str optional coroutine
-            autorun: bool with self.init
-            persist: bool if need rerun
-            logger: str
-            sleep: int time in seconds for sleep between rerun
-            sleep_start: int time in seconds for sleep before run
-            crontab: str rule as cron. Every 5 minutes "*/5 * * * *"
-            input: str.path to instance of AbstractReader
-            output: str.path to instance of AbstractWriter
+    """Worker
+    config:
+        run: str optional coroutine
+        autorun: bool with self.init
+        persist: bool if need rerun
+        logger: str
+        sleep: int time in seconds for sleep between rerun
+        sleep_start: int time in seconds for sleep before run
+        crontab: str rule as cron. Every 5 minutes "*/5 * * * *"
+        input: str.path to instance of AbstractReader
+        output: str.path to instance of AbstractWriter
     """
+
     _crontab = None
     _sleep = None
     _sleep_start = None
@@ -56,7 +57,9 @@ class Worker(AbstractWorker):
             self._crontab = CronTab(crontab)
 
         self._sleep = self.config.get_duration(
-            'sleep', default=None, null=True
+            'sleep',
+            default=None,
+            null=True,
         )
         self._sleep_start = self.config.get_duration(
             'sleep_start', default=None, null=True
@@ -118,10 +121,12 @@ class Worker(AbstractWorker):
                     raise
                 except BaseException:
                     self.counter['error'] += 1
-                    self.logger.exception('ERROR {} {}'.format(
-                        self.name,
-                        self.config.get('run', type(self)),
-                    ))
+                    self.logger.exception(
+                        'ERROR {} {}'.format(
+                            self.name,
+                            self.config.get('run', type(self)),
+                        )
+                    )
                 self._is_sleep = True
                 if not self._persist:
                     return

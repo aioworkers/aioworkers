@@ -147,7 +147,7 @@ def dump_to_fd(fd, data):
 
 def mapping_repr(*maps, indent=0, **kwargs):
     result = []
-    maps += kwargs,
+    maps += (kwargs,)
 
     for m in maps:
         for k, v in sorted(m.items()):

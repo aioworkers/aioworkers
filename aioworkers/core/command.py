@@ -18,8 +18,7 @@ def kwargs_from_argv(params, ns, argv):
         else:
             parser.add_argument('--' + i, type=p.annotation)
     argv[:] = parser.parse_known_args(argv, namespace=ns)[1]
-    return {k: v for k, v in ns.__dict__.items()
-            if v is not None and k in params}
+    return {k: v for k, v in ns.__dict__.items() if v is not None and k in params}
 
 
 def run(cmd, context, loop=None, ns=None, argv=None):

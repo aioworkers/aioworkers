@@ -48,8 +48,7 @@ class MergeDict(dict):
         if replace:
             key = key.strip('!')
 
-        is_dict = type(value) is dict or \
-            isinstance(value, MergeDict)
+        is_dict = type(value) is dict or isinstance(value, MergeDict)
 
         if '.' in key and '/' not in key:
             *path, z = key.split('.')
@@ -62,14 +61,17 @@ class MergeDict(dict):
 
             if replace and is_dict:
                 d[z] = type(self)(value)
-            elif replace or not is_dict or \
-                    z not in d or not isinstance(d[z], dict):
+            elif replace or not is_dict or z not in d or not isinstance(d[z], dict):
                 d[z] = value
             else:
                 d[z].update(value)
 
-        elif not replace and is_dict and \
-                key in self and isinstance(self[key], type(self)):
+        elif (
+            not replace
+            and is_dict
+            and key in self
+            and isinstance(self[key], type(self))
+        ):
             self[key].update(value)
 
         else:
@@ -155,12 +157,14 @@ class ConfigFileLoader:
 
     def load_url(self, url):
         from urllib.request import urlopen
+
         with urlopen(url) as r:
             assert r.code == 200, r.read(255).decode()
             ct = r.headers.get('Content-Type')
             mt = ct and ct.split(';')[0]
-            assert not self.mime_types or mt in self.mime_types, \
-                'Unexpected mime_type {}'.format(mt)
+            assert (
+                not self.mime_types or mt in self.mime_types
+            ), 'Unexpected mime_type {}'.format(mt)
             return self.load_bytes(r.read())
 
 
@@ -274,7 +278,8 @@ class StringReplaceLoader(ConfigFileLoader):
         IntValueMatcher,
         BooleanValueMatcher,
         FloatValueMatcher,
-        MultilineValueMatcher, ListValueMatcher,
+        MultilineValueMatcher,
+        ListValueMatcher,
     )
 
     def _replace(self, d, iterfunc=lambda d: d.items()):
@@ -332,15 +337,13 @@ class Registry(dict):
     def __call__(self, cls):
         for ext in cls.extensions:
             if not isinstance(ext, str):
-                raise ValueError(
-                    'Extension expect string, given {!r}'.format(ext))
+                raise ValueError('Extension expect string, given {!r}'.format(ext))
             elif ext in self:
                 raise ValueError('Duplicate extension {}'.format(ext))
             self[ext] = cls
         for mime in cls.mime_types:
             if not isinstance(mime, str):
-                raise ValueError(
-                    'MimeType expect string, given {!r}'.format(mime))
+                raise ValueError('MimeType expect string, given {!r}'.format(mime))
             elif mime in self:
                 raise ValueError('Duplicate MimeType {}'.format(mime))
             self[mime] = cls
@@ -441,6 +444,7 @@ class ValueExtractor(Mapping):
             if val is None and null:
                 return val
             return converter(val)
+
         return extractor
 
     def __len__(self) -> int:
@@ -556,6 +560,7 @@ class Config(ValueExtractor):
                     flater(v, k)
                 else:
                     self._env[k] = v
+
         if 'env' in c:
             flater(c.pop('env'))
         for k in [i for i in c if i.startswith('env.')]:
@@ -612,7 +617,7 @@ class Config(ValueExtractor):
 
     def update(self, *mappings, **kwargs):
         if kwargs:
-            mappings += kwargs,
+            mappings += (kwargs,)
         for d in mappings:
             if isinstance(d, ValueExtractor):
                 d = d.__getstate__()
@@ -620,6 +625,7 @@ class Config(ValueExtractor):
 
     def load_plugins(self, *modules, force=True):
         from . import plugin
+
         plugins = plugin.search_plugins(*modules, force=force)
         for p in plugins:
             self.load(*p.configs)

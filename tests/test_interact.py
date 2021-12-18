@@ -25,12 +25,12 @@ async def test_shell(mocker, loop):
     def MockThread(target):
         target()
         return mocker.Mock()
+
     context = mocker.Mock(loop=loop)
     fs = set()
 
     mocker.patch.object(interact, 'Thread', MockThread)
-    mocker.patch.object(loop, 'call_soon_threadsafe',
-                        lambda f, arg: fs.add(arg))
+    mocker.patch.object(loop, 'call_soon_threadsafe', lambda f, arg: fs.add(arg))
     mocker.patch('concurrent.futures.Future.result')
     mocker.patch('IPython.terminal.embed.InteractiveShellEmbed')
 

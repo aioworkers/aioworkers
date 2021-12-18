@@ -20,9 +20,12 @@ async def test_score_base(loop):
 
 
 async def test_score_time(loop):
-    q = ScoreQueue(MergeDict(
-        default_score='time.time',
-    ), loop=loop)
+    q = ScoreQueue(
+        MergeDict(
+            default_score='time.time',
+        ),
+        loop=loop,
+    )
     await q.init()
     await q.put(2)
     assert 2 == await q.get()

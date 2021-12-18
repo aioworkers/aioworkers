@@ -16,7 +16,9 @@ class DictReader(AbstractReader):
         # will not raise an exception StopIteration TODO ?
         async with self._lock:
             return await self.loop.run_in_executor(
-                self._executor, next, self._reader,
+                self._executor,
+                next,
+                self._reader,
             )
 
     def cleanup(self):

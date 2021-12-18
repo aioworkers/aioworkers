@@ -9,10 +9,12 @@ from . import config, formatter
 logger = logging.getLogger(__name__)
 
 
-def load_plugin(module: str,
-                force: bool = False,
-                *,
-                cache: Dict = {}) -> Optional['Plugin']:
+def load_plugin(
+    module: str,
+    force: bool = False,
+    *,
+    cache: Dict = {},
+) -> Optional['Plugin']:
     if module in cache:
         return cache[module]
     elif force:
@@ -81,8 +83,11 @@ class ProxyPlugin(Plugin):
     def __init__(self, original):
         self._original = original
         for i in (
-            'formatters', 'config_loaders', 'configs',
-            'get_config', 'add_arguments',
+            'formatters',
+            'config_loaders',
+            'configs',
+            'get_config',
+            'add_arguments',
         ):
             v = getattr(original, i, None)
             if v:

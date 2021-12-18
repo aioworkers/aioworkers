@@ -9,7 +9,16 @@ def size(value: int, suffixes: list = None) -> str:
     '1 KB'
     """
     suffixes = suffixes or [
-        'bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+        'bytes',
+        'KB',
+        'MB',
+        'GB',
+        'TB',
+        'PB',
+        'EB',
+        'ZB',
+        'YB',
+    ]
     order = int(log2(value) / 10) if value else 0
     return '{:.4g} {}'.format(value / (1 << (order * 10)), suffixes[order])
 

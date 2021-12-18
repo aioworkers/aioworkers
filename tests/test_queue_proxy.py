@@ -20,10 +20,12 @@ async def test_q(loop):
 
 async def test_plq(loop):
     conf = Config()
-    conf.update({
-        'q.cls': utils.import_uri(proxy.PipeLineQueue),
-        'q.format': 'newline:str',
-    })
+    conf.update(
+        {
+            'q.cls': utils.import_uri(proxy.PipeLineQueue),
+            'q.format': 'newline:str',
+        }
+    )
 
     async with Context(conf, loop=loop) as ctx:
         nl = os.linesep.encode()

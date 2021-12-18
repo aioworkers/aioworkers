@@ -140,6 +140,7 @@ class PickleFormatter(BaseFormatter):
 
     def __init__(self):
         import pickle
+
         self._loads = pickle.loads
         self._dumps = pickle.dumps
 
@@ -159,6 +160,7 @@ class JsonFormatter(BaseFormatter):
 
     def __init__(self):
         import json
+
         convs = []
         for score, klass, conv in self.converters:
             if isinstance(klass, str):
@@ -184,7 +186,7 @@ class JsonFormatter(BaseFormatter):
 
     @classmethod
     def add_converter(cls, klass, conv, score=0):
-        """ Add converter
+        """Add converter
         :param klass: class or str
         :param conv: callable
         :param score:
@@ -204,6 +206,7 @@ class YamlFormatter(JsonFormatter):
 
     def __init__(self):
         import yaml
+
         Loader = getattr(yaml, 'CLoader', yaml.Loader)
         self._loads = lambda x: yaml.load(x, Loader)
         self._dumps = yaml.dump
@@ -230,9 +233,15 @@ class LzmaFormatter(BaseFormatter):
         filters = [{'id': FILTER_LZMA2}]
         FORMAT_RAW = lzma.FORMAT_RAW
         self.encode = lambda v: lzma.compress(
-            v, format=FORMAT_RAW, filters=filters)
+            v,
+            format=FORMAT_RAW,
+            filters=filters,
+        )
         self.decode = lambda v: lzma.decompress(
-            v, format=FORMAT_RAW, filters=filters)
+            v,
+            format=FORMAT_RAW,
+            filters=filters,
+        )
 
 
 class MsgPackFormatter(BaseFormatter):

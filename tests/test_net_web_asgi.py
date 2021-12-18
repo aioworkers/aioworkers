@@ -6,10 +6,12 @@ from aioworkers.net.web.asgi import AsgiMiddleware
 
 async def app(scope, receive, send):
     assert scope['type'] == 'http'
-    await send({
-        "type": "http.response.start",
-        "status": 404,
-    })
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 404,
+        }
+    )
 
 
 async def test_lifespan():

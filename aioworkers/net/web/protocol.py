@@ -26,7 +26,9 @@ class Protocol(asyncio.Protocol):
             self._parser.feed_data(data)
         except Exception:
             self._server.request_factory(
-                transport=self._transport, url=None, method=None,
+                transport=self._transport,
+                url=None,
+                method=None,
             ).response(status=500)
 
     def on_url(self, url: bytes):

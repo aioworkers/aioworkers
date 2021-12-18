@@ -109,7 +109,8 @@ def test_load_plugins():
 
 def test_ini():
     loader = IniLoader()
-    d = loader.load_str("""
+    d = loader.load_str(
+        """
         [sec]
         int1: 1
         int2 = 2
@@ -134,7 +135,8 @@ def test_ini():
         bool5: On
         bool6: Off
         int7: 1
-        """)
+        """
+    )
     for k, v in d['sec'].items():
         if k.startswith('int'):
             assert isinstance(v, int)
@@ -211,10 +213,12 @@ def test_value_extractor_order_keys():
 def test_logging():
     confs = (
         {'logging.disable_existing_loggers': True},
-        {'logging': {
-            'handlers': {'a': {'level': 'DEBUG'}, 'b': {'level': 'DEBUG'}},
-            'loggers': {'a': {'level': 'DEBUG'}, 'a.a': {'level': 'DEBUG'}},
-        }},
+        {
+            'logging': {
+                'handlers': {'a': {'level': 'DEBUG'}, 'b': {'level': 'DEBUG'}},
+                'loggers': {'a': {'level': 'DEBUG'}, 'a.a': {'level': 'DEBUG'}},
+            }
+        },
         {'logging.handlers.a': {'level': 'WARNING'}},
         {'logging.handlers.b.level': 'WARNING'},
         {'logging.loggers.a': {'level': 'INFO'}},
@@ -251,12 +255,14 @@ def test_dump_config():
 def test_from_env():
     os.environ['TEST'] = 'DEBUG'
     c = Config()
-    c.update({
-        'env.x.y': 'TEST',
-        'env.x': {'z': 'TEST'},
-        'env': {'z': 'TEST'},
-        'env.logging.root.level': 'TEST',
-    })
+    c.update(
+        {
+            'env.x.y': 'TEST',
+            'env.x': {'z': 'TEST'},
+            'env': {'z': 'TEST'},
+            'env.logging.root.level': 'TEST',
+        }
+    )
     assert c._env == {
         'x.y': 'TEST',
         'x.z': 'TEST',

@@ -142,10 +142,13 @@ class Signal:
         self._logger = NameLogger(
             logging.getLogger('aioworkers.signals'),
             {
-                'name': '.'.join([
-                    'aioworkers.signals', self._name,
-                ]),
-            }
+                'name': '.'.join(
+                    [
+                        'aioworkers.signals',
+                        self._name,
+                    ]
+                ),
+            },
         )
 
     def append(self, signal: Callable, groups: TSeq = ()):
@@ -159,7 +162,8 @@ class Signal:
         self._counter += 1
         self._logger.info(
             self.LOG_END,
-            self._counter, len(self._signals),
+            self._counter,
+            len(self._signals),
             name,
         )
 
@@ -174,7 +178,8 @@ class Signal:
             self._counter += 1
             self._logger.info(
                 self.LOG_END,
-                self._counter, len(self._signals),
+                self._counter,
+                len(self._signals),
                 name,
             )
         except Exception:
@@ -302,18 +307,26 @@ class EntityContextProcessor(ContextProcessor):
             except TypeError as e:
                 raise TypeError(
                     'Error while creating entity on {} from {}: {}'.format(
-                        path, value[self.key], e))
+                        path, value[self.key], e
+                    )
+                )
             except ValueError as e:
                 raise ValueError(
                     'Error while checking entity on {} from {}: {}'.format(
-                        path, value[self.key], e))
+                        path, value[self.key], e
+                    )
+                )
             entity = cls(value, context=context, loop=context.loop)
         context[path] = entity
         self.entity = entity
 
     @classmethod
-    def match(cls, context: 'Context', path: str,
-              value: ValueExtractor) -> Optional[ContextProcessor]:
+    def match(
+        cls,
+        context: 'Context',
+        path: str,
+        value: ValueExtractor,
+    ) -> Optional[ContextProcessor]:
         if isinstance(value, Mapping) and cls.key in value:
             return cls(context, path, value)
         return None
@@ -335,8 +348,12 @@ class InstanceEntityContextProcessor(EntityContextProcessor):
             context[path] = entity
 
     @classmethod
-    def match(cls, context: 'Context', path: str,
-              value: ValueExtractor) -> Optional[ContextProcessor]:
+    def match(
+        cls,
+        context: 'Context',
+        path: str,
+        value: ValueExtractor,
+    ) -> Optional[ContextProcessor]:
         e = context[path]
         if isinstance(e, AbstractEntity):
             return cls(context, path, value)
@@ -360,8 +377,12 @@ class FuncContextProcessor(ContextProcessor):
         context[path] = func(*args, **kwargs)
 
     @classmethod
-    def match(cls, context: 'Context', path: str,
-              value: ValueExtractor) -> Optional[ContextProcessor]:
+    def match(
+        cls,
+        context: 'Context',
+        path: str,
+        value: ValueExtractor,
+    ) -> Optional[ContextProcessor]:
         if isinstance(value, Mapping) and cls.key in value:
             return cls(context, path, value)
         return None

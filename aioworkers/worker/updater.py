@@ -26,9 +26,7 @@ class BaseUpdater(Subprocess):
         pass
 
     async def restart(self):
-        atexit.register(
-            os.execl, sys.executable,
-            sys.executable, *sys.argv)
+        atexit.register(os.execl, sys.executable, sys.executable, *sys.argv)
         self.loop.stop()
 
     async def can_update(self):

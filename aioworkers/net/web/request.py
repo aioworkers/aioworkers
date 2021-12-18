@@ -3,10 +3,16 @@ from .exceptions import HttpException
 
 
 class Request:
-    def __init__(self, url, method, *,
-                 body_future=None,
-                 headers=(), transport=None,
-                 context=None):
+    def __init__(
+        self,
+        url,
+        method,
+        *,
+        body_future=None,
+        headers=(),
+        transport=None,
+        context=None,
+    ):
         self.url = url
         self.method = method
         self.headers = headers
@@ -24,8 +30,12 @@ class Request:
         return self._body_future
 
     def response(
-        self, data=None, status=200, reason='',
-        format=None, headers=(),
+        self,
+        data=None,
+        status=200,
+        reason='',
+        format=None,
+        headers=(),
     ):
         if self._finised:
             return

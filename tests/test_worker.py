@@ -25,10 +25,13 @@ async def test_coro_run(loop, mocker):
     mocker.patch('aioworkers.worker.base.import_name',
                  lambda x: myrun)
 
-    config = Config(w=dict(
-        cls='aioworkers.worker.base.Worker', autorun=True,
-        run='mocked.run',
-    ))
+    config = Config(
+        w=dict(
+            cls='aioworkers.worker.base.Worker',
+            autorun=True,
+            run='mocked.run',
+        )
+    )
     async with Context(config, loop=loop) as context:
         worker = context.w
         assert worker._started_at
@@ -38,13 +41,15 @@ async def test_coro_run(loop, mocker):
 
 
 async def test_stop(loop):
-    config = Config(w=dict(
-        cls='aioworkers.worker.base.Worker',
-        autorun=True,
-        persist=True,
-        sleep=0.01,
-        sleep_start=0.01,
-    ))
+    config = Config(
+        w=dict(
+            cls='aioworkers.worker.base.Worker',
+            autorun=True,
+            persist=True,
+            sleep=0.01,
+            sleep_start=0.01,
+        )
+    )
     async with Context(config, loop=loop) as context:
         worker = context.w
         await asyncio.sleep(0.1, loop=loop)
@@ -54,11 +59,13 @@ async def test_stop(loop):
 
 
 async def test_crontab(loop):
-    config = Config(w=dict(
-        cls='aioworkers.worker.base.Worker',
-        persist=True,
-        crontab='*/1 * * * *',
-    ))
+    config = Config(
+        w=dict(
+            cls='aioworkers.worker.base.Worker',
+            persist=True,
+            crontab='*/1 * * * *',
+        )
+    )
     async with Context(config, loop=loop) as context:
         worker = context.w
         await asyncio.sleep(0.1, loop=loop)

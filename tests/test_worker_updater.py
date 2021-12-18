@@ -17,7 +17,7 @@ def config(config):
             cls=import_uri(PipUpdater),
             package=dict(name='pip'),
             autorun=False,
-        )
+        ),
     )
     return config
 

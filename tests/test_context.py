@@ -61,10 +61,14 @@ async def test_context_items(loop):
 
 async def test_context_create(loop):
     conf = Config()
-    conf.update(MergeDict({
-        'q.cls': 'aioworkers.queue.timeout.TimestampQueue',
-        'f.e': 1,
-    }))
+    conf.update(
+        MergeDict(
+            {
+                'q.cls': 'aioworkers.queue.timeout.TimestampQueue',
+                'f.e': 1,
+            }
+        )
+    )
     c = Context(conf, loop=loop)
     await c.init()
     await c.start()
@@ -76,10 +80,12 @@ async def test_context_create(loop):
 
     async def handler(context):
         pass
+
     c.on_stop.append(handler)
 
     async def handler():
         raise ValueError
+
     c.on_stop.append(handler)
     c.on_stop.append(handler())
 

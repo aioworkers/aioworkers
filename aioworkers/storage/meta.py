@@ -98,5 +98,4 @@ class FutureStorage(base.AbstractStorage):
         if key in self._futures:
             return self._futures[key]
         else:
-            return self._futures.setdefault(
-                key, self.loop.create_future())
+            return self._futures.setdefault(key, self.loop.create_future())

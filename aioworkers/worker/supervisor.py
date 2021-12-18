@@ -13,6 +13,7 @@ class Supervisor(Worker):
         children: Union[int, list[str], list[dict]] - count or list
         child: Mapping - config for child worker
     """
+
     def __init__(self, *args, **kwargs):
         self._children = {}
         super().__init__(*args, **kwargs)
@@ -93,7 +94,9 @@ class Supervisor(Worker):
             await self._wait(lambda w: w.start(), children)
             d, p = await asyncio.wait(
                 [i._future for i in self._children.values()],
-                loop=self.loop, return_when=then)
+                loop=self.loop,
+                return_when=then,
+            )
             if not self._persist:
                 break
             await asyncio.sleep(1, loop=self.loop)

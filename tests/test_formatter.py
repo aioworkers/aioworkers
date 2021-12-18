@@ -17,18 +17,21 @@ r = registry.new_child()
 r(RtsFormatter)
 
 
-@pytest.mark.parametrize('formatter,data', [
-    ('json', {'f': 3}),
-    ('pickle', {'f': 3}),
-    ('yaml', {'f': 3}),
-    ('str', '123'),
-    ('newline|str', '123'),
-    ('str|bnewline', '123'),
-    ('str|zlib', '123'),
-    ('str|lzma', '123'),
-    ('msgpack', {'b': b'123', 's': '123', 'i': 123}),
-    ('bson', {'f': 4}),
-])
+@pytest.mark.parametrize(
+    'formatter,data',
+    [
+        ('json', {'f': 3}),
+        ('pickle', {'f': 3}),
+        ('yaml', {'f': 3}),
+        ('str', '123'),
+        ('newline|str', '123'),
+        ('str|bnewline', '123'),
+        ('str|zlib', '123'),
+        ('str|lzma', '123'),
+        ('msgpack', {'b': b'123', 's': '123', 'i': 123}),
+        ('bson', {'f': 4}),
+    ],
+)
 def test_formatters(formatter, data):
     f = r.get(formatter)
     enc = f.encode(data)
@@ -36,12 +39,15 @@ def test_formatters(formatter, data):
     assert f.decode(enc) == data
 
 
-@pytest.mark.parametrize('f', [
-    ['str', 'rts'],
-    'str:rts',
-    'str|rts',
-    'str|from_str:str|from_str',
-])
+@pytest.mark.parametrize(
+    'f',
+    [
+        ['str', 'rts'],
+        'str:rts',
+        'str|rts',
+        'str|from_str:str|from_str',
+    ],
+)
 def test_chain(f):
     f = r.get(f)
     a = '1'

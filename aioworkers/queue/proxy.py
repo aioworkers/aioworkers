@@ -47,8 +47,7 @@ class PipeLineQueue(FormattedEntity, ExecutorEntity, AbstractQueue):
     async def get(self):
         async with self._read_lock:
             while True:
-                v = await self.run_in_executor(
-                    self._reader.readline)
+                v = await self.run_in_executor(self._reader.readline)
                 if v:
                     break
                 elif not self._timeout:
@@ -59,5 +58,4 @@ class PipeLineQueue(FormattedEntity, ExecutorEntity, AbstractQueue):
     async def put(self, value):
         value = self.encode(value)
         async with self._write_lock:
-            return await self.run_in_executor(
-                self._writer.write, value)
+            return await self.run_in_executor(self._writer.write, value)

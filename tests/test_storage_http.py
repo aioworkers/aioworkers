@@ -22,7 +22,8 @@ async def test_set_get(loop, aiohttp_client):
             prefix=str(url),
             headers=[['A', 'b']],
             format='json',
-        ))
+        )
+    )
 
     async with Context(config=config, loop=loop) as context:
         storage = context.storage
@@ -32,10 +33,12 @@ async def test_set_get(loop, aiohttp_client):
 
 
 async def test_format(loop):
-    config = Config(storage=dict(
-        cls='aioworkers.storage.http.Storage',
-        format='bytes',
-    ))
+    config = Config(
+        storage=dict(
+            cls='aioworkers.storage.http.Storage',
+            format='bytes',
+        )
+    )
     async with Context(config=config, loop=loop) as context:
         storage = context.storage
         assert isinstance(storage.raw_key('test'), URL)

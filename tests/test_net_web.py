@@ -21,7 +21,9 @@ def config_yaml(unused_port):
     data: 1
     str_data: asdf
     storage.cls: aioworkers.storage.http.Storage
-    """.format(port=unused_port())
+    """.format(
+        port=unused_port()
+    )
 
 
 @pytest.fixture

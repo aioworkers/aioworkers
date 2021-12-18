@@ -20,6 +20,7 @@ def test_main(mocker):
 
     def init(self):
         self.app = mocker.Mock()
+
     context = mocker.patch.object(cli, 'Context')
     context.init = init
     cli.main_with_conf()
@@ -27,7 +28,7 @@ def test_main(mocker):
 
 def test_stdin_config():
     f = io.BytesIO()
-    data = 123,
+    data = (123,)
     utils.dump_to_fd(f, data)
     f.seek(0)
     assert data == utils.load_from_fd(f)

@@ -82,8 +82,12 @@ class Subprocess(FormattedEntity, Worker):
         else:
             coro = asyncio.create_subprocess_exec
         self.create_subprocess = lambda *args: coro(
-            *args, stdin=stdin, stdout=stdout,
-            stderr=stderr, loop=self.loop)
+            *args,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            loop=self.loop,
+        )
 
         self.params = dict(self.config.get('params', ()))
         self.params.setdefault('python', sys.executable)
@@ -113,7 +117,7 @@ class Subprocess(FormattedEntity, Worker):
         elif isinstance(value, Sequence):
             args = value
         elif isinstance(value, str):
-            args = value,
+            args = (value,)
 
         is_cmd_str = isinstance(cmd, str)
 
@@ -128,7 +132,7 @@ class Subprocess(FormattedEntity, Worker):
         elif not self._shell and is_cmd_str:
             cmd = shlex.split(cmd)
         if isinstance(cmd, str):
-            cmd = cmd,
+            cmd = (cmd,)
         return cmd
 
     async def run_cmd(self, *args, **kwargs):

@@ -89,12 +89,12 @@ class AbstractNestedEntity(AbstractEntity):
     async def init(self):
         await super().init()
         if self._children:
-            await self.context.wait_all(
-                [c.init() for c in self._children.values()]
-            )
+            await self.context.wait_all([c.init() for c in self._children.values()])
 
     def get_child_config(
-        self, item: str, config: Optional[ValueExtractor] = None,
+        self,
+        item: str,
+        config: Optional[ValueExtractor] = None,
     ) -> Optional[ValueExtractor]:
         if config is not None:
             c = config
@@ -168,6 +168,7 @@ class ExecutorEntity(AbstractEntity):
 
     def executor_factory(self, *args, **kwargs):
         from concurrent.futures import ThreadPoolExecutor
+
         return ThreadPoolExecutor(*args, **kwargs)
 
     def _create_executor(self):
@@ -211,6 +212,7 @@ class MultiExecutorEntity(AbstractEntity):
 
     def executor_factory(self, *args, **kwargs):
         from concurrent.futures import ThreadPoolExecutor
+
         return ThreadPoolExecutor(*args, **kwargs)
 
     async def init(self):
@@ -234,9 +236,12 @@ class MultiExecutorEntity(AbstractEntity):
 class NameLogger(logging.LoggerAdapter):
     @classmethod
     def from_instance(cls, logger, instance):
-        return cls(logger, {
-            'name': instance.config.name,
-        })
+        return cls(
+            logger,
+            {
+                'name': instance.config.name,
+            },
+        )
 
     def process(self, msg, kwargs):
         return '[{}] {}'.format(self.extra['name'], msg), kwargs

@@ -69,7 +69,10 @@ def score_queue(default_score=None):
     return lambda klass: type(
         klass.__name__,
         (ScoreQueueMixin, klass),
-        {'default_score': default_score, 'super': klass}
+        {
+            'default_score': default_score,
+            'super': klass,
+        },
     )
 
 

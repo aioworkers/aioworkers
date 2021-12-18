@@ -7,9 +7,13 @@ from .base import AbstractQueue, ScoreQueueMixin
 
 
 class TimeoutItem:
-    def __init__(self, value, *,
-                 timeout: float = None,
-                 add: float = 0):
+    def __init__(
+        self,
+        value,
+        *,
+        timeout: float = None,
+        add: float = 0,
+    ):
         self._value = value
         if timeout is None:
             timeout = time.time()
@@ -37,7 +41,9 @@ class TimeoutItem:
 
     def __repr__(self):
         return '{}({}, timeout={})'.format(
-            type(self).__name__, repr(self._value), self._timeout,
+            type(self).__name__,
+            repr(self._value),
+            self._timeout,
         )
 
 
@@ -55,7 +61,8 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
         super().set_config(config)
         self._add_score = self.config.get_duration(
             'add_score',
-            null=True, default=0,
+            null=True,
+            default=0,
         )
 
     def set_context(self, context):

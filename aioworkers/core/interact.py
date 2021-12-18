@@ -25,6 +25,7 @@ def shell(run):
 
     if int(prompt_toolkit.__version__.split('.', 1)[0]) < 3:
         from IPython.terminal.embed import InteractiveShellEmbed
+
         shell = InteractiveShellEmbed.instance()
         _f = concurrent.futures.Future()
 
@@ -32,10 +33,14 @@ def shell(run):
             context = _f.result()
             locals()['await'] = partial(_await, context=context)
             shell(
-                header='Welcome to interactive mode of aioworkers. \n'
-                       'You available the main context and '
-                       'the await function to perform coroutine.')
+                header=(
+                    'Welcome to interactive mode of aioworkers. \n'
+                    'You available the main context and '
+                    'the await function to perform coroutine.'
+                )
+            )
             return locals()['await'](asyncio.coroutine(context.loop.stop)())
+
         thread = Thread(target=_thread)
         thread.start()
         run(future=_f)

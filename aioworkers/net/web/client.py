@@ -20,7 +20,8 @@ class Request:
         logger.info('Request %r', self._request)
         try:
             response = await self._session.run(
-                self._session.opener.open, self._request,
+                self._session.opener.open,
+                self._request,
             )
         except urllib.error.HTTPError as e:
             response = e
@@ -34,7 +35,8 @@ class Request:
 
 class Response:
     def __init__(
-        self, response: HTTPResponse,
+        self,
+        response: HTTPResponse,
         session: 'Session',
     ):
         self._response = response

@@ -120,7 +120,12 @@ def main(*config_files, args=None, config_dirs=(),
             exclude=sum_g(args.exclude_groups),
             all_groups=args.exclude_groups is not None,
             default=True,
-        ), cmds=cmds, argv=argv, ns=args, prompt=PROMPT)
+        ),
+        cmds=cmds,
+        argv=argv,
+        ns=args,
+        prompt=PROMPT,
+    )
 
     try:
         if args.multiprocessing:
@@ -144,11 +149,13 @@ def main(*config_files, args=None, config_dirs=(),
 
         elif args.interact:
             from .core.interact import shell
+
             args.print = lambda *args: None
             os.environ['AIOWORKERS_MODE'] = 'console'
             shell(run)
         elif args.interact_kernel:
             from .core.interact import kernel
+
             kernel(run)
         else:
             run()
@@ -174,15 +181,19 @@ def process_iter(cfg):
     for k, v in cfg.items():
         if 'count' in v:
             for i in range(v.get_int('count')):
-                result.append({
-                    'name': '{}-{}'.format(k, i),
-                    'groups': v.get('groups', ()),
-                })
+                result.append(
+                    {
+                        'name': '{}-{}'.format(k, i),
+                        'groups': v.get('groups', ()),
+                    }
+                )
         else:
-            result.append({
-                'name': k,
-                'groups': v.get('groups', ()),
-            })
+            result.append(
+                {
+                    'name': k,
+                    'groups': v.get('groups', ()),
+                }
+            )
     return result
 
 
@@ -206,10 +217,13 @@ def create_process(cfg):
 
 
 def loop_run(
-    conf=None, future=None,
+    conf=None,
+    future=None,
     group_resolver=None,
-    ns=None, cmds=None,
-    argv=None, loop=None,
+    ns=None,
+    cmds=None,
+    argv=None,
+    loop=None,
     prompt=None,
     process_name=None,
 ):
@@ -273,7 +287,10 @@ class plugin(Plugin):
         default = []
         parser.set_defaults(config=default)
         parser.add_argument(
-            '-c', '--config', nargs='+', action=ExtendAction,
+            '-c',
+            '--config',
+            nargs='+',
+            action=ExtendAction,
             type=UriType('r', encoding='utf-8'),
         )
         parser.add_argument('--config-stdin', action='store_true')
@@ -281,9 +298,11 @@ class plugin(Plugin):
 
 def main_with_conf(*args, **kwargs):
     import warnings
+
     warnings.warn(
         'Deprecated main_with_conf, use main',
-        DeprecationWarning, stacklevel=2,
+        DeprecationWarning,
+        stacklevel=2,
     )
     main(*args, **kwargs)
 

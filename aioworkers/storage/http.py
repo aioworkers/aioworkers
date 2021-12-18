@@ -18,9 +18,11 @@ class StorageDataFormatError(StorageError):
 
 
 class AbstractHttpStorage(
-    FormattedEntity, LoggingEntity, base.AbstractStorageReadOnly,
+    FormattedEntity,
+    LoggingEntity,
+    base.AbstractStorageReadOnly,
 ):
-    """ ReadOnly storage over http GET
+    """ReadOnly storage over http GET
     config:
         conn_limit: int = 1
         conn_timeout: float
@@ -32,6 +34,7 @@ class AbstractHttpStorage(
         template: url template
         format: [json|str|bytes], default json
     """
+
     def __init__(self, *args, **kwargs):
         self.session = None
         super().__init__(*args, **kwargs)
@@ -106,11 +109,12 @@ class AbstractHttpStorage(
         return self.request(url)
 
     async def copy(self, key_source, storage_dest, key_dest):
-        """ Return True if data are copied
+        """Return True if data are copied
         * optimized for http->fs copy
         * not supported return_status
         """
         from aioworkers.storage.filesystem import FileSystemStorage
+
         if not isinstance(storage_dest, FileSystemStorage):
             return super().copy(key_source, storage_dest, key_dest)
         url = self.raw_key(key_source)
@@ -121,9 +125,13 @@ class AbstractHttpStorage(
                 if self.logger.getEffectiveLevel() == logging.DEBUG:
                     self.logger.debug(
                         'HttpStorage request to %s '
-                        'returned code %s:\n%s' % (
-                            url, response.status,
-                            (await response.read()).decode()))
+                        'returned code %s:\n%s'
+                        % (
+                            url,
+                            response.status,
+                            (await response.read()).decode(),
+                        )
+                    )
                 return
             async with storage_dest.raw_key(key_dest).open('wb') as f:
                 async for chunk in response.content.iter_any():
@@ -147,7 +155,7 @@ class RoStorage(ExecutorEntity, AbstractHttpStorage):
 
 
 class Storage(RoStorage, base.AbstractStorageWriteOnly):
-    """ RW storage over http
+    """RW storage over http
     config:
         conn_limit: int
         allow_hosts: list
@@ -167,5 +175,8 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
             headers['Content-Type'] = self._formatter.mimetypes[0]
 
         return self.request(
-            url, method=self.config.get('set', 'post'),
-            data=data, headers=headers)
+            url,
+            method=self.config.get('set', 'post'),
+            data=data,
+            headers=headers,
+        )

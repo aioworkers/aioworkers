@@ -11,10 +11,12 @@ class SocketServer(LoggingEntity):
 
     def set_config(self, config):
         super().set_config(config)
-        self._sockets.extend(self.bind(
-            port=self.config.get_int('port', null=True),
-            host=self.config.get('host'),
-        ))
+        self._sockets.extend(
+            self.bind(
+                port=self.config.get_int('port', null=True),
+                host=self.config.get('host'),
+            )
+        )
 
     def set_context(self, context):
         super().set_context(context)
