@@ -215,8 +215,14 @@ def test_logging():
         {'logging.disable_existing_loggers': True},
         {
             'logging': {
-                'handlers': {'a': {'level': 'DEBUG'}, 'b': {'level': 'DEBUG'}},
-                'loggers': {'a': {'level': 'DEBUG'}, 'a.a': {'level': 'DEBUG'}},
+                'handlers': {
+                    'a': {'level': 'DEBUG'},
+                    'b': {'level': 'DEBUG'},
+                },
+                'loggers': {
+                    'a': {'level': 'DEBUG'},
+                    'a.a': {'level': 'DEBUG'},
+                },
             }
         },
         {'logging.handlers.a': {'level': 'WARNING'}},
