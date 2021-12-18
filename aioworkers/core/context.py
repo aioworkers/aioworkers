@@ -94,7 +94,9 @@ class Octopus(MutableMapping):
 
         result = []
         if header:
-            result.extend(['  ' * indent, '<', self.__class__.__name__, '>\n'])
+            result.extend(
+                ['  ' * indent, '<', self.__class__.__name__, '>\n']
+            )
             indent += 1
 
         for k, v in sorted(self.__dict__.items()):

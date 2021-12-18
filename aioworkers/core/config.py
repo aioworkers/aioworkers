@@ -61,7 +61,12 @@ class MergeDict(dict):
 
             if replace and is_dict:
                 d[z] = type(self)(value)
-            elif replace or not is_dict or z not in d or not isinstance(d[z], dict):
+            elif (
+                replace
+                or not is_dict
+                or z not in d
+                or not isinstance(d[z], dict)
+            ):
                 d[z] = value
             else:
                 d[z].update(value)
@@ -337,13 +342,17 @@ class Registry(dict):
     def __call__(self, cls):
         for ext in cls.extensions:
             if not isinstance(ext, str):
-                raise ValueError('Extension expect string, given {!r}'.format(ext))
+                raise ValueError(
+                    'Extension expect string, given {!r}'.format(ext)
+                )
             elif ext in self:
                 raise ValueError('Duplicate extension {}'.format(ext))
             self[ext] = cls
         for mime in cls.mime_types:
             if not isinstance(mime, str):
-                raise ValueError('MimeType expect string, given {!r}'.format(mime))
+                raise ValueError(
+                    'MimeType expect string, given {!r}'.format(mime)
+                )
             elif mime in self:
                 raise ValueError('Duplicate MimeType {}'.format(mime))
             self[mime] = cls

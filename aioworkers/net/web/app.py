@@ -19,8 +19,11 @@ class Application(AbstractNamedEntity):
                     raise TypeError(
                         'operation for {method} {url} '
                         'expected Mapping, not {t}'.format(
-                            method=method.upper(), url=url,
-                            t=type(operation)))
+                            method=method.upper(),
+                            url=url,
+                            t=type(operation),
+                        )
+                    )
                 operation = dict(operation)
                 handler = operation.pop('handler')
                 self.add_route(method, url, handler, name=name)
@@ -77,14 +80,17 @@ class Resources(Iterable):
             return
         elif not isinstance(resources, Mapping):
             raise TypeError(
-                'Resources should be described in dict %s' % resources)
+                'Resources should be described in dict %s' % resources
+            )
         prefix += resources.get('prefix', '')
         for name, sub in resources.items():
+
             if name == 'prefix':
                 continue
             elif not isinstance(sub, Mapping):
                 raise TypeError(
-                    'Resource should be described in dict %s' % sub)
+                    'Resource should be described in dict %s' % sub
+                )
             routes = dict(sub)
             priority = routes.pop('priority', 0)
             if 'include' in routes:

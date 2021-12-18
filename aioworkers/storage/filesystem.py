@@ -344,8 +344,9 @@ class BaseFileSystemStorage(
             d.mkdir(parents=True, exist_ok=True)
         if value is not None:
             with tempfile.NamedTemporaryFile(
-                    dir=self._tmp,
-                    delete=False) as f:
+                dir=self._tmp,
+                delete=False,
+            ) as f:
                 source = f.name
                 f.write(value)
             shutil.move(source, str(key))
