@@ -1,4 +1,4 @@
 
 
 async def handler(context):
-    return await context.data
+    return context.data
