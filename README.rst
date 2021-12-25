@@ -26,7 +26,7 @@ Easy configurable workers based on asyncio
 
 
 * Free software: Apache Software License 2.0
-* Required: Python >=3.5.3, optional
+* Required: Python >=3.6, optional
   `pyyaml <https://pypi.python.org/pypi/pyyaml>`_,
   `uvloop <https://pypi.python.org/pypi/uvloop>`_,
   `httptools <https://pypi.python.org/pypi/httptools>`_,
