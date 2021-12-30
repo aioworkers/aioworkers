@@ -30,6 +30,7 @@ Easy configurable workers based on asyncio
   `pyyaml <https://pypi.python.org/pypi/pyyaml>`_,
   `uvloop <https://pypi.python.org/pypi/uvloop>`_,
   `httptools <https://pypi.python.org/pypi/httptools>`_,
+  `yarl <https://pypi.python.org/pypi/yarl>`_,
   `crontab <https://pypi.python.org/pypi/crontab>`_,
   `setproctitle <https://pypi.python.org/pypi/setproctitle>`_,
   `msgpack <https://pypi.python.org/pypi/msgpack>`_,
