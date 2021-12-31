@@ -2,10 +2,11 @@
 History
 =======
 
-0.20 (2021-06-20)
------------------
+0.20a3 (2021-12-31)
+-------------------
 
 * Drop support Python 3.5
+* Add support Python 3.10
 * add stubs by stubgen
 
 
