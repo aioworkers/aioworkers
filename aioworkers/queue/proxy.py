@@ -32,8 +32,8 @@ class ProxyQueue(ExecutorEntity, AbstractQueue):
 class PipeLineQueue(FormattedEntity, ExecutorEntity, AbstractQueue):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._read_lock = asyncio.Lock(loop=self._loop)
-        self._write_lock = asyncio.Lock(loop=self._loop)
+        self._read_lock = asyncio.Lock()
+        self._write_lock = asyncio.Lock()
         self.set_reader(sys.stdin.buffer)
         self.set_writer(sys.stdout.buffer)
         self._timeout = self.config.get('timeout')
