@@ -124,8 +124,8 @@ async def test_freespace(context, loop):
     ):
         assert 1 == await storage.get_free_space()
         storage.config._val.limit_free_space = 2
-        f = asyncio.ensure_future(storage.set(key1, data), loop=loop)
-        await asyncio.sleep(0, loop=loop)
+        f = asyncio.ensure_future(storage.set(key1, data))
+        await asyncio.sleep(0)
     await storage.set(key2, data)
     await storage.set(key1, None)
     assert not storage._space_waiters
