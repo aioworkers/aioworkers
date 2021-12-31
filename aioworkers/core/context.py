@@ -205,7 +205,7 @@ class Signal:
                     awaitable = i()
                 awaitable = self._run_async(name, awaitable)
                 coro = wraps(i)(lambda x: x)(awaitable)
-            elif asyncio.iscoroutine(i):
+            elif isinstance(i, Awaitable):
                 coro = self._run_async(name, i)
             elif callable(i):
                 self._run_sync(name, i)
