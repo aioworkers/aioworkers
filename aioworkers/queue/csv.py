@@ -7,7 +7,7 @@ from ..core.base import AbstractReader
 class DictReader(AbstractReader):
     async def init(self):
         self._executor = None  # TODO
-        self._lock = asyncio.Lock(loop=self.loop)
+        self._lock = asyncio.Lock()
         self._file = open(self.config.file)
         self._reader = csv.DictReader(self._file)
         self.context.on_cleanup.append(self.cleanup)

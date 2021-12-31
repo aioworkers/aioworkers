@@ -18,7 +18,7 @@ async def test_await(mocker, loop):
     context.loop.call_soon_threadsafe = lambda f, arg: fs.add(arg)
     interact._await(coro_1(), context)
     interact._await(coro_2(), context)
-    await asyncio.wait(fs, loop=loop)
+    await asyncio.wait(fs)
 
 
 async def test_shell(mocker, loop):

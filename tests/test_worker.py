@@ -52,7 +52,7 @@ async def test_stop(loop):
     )
     async with Context(config, loop=loop) as context:
         worker = context.w
-        await asyncio.sleep(0.1, loop=loop)
+        await asyncio.sleep(0.1)
         await worker.stop()
         assert not worker.running()
         assert isinstance(await worker.status(), dict)
@@ -68,7 +68,7 @@ async def test_crontab(loop):
     )
     async with Context(config, loop=loop) as context:
         worker = context.w
-        await asyncio.sleep(0.1, loop=loop)
+        await asyncio.sleep(0.1)
         await worker.stop()
         assert not worker.running()
 

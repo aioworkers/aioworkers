@@ -15,9 +15,7 @@ def config_yaml():
 @pytest.mark.timeout(5)
 async def test_web_client(context, aiohttp_client):
     app = web.Application()
-    app.router.add_get(
-        '/test/1',
-        lambda x: web.json_response(["Python"]))
+    app.router.add_get('/test/1', lambda x: web.json_response(["Python"]))
     client = await aiohttp_client(app)
     url = client.make_url('/test/1')
     async with context.storage.session.request(url) as response:
