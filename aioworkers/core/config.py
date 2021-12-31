@@ -391,15 +391,15 @@ class ValueExtractor(Mapping):
         self._setattr = False
 
     @classmethod
-    def _mapping_factory(cls, *mappings) -> 'ValueExtractor':
-        maps = OrderedDict()  # type: Dict[int, Mapping]
+    def _mapping_factory(cls, *mappings: MutableMapping) -> 'ValueExtractor':
+        maps: Dict[int, MutableMapping] = OrderedDict()
         for m in mappings:
             if isinstance(m, ValueExtractor):
                 m = m._val
             if isinstance(m, ChainMap):
                 for m in m.maps:
                     maps[id(m)] = m
-            elif not isinstance(m, Mapping):
+            elif not isinstance(m, MutableMapping):
                 raise ValueError(m)
             else:
                 maps[id(m)] = m
