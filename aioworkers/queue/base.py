@@ -12,7 +12,7 @@ class Queue(asyncio.Queue, AbstractQueue):
     def __init__(self, config=None, *, loop=None, **kwargs):
         self._maxsize = kwargs.get('maxsize', 0)
         AbstractQueue.__init__(self, config, loop=loop, **kwargs)
-        asyncio.Queue.__init__(self, maxsize=self._maxsize, loop=loop)
+        asyncio.Queue.__init__(self, maxsize=self._maxsize)
 
     def set_config(self, config) -> None:
         super().set_config(config)
@@ -26,7 +26,7 @@ class PriorityQueue(asyncio.PriorityQueue, Queue):
     def __init__(self, config=None, *, loop=None, **kwargs):
         self._maxsize = kwargs.get('maxsize', 0)
         AbstractQueue.__init__(self, config, loop=loop, **kwargs)
-        asyncio.Queue.__init__(self, maxsize=self._maxsize, loop=loop)
+        asyncio.Queue.__init__(self, maxsize=self._maxsize)
 
 
 class ScoreQueueMixin:

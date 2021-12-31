@@ -125,7 +125,7 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
             min_item = heapq.nsmallest(1, self._queue)[0]  # type: TimeoutItem
             t = min_item.timeout - time.time()
             if t > 0:
-                await asyncio.sleep(t, loop=self.loop)
+                await asyncio.sleep(t)
             else:
                 while self._waiters:
                     with_score, f = self._waiters.popleft()

@@ -12,7 +12,7 @@ class ProxyQueue(ExecutorEntity, AbstractQueue):
         self._lock = None
 
     async def init(self):
-        lock = asyncio.Lock(loop=self._loop)
+        lock = asyncio.Lock()
         await lock.acquire()
         self._lock = lock
 

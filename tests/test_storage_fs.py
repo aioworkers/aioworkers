@@ -66,7 +66,7 @@ async def test_set_get(context):
     await storage.set(key, data)
     d = await asyncio.gather(
         storage.get(key), storage.get(key),
-        loop=context.loop)
+    )
     for j in d:
         assert data == j
 
