@@ -12,6 +12,7 @@ from aioworkers.core.config import (
     StringReplaceLoader,
     ValueExtractor,
 )
+from aioworkers.net.uri import URI, URL
 
 
 def test_dict_create():
@@ -175,6 +176,12 @@ def test_uri_as_key():
     d[uri] = 123
     assert d[uri] == 123
     assert {uri: 123} == dict(d)
+
+
+def test_value_extractor_uri():
+    e = ValueExtractor({'a': '/a'})
+    assert e.get_uri('a') == URI('/a')
+    assert e.get_url('a') == URL('/a')
 
 
 def test_value_extractor():

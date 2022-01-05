@@ -9,8 +9,9 @@ from collections import ChainMap, OrderedDict
 from pathlib import Path
 from typing import Callable, Dict, Iterator, Mapping, MutableMapping, Set
 
+from aioworkers.net.uri import URI, URL
+
 from .. import humanize, utils
-from ..http import URL
 from ..utils import mapping_repr
 
 logger = logging.getLogger(__name__)
@@ -377,6 +378,7 @@ extractors = {
     'get_duration': humanize.parse_duration,
     'get_size': humanize.parse_size,
     'get_url': URL,
+    'get_uri': URI,
     'get_path': Path,
     'get_obj': utils.import_name,
 }
