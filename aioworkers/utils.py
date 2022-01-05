@@ -7,12 +7,18 @@ import struct
 import sys
 import time
 from pathlib import Path
-from typing import Mapping
+from typing import TYPE_CHECKING, Mapping
 
 try:
     from setproctitle import setproctitle
 except ImportError:
     setproctitle = lambda title: None  # noqa
+
+
+if TYPE_CHECKING:
+    cached_property = property
+else:
+    cached_property = getattr(functools, 'cached_property', property)
 
 SIZE = struct.Struct('!I')
 logger = logging.getLogger(__name__)
