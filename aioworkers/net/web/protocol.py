@@ -2,7 +2,7 @@ import asyncio
 import logging
 from functools import partial
 
-from ...http import URL
+from ..uri import URL
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class Protocol(asyncio.Protocol):
             ).response(status=500)
 
     def on_url(self, url: bytes):
-        self._url = URL(url.decode())
+        self._url = URL.from_bytes(url)
 
     def on_header(self, name: bytes, value: bytes):
         self._headers.append((name.decode(), value.decode()))
