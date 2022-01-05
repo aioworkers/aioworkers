@@ -1,5 +1,14 @@
 import abc
-from typing import Dict, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar
+from typing import (
+    Iterator,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+)
 from urllib.parse import SplitResult, parse_qsl, urlencode, urljoin, urlsplit
 
 from aioworkers.utils import cached_property
@@ -33,7 +42,7 @@ class QueryDict(Mapping[str, str]):
     false = frozenset({'0', 'false'})
 
     __slots__ = ('_data',)
-    _data: Dict[str, List[str]]
+    _data: MutableMapping[str, List[str]]
 
     def __init__(self, qsl: List[Tuple[str, str]]):
         self._data = {}
@@ -187,7 +196,10 @@ class BaseURI(str):
         return self.from_split(sr)
 
     def with_path(
-        self: TURI, path: str, drop_query: bool = True, drop_fragment: bool = True
+        self: TURI,
+        path: str,
+        drop_query: bool = True,
+        drop_fragment: bool = True,
     ) -> TURI:
         path = urljoin(self._split.path, path)
         kw = {}
