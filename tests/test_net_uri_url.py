@@ -1,7 +1,7 @@
 import pytest
 import yarl
 
-from aioworkers.http import _URL as URL
+from aioworkers.net.uri import URL
 
 
 def test_repr():
@@ -13,6 +13,12 @@ def test_div_err():
     url = URL('/api/')
     with pytest.raises(TypeError):
         assert url / 1
+
+
+def test_div_err_slash():
+    url = URL('/api/')
+    with pytest.raises(ValueError):
+        assert url / '/b'
 
 
 @pytest.mark.parametrize(
