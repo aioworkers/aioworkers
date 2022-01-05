@@ -99,7 +99,7 @@ def test_with_query():
 
 
 def test_update_query():
-    uri = URI('/a?b=9&c=u&b=8&c=7&z=1&y=0')
+    uri = URI('/a?b=9&b=8&c=7&c=u&z=1&y=0')
     uwq = uri.update_query(b=3)
     assert uwq.query.get_list('b') == ['3']
     assert uwq.query.get_int('c') == 7

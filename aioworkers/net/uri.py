@@ -60,7 +60,7 @@ class QueryDict(Mapping[str, str]):
             raise KeyError(k)
 
     def get_bool(self, k: str) -> Optional[bool]:
-        for val in self.get_list(k):
+        for val in self._data.get(k) or ():
             if val in self.true:
                 return True
             elif val in self.false:
@@ -68,13 +68,13 @@ class QueryDict(Mapping[str, str]):
         return None
 
     def get_int(self, k: str) -> Optional[int]:
-        for val in self.get_list(k):
+        for val in self._data.get(k) or ():
             if val.isdigit():
                 return int(val)
         return None
 
     def get_float(self, k: str) -> Optional[float]:
-        for val in self.get_list(k):
+        for val in self._data.get(k) or ():
             try:
                 return float(val)
             except ValueError:
