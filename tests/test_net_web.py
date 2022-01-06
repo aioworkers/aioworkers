@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 
@@ -40,6 +42,7 @@ async def handler_post(request, context):
 
 @pytest.mark.timeout(5)
 async def test_web_server(context):
+    await asyncio.sleep(2)
     url = context.http.url
     assert 1 == await context.storage.get(url / 'api')
     assert b'asdf' == await context.storage.get(url / 'api/str')
