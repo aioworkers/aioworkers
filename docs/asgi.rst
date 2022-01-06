@@ -3,8 +3,46 @@ Support asgi
 
 Supported run:
 
+* asgi on aioworkers
 * aioworkers over asgi
 
+
+asgi on aioworkers
+------------------
+
+my_app.py:
+
+.. code-block:: python
+
+  from fastapi import FastAPI
+
+
+  app = FastAPI()
+
+
+  @app.get("/s")
+  def a(op: int):
+      return {'op': op}
+
+
+conf.yaml:
+
+.. code-block:: yaml
+
+  http:
+    port: 8080
+    handler: my_app:app
+
+
+run:
+
+.. code-block:: shell
+
+  aioworkers aioworkers.net.web -c conf.yaml
+
+
+aioworkers over asgi
+--------------------
 
 .. code-block:: python
 

@@ -1,15 +1,28 @@
 import asyncio
 import inspect
 from collections import defaultdict, namedtuple
-from typing import Iterable, Mapping
+from typing import (
+    Awaitable,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Type,
+    TypeVar,
+)
 
-from aioworkers.core.base import AbstractNamedEntity
+from aioworkers.core.base import LoggingEntity
 from aioworkers.net.web.exceptions import HttpException
+
+from .request import Request
 
 Route = namedtuple('Route', 'handler kwargs')
 
 
-class Application(AbstractNamedEntity):
+class Application(LoggingEntity):
     async def init(self):
         self._routes = defaultdict(dict)
         resources = self.config.get('resources')
@@ -42,14 +55,46 @@ class Application(AbstractNamedEntity):
             kwargs = ()
         handlers[method] = Route(h, kwargs)
 
-    async def handler(self, request):
-        path = request.url.path
-        method = request.method
+    async def handler(
+        self,
+        scope: Mapping,
+        receive: Callable[[], Awaitable],
+        send: Callable[[Mapping], Awaitable],
+    ):
+        request = Request(
+            app=self,
+            context=self.context,
+            scope=scope,
+            receive=receive,
+            send=send,
+        )
+        path = scope['path']
+        method = scope['method']
         if path not in self._routes:
-            raise HttpException(status=404)
+            await send(
+                {
+                    'type': 'http.response.start',
+                    'status': 404,
+                }
+            )
+            return await send(
+                {
+                    'type': 'http.response.body',
+                }
+            )
         handlers = self._routes[path]
         if method not in handlers:
-            raise HttpException(status=405)
+            await send(
+                {
+                    'type': 'http.response.start',
+                    'status': 405,
+                }
+            )
+            return await send(
+                {
+                    'type': 'http.response.body',
+                }
+            )
         route = handlers[method]
         handler = route.handler
         kwargs = {}
@@ -58,13 +103,16 @@ class Application(AbstractNamedEntity):
         if 'context' in route.kwargs:
             kwargs['context'] = self._context
         if asyncio.iscoroutinefunction(handler):
-            request.app = self
             handler = await handler(**kwargs)
         elif callable(handler):
             handler = handler(**kwargs)
         if asyncio.isfuture(handler):
             handler = await handler
-        return request.response(handler, format='json')
+        try:
+            return request.response(handler, format='json')
+        except HttpException as e:
+            request.response(e, status=500)
+            self.logger.exception('Server error:')
 
 
 class Resources(Iterable):
