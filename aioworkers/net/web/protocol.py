@@ -76,8 +76,11 @@ class ASGIResponseSender:
             handler(message)
         return self
 
+    async def _await(self):
+        pass
+
     def __await__(self):
-        return asyncio.sleep(0).__await__()
+        return self._await().__await__()
 
 
 class Protocol(asyncio.Protocol):
