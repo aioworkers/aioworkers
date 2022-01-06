@@ -68,7 +68,8 @@ class ASGIResponseSender:
 
     def __call__(self, message: Mapping) -> "ASGIResponseSender":
         message_type = message["type"]
-        handler: Optional[Callable[[Mapping], None]] = self._handlers.get(message_type)
+        handler: Optional[Callable[[Mapping], None]]
+        handler = self._handlers.get(message_type)
         if handler is None:
             raise RuntimeError(f"Not supported type {message_type}")
         else:
