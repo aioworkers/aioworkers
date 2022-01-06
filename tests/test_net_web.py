@@ -38,6 +38,7 @@ async def handler_post(request, context):
     return {'body': body.decode()}
 
 
+@pytest.mark.timeout(5)
 async def test_web_server(context):
     url = context.http.url
     assert 1 == await context.storage.get(url / 'api')
