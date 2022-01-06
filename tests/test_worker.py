@@ -22,8 +22,10 @@ async def test_coro_run(loop, mocker):
     async def myrun(*args, **kwargs):
         f.set_result(10)
 
-    mocker.patch('aioworkers.worker.base.import_name',
-                 lambda x: myrun)
+    mocker.patch(
+        'aioworkers.worker.base.import_name',
+        lambda x: myrun,
+    )
 
     config = Config(
         w=dict(

@@ -14,8 +14,10 @@ def _await(coro, context):
             f.set_exception(e)
         else:
             f.set_result(result)
+
     context.loop.call_soon_threadsafe(
-        context.loop.create_task, wrap(coro)
+        context.loop.create_task,
+        wrap(coro),
     )
     return f.result()
 

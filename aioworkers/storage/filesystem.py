@@ -167,17 +167,23 @@ class AsyncPath(PurePath):
 
     async def read_text(self, *args, **kwargs):
         return await self.storage.run_in_executor(
-            self.path.read_text, *args, **kwargs
+            self.path.read_text,
+            *args,
+            **kwargs,
         )
 
     async def write_text(self, *args, **kwargs):
         return await self.storage.run_in_executor(
-            self.path.write_text, *args, **kwargs
+            self.path.write_text,
+            *args,
+            **kwargs,
         )
 
     async def read_bytes(self, *args, **kwargs):
         return await self.storage.run_in_executor(
-            self.path.read_bytes, *args, **kwargs
+            self.path.read_bytes,
+            *args,
+            **kwargs,
         )
 
     async def write_bytes(self, *args, **kwargs):

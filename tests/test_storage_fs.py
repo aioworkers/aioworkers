@@ -65,7 +65,8 @@ async def test_set_get(context):
 
     await storage.set(key, data)
     d = await asyncio.gather(
-        storage.get(key), storage.get(key),
+        storage.get(key),
+        storage.get(key),
     )
     for j in d:
         assert data == j
@@ -119,8 +120,9 @@ async def test_freespace(context, loop):
     assert await storage.get_free_space()
 
     with mock.patch.object(
-        storage, 'get_free_space',
-        asyncio.coroutine(lambda: 1)
+        storage,
+        'get_free_space',
+        asyncio.coroutine(lambda: 1),
     ):
         assert 1 == await storage.get_free_space()
         storage.config._val.limit_free_space = 2
