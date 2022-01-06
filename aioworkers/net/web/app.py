@@ -1,18 +1,7 @@
 import asyncio
 import inspect
 from collections import defaultdict, namedtuple
-from typing import (
-    Awaitable,
-    Callable,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Type,
-    TypeVar,
-)
+from typing import Awaitable, Callable, Iterable, Mapping
 
 from aioworkers.core.base import LoggingEntity
 from aioworkers.net.web.exceptions import HttpException
