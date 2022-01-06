@@ -184,7 +184,7 @@ def test_value_extractor_uri():
     assert e.get_url('a') == URL('/a')
 
 
-def test_value_extractor():
+def test_value_extractor_path():
     e = ValueExtractor(os.environ)
     if os.name == 'nt':
         os.environ.setdefault(
@@ -192,10 +192,40 @@ def test_value_extractor():
             os.environ['HOMEDRIVE'] + os.environ['HOMEPATH'],
         )
     assert isinstance(e.get_path('HOME'), Path)
-    v = ValueExtractor({'a': {'b': 1, 'c': None}, 'env': e})
+
+
+def test_value_extractor_bool():
+    ve = ValueExtractor(
+        {
+            'a': True,
+            'b': 1,
+            'c': '1',
+            'd': 'true',
+            'e': '0',
+            'f': 'false',
+            'g': 'off',
+            'h': 'on',
+            'z': '',
+        }
+    )
+    assert ve.get_bool('a') is True
+    assert ve.get_bool('b') is True
+    assert ve.get_bool('c') is True
+    assert ve.get_bool('d') is True
+    assert ve.get_bool('e') is False
+    assert ve.get_bool('f') is False
+    assert ve.get_bool('g') is False
+    assert ve.get_bool('h') is True
+    with pytest.raises(ValueError):
+        assert ve.get_bool('z')
+
+
+def test_value_extractor():
+    env = {}
+    v = ValueExtractor({'a': {'b': 1, 'c': None}, 'env': env})
     assert isinstance(v.get('a'), ValueExtractor)
     assert v.a.get_int('b') is v.a.b
-    assert v.env._val == e._val
+    assert v.env._val == env
 
     with pytest.raises(RuntimeError):
         v.x = 1
