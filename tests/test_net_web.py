@@ -44,5 +44,6 @@ async def test_web_server(context):
     assert b'asdf' == await context.storage.get(url / 'api/str')
     assert not await context.storage.set(url / 'api/str', b'123')  # 405
     assert b'qwerty' == await context.storage.get(url / 'api/bin')
-    assert {'body': '123'} == await context.storage.set(url / 'api/bin', b'123')
+    d = await context.storage.set(url / 'api/bin', b'123')
+    assert d == {'body': '123'}
     assert not await context.storage.set(url / 'api/not/found', b'123')  # 404
