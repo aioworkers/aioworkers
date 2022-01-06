@@ -1,5 +1,6 @@
 from unittest import mock
 
+from aioworkers.net.web.exceptions import HttpException
 from aioworkers.net.web.request import Request
 
 
@@ -38,3 +39,37 @@ async def test_url():
         app=mock.Mock(),
     )
     assert r.url.query.get("a") == "yes"
+
+
+async def test_response_simple():
+    r = Request(
+        {},
+        receive=mock.Mock(),
+        send=mock.Mock(),
+        context=mock.Mock(),
+        app=mock.Mock(),
+    )
+    assert r.response()
+    assert not r.response()
+
+
+async def test_response_headers():
+    r = Request(
+        {},
+        receive=mock.Mock(),
+        send=mock.Mock(),
+        context=mock.Mock(),
+        app=mock.Mock(),
+    )
+    assert r.response(headers=[(b"H", b"V")])
+
+
+async def test_response_exception():
+    r = Request(
+        {},
+        receive=mock.Mock(),
+        send=mock.Mock(),
+        context=mock.Mock(),
+        app=mock.Mock(),
+    )
+    assert r.response(HttpException())
