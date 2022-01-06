@@ -91,6 +91,8 @@ class Request:
 
         if not headers:
             headers = []
+        else:
+            headers = list(headers)
 
         if isinstance(data, bytes):
             pass
