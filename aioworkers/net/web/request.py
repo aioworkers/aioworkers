@@ -100,7 +100,8 @@ class Request:
         elif format:
             formatter = registry.get(format)
             if formatter.mimetypes:
-                headers.append((b'Content-Type', formatter.mimetypes[0].encode()))
+                header = (b'Content-Type', formatter.mimetypes[0].encode())
+                headers.append(header)
             data = formatter.encode(data)
 
         self._send(
