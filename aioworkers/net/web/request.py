@@ -1,41 +1,87 @@
-from ...core.formatter import registry
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+)
+from urllib.parse import SplitResult
+
+from aioworkers.core.context import Context
+from aioworkers.core.formatter import registry
+from aioworkers.utils import cached_property
+
+from ..uri import URL
 from .exceptions import HttpException
+
+if TYPE_CHECKING:
+    from .app import Application
+else:
+    Application = Any
 
 
 class Request:
     def __init__(
         self,
-        url,
-        method,
-        *,
-        body_future=None,
-        headers=(),
-        transport=None,
-        context=None,
+        scope: Mapping,
+        receive: Callable[[], Awaitable],
+        send: Callable[[Mapping], Awaitable],
+        context: Context,
+        app: Application,
     ):
-        self.url = url
-        self.method = method
-        self.headers = headers
-        self.transport = transport
+        self._scope = scope
+        self._receive = receive
+        self._send = send
         self.context = context
-        self.content_length = None
-        for k, v in headers:
-            if k.lower() == 'content-length':
-                self.content_length = int(v)
-        self._body_future = body_future
+        self.app = app
         self._finised = False
 
-    def read(self):
-        self.transport.resume_reading()
-        return self._body_future
+    async def read(self):
+        msg = await self._receive()
+        return msg['body']
+
+    @cached_property
+    def method(self) -> str:
+        return self._scope['method']
+
+    @cached_property
+    def url(self) -> URL:
+        return URL.from_split(
+            SplitResult(
+                scheme=self._scope['scheme'],
+                netloc='',
+                path=self._scope.get('path', ''),
+                query=self._scope.get('query_string', b'').decode(),
+                fragment='',
+            )
+        )
+
+    @cached_property
+    def content_length(self) -> int:
+        cl = self.headers.get('content-length', 0)
+        return int(cl)
+
+    @cached_property
+    def headers(self) -> Mapping[str, str]:
+        result = {}
+        for k, v in self._scope['headers']:
+            val = v.decode()
+            key = k.decode()
+            result[k] = v
+            result[key] = val
+            result[key.lower()] = val
+        return result
 
     def response(
         self,
-        data=None,
-        status=200,
-        reason='',
-        format=None,
-        headers=(),
+        data: Any = None,
+        status: int = 200,
+        reason: str = '',
+        format: Optional[str] = None,
+        headers: List[Tuple[bytes, bytes]] = None,
     ):
         if self._finised:
             return
@@ -43,31 +89,34 @@ class Request:
             status = data.status
             data = None
 
-        write = self.transport.write
-        write(b'HTTP/1.1 ')
-        write(str(status).encode())
-        write(b' ')
-        write(reason.encode())
-        write(b'\nServer: aioworkers')
-        for h, v in headers:
-            write('\n{}: {}'.format(h, v).encode())
+        if not headers:
+            headers = []
+
         if isinstance(data, bytes):
             pass
         elif isinstance(data, str):
             data = data.encode()
-            write(b'\nContent-Type: text/plain')
+            headers.append((b'Content-Type', b'text/plain'))
         elif format:
             formatter = registry.get(format)
             if formatter.mimetypes:
-                write(b'\nContent-Type: ')
-                write(formatter.mimetypes[0].encode())
+                headers.append((b'Content-Type', formatter.mimetypes[0].encode()))
             data = formatter.encode(data)
-        if data:
-            write(b'\nContent-Length: ')
-            write(str(len(data)).encode())
-        write(b'\n\n')
-        if data:
-            write(data)
-        self.transport.close()
+
+        self._send(
+            {
+                'type': 'http.response.start',
+                'status': status,
+                'reason': reason,
+                'headers': headers,
+            }
+        )
+        self._send(
+            {
+                'type': 'http.response.body',
+                'body': data,
+            }
+        )
+
         self._finised = True
         return HttpException(status=status)

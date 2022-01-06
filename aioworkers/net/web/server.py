@@ -1,12 +1,13 @@
-from ...core.base import AbstractNamedEntity
-from ...http import URL
-from ..server import SocketServer
+from typing import Awaitable, Callable, Mapping
+
+from aioworkers.net.server import SocketServer
+from aioworkers.net.uri import URL
+
 from . import access_logger
-from .exceptions import HttpException
 from .protocol import Protocol
 
 
-class WebServer(SocketServer, AbstractNamedEntity):
+class WebServer(SocketServer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._servers = []
@@ -18,7 +19,11 @@ class WebServer(SocketServer, AbstractNamedEntity):
         self.request_factory = self.context.get_object(
             self.config.get('request', 'aioworkers.net.web.request.Request'))
         self.parser_factory = self.context.get_object(
-            self.config.get('parser', 'httptools.HttpRequestParser'))
+            self.config.get('parser', 'httptools.HttpRequestParser')
+        )
+        self.parser_url = self.context.get_object(
+            self.config.get('parser_url', 'httptools.parse_url')
+        )
         self.context.on_start.append(self.start)
         self.context.on_stop.append(self.stop)
         self.url = URL('http://{host}:{port}/'.format_map(self.config))
@@ -35,20 +40,32 @@ class WebServer(SocketServer, AbstractNamedEntity):
             server.close()
             await server.wait_closed()
 
-    async def handler(self, request):
+    async def handler(
+        self,
+        scope: Mapping,
+        receive: Callable[[], Awaitable],
+        send: Callable[[Mapping], Awaitable],
+    ):
         try:
-            result = await self._handler(request)
-            request.response(result)
-        except HttpException as e:
-            request.response(e, status=500)
-            self.logger.exception('Server error:')
+            await self._handler(scope, receive, send)
         except Exception:
-            request.response(b'Internal error', status=500)
+            await send(
+                {
+                    'type': 'http.response.start',
+                    'status': 500,
+                    'reason': 'Internal error',
+                }
+            )
+            await send(
+                {
+                    'type': 'http.response.body',
+                }
+            )
             self.logger.exception('Server error:')
         else:
             access_logger.info(
-                "Received request %s %s",
-                request.method,
-                request.url,
+                "Received request %s %s?%s",
+                scope['method'],
+                scope['path'],
+                scope['query_string'].decode(),
             )
-        request.transport.close()
