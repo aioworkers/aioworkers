@@ -17,7 +17,7 @@ from aioworkers.utils import cached_property
 from ..uri import URL
 from .exceptions import HttpException
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .app import Application
 else:
     Application = Any
