@@ -1,6 +1,6 @@
 import time
 from email.utils import formatdate
-from typing import Awaitable, Callable, Dict, Mapping
+from typing import Any, Awaitable, Callable, Dict, Mapping
 
 from aioworkers.core.config import ValueExtractor
 from aioworkers.net.server import SocketServer
@@ -14,6 +14,7 @@ from .protocol import Protocol
 class WebServer(SocketServer, Worker):
     _handler: Callable[
         [
+            Any,
             Mapping,
             Callable[[], Awaitable],
             Callable[[Mapping], Awaitable],
