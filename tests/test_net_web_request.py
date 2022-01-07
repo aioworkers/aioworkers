@@ -61,7 +61,7 @@ async def test_response_headers():
         context=mock.Mock(),
         app=mock.Mock(),
     )
-    assert r.response(headers=[(b"H", b"V")])
+    assert r.response(headers=[("H", "V")])
 
 
 async def test_response_exception():
