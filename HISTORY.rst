@@ -8,6 +8,8 @@ History
 * Drop support Python 3.5
 * Add support Python 3.10
 * add stubs by stubgen
+* URI impl (#85)
+* Support run asgi on aioworkers (#85)
 
 
 
