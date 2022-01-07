@@ -95,6 +95,10 @@ class Registry(dict):
 
 class StringFormatter(BaseFormatter):
     name = 'str'
+    mimetypes = (
+        'text/plain',
+        'text/plain; charset=utf-8',
+    )
 
     @staticmethod
     def decode(b):
