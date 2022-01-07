@@ -13,7 +13,7 @@ def aioworkers(aioworkers):
 def config_yaml(unused_port):
     return """
     http.port: {port}
-    app.resources:
+    web.resources:
         /api:
             get: .data
         /api/str:
