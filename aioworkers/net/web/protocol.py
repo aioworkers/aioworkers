@@ -15,7 +15,7 @@ from typing import (
 from urllib.parse import unquote
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .server import SocketServer
+    from .server import WebServer
 else:
     SocketServer = Any
 
@@ -29,7 +29,7 @@ class ASGIResponseSender:
         405: "Method not allowed",
     }
 
-    def __init__(self, transport: asyncio.Transport, server: SocketServer):
+    def __init__(self, transport: asyncio.Transport, server: WebServer):
         self._transport = transport
         self._server = server
         self._status: int = 200
