@@ -9,7 +9,7 @@ History
 * Add support Python 3.10
 * add stubs by stubgen
 * URI impl (#85)
-* Support run asgi on aioworkers (#85)
+* Support run asgi on aioworkers (#86)
 * Add default header Date to net.web (#87)
 
 
