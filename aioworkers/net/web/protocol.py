@@ -17,7 +17,7 @@ from urllib.parse import unquote
 if TYPE_CHECKING:  # pragma: no cover
     from .server import WebServer
 else:
-    SocketServer = Any
+    WebServer = Any
 
 logger = logging.getLogger(__name__)
 
