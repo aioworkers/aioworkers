@@ -1,8 +1,23 @@
 import asyncio
 import logging
 from functools import partial
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
 from urllib.parse import unquote
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .server import SocketServer
+else:
+    SocketServer = Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +29,9 @@ class ASGIResponseSender:
         405: "Method not allowed",
     }
 
-    def __init__(self, transport: asyncio.Transport):
+    def __init__(self, transport: asyncio.Transport, server: SocketServer):
         self._transport = transport
+        self._server = server
         self._status: int = 200
         self._reason: str = "OK"
         self._headers: Sequence[Tuple[bytes, bytes]] = ()
@@ -36,6 +52,12 @@ class ASGIResponseSender:
         write = self._transport.write
         write(f"HTTP/1.1 {self._status} {self._reason}".encode())
         write(b"\r\nServer: aioworkers")
+        write(b"\r\nConnection: close")
+        for h, v in self._server.headers.items():
+            write(b"\r\n")
+            write(h)
+            write(b": ")
+            write(v)
         for h, v in self._headers:
             if h.lower() == b"content-length":
                 content_length = 0
@@ -100,7 +122,7 @@ class Protocol(asyncio.Protocol):
 
     def connection_made(self, transport):
         self._transport = transport
-        self._sender = ASGIResponseSender(self._transport)
+        self._sender = ASGIResponseSender(self._transport, self._server)
         self._body_future = self._server.loop.create_future()
         self._headers = []
         self._scope = {
