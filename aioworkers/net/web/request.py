@@ -81,7 +81,7 @@ class Request:
         status: int = 200,
         reason: str = '',
         format: Optional[str] = None,
-        headers: List[Tuple[bytes, bytes]] = None,
+        headers: List[Tuple[str, str]] = None,
     ):
         if self._finised:
             return
@@ -89,21 +89,20 @@ class Request:
             status = data.status
             data = None
 
-        if not headers:
-            headers = []
-        else:
-            headers = list(headers)
+        bheaders = []
+        for h, v in headers or ():
+            bheaders.append((h.encode(), v.encode()))
 
         if isinstance(data, bytes):
             pass
         elif isinstance(data, str):
             data = data.encode()
-            headers.append((b'Content-Type', b'text/plain'))
+            bheaders.append((b'Content-Type', b'text/plain'))
         elif format:
             formatter = registry.get(format)
             if formatter.mimetypes:
                 header = (b'Content-Type', formatter.mimetypes[0].encode())
-                headers.append(header)
+                bheaders.append(header)
             data = formatter.encode(data)
 
         self._send(
@@ -111,7 +110,7 @@ class Request:
                 'type': 'http.response.start',
                 'status': status,
                 'reason': reason,
-                'headers': headers,
+                'headers': bheaders,
             }
         )
         self._send(
