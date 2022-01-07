@@ -181,7 +181,7 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
         key: Any,
         value: Any,
         *,
-        raise_for_status: FrozenSet[int] = frozenset([405]),
+        raise_for_status: FrozenSet[int] = frozenset([404, 405]),
     ):
         url = self.raw_key(key)
         data = self.encode(value)

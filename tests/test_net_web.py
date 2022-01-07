@@ -52,4 +52,5 @@ async def test_web_server(context):
     assert b'qwerty' == await context.storage.get(url / 'api/bin')
     d = await context.storage.set(url / 'api/bin', b'123')
     assert d == {'body': '123'}
-    assert not await context.storage.set(url / 'api/not/found', b'123')  # 404
+    with pytest.raises(StorageError):
+        await context.storage.set(url / 'api/not/found', b'123')  # 404
