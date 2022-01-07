@@ -1,6 +1,6 @@
 import logging
 from abc import abstractmethod
-from typing import Mapping, Sequence
+from typing import Any, FrozenSet, Mapping, Sequence, Union
 
 from ..core.base import ExecutorEntity, LoggingEntity
 from ..core.formatter import FormattedEntity
@@ -91,7 +91,12 @@ class AbstractHttpStorage(
             raise KeyError(key)
         return url
 
-    async def request(self, url, **kwargs):
+    async def request(
+        self,
+        url: Union[str, URL],
+        raise_for_status: FrozenSet[int] = frozenset(),
+        **kwargs,
+    ):
         async with self.session.request(url, **kwargs) as response:
             data = await response.read()
         try:
@@ -99,6 +104,8 @@ class AbstractHttpStorage(
         except KeyError:
             formatter = self
         result = formatter.decode(data)
+        if response.status in raise_for_status:
+            raise StorageError(f'Exception by status {response.status}')
         if self._return_status:
             return response.status, result
         else:
@@ -150,6 +157,8 @@ class RoStorage(ExecutorEntity, AbstractHttpStorage):
     async def request(self, url, **kwargs):
         try:
             return await super().request(url, **kwargs)
+        except StorageError:
+            raise
         except Exception as e:
             raise StorageError() from e
 
@@ -167,7 +176,13 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
         set: [post|put|patch], default post
     """
 
-    def set(self, key, value):
+    def set(
+        self,
+        key: Any,
+        value: Any,
+        *,
+        raise_for_status: FrozenSet[int] = frozenset([405]),
+    ):
         url = self.raw_key(key)
         data = self.encode(value)
         headers = {}
@@ -179,4 +194,5 @@ class Storage(RoStorage, base.AbstractStorageWriteOnly):
             method=self.config.get('set', 'post'),
             data=data,
             headers=headers,
+            raise_for_status=raise_for_status,
         )
