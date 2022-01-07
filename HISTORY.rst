@@ -12,6 +12,7 @@ History
 * Support run asgi on aioworkers (#86)
 * Add default header Date to net.web (#87)
 * Decode Content-Type: text/plain
+* Default key web.Application is "web" instead of "app" (#88)
 
 
 
