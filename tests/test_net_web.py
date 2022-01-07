@@ -2,6 +2,8 @@ import asyncio
 
 import pytest
 
+from aioworkers.storage import StorageError
+
 
 @pytest.fixture
 def aioworkers(aioworkers):
@@ -46,7 +48,8 @@ async def test_web_server(context):
     url = context.http.url
     assert 1 == await context.storage.get(url / 'api')
     assert 'asdf' == await context.storage.get(url / 'api/str')
-    assert not await context.storage.set(url / 'api/str', b'123')  # 405
+    with pytest.raises(StorageError):
+        await context.storage.set(url / 'api/str', b'123')  # 405
     assert b'qwerty' == await context.storage.get(url / 'api/bin')
     d = await context.storage.set(url / 'api/bin', b'123')
     assert d == {'body': '123'}
