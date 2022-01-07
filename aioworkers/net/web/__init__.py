@@ -10,7 +10,10 @@ def get_config():
             cls='aioworkers.net.web.server.WebServer',
             host='0.0.0.0',
         ),
-        app=dict(
+        app=dict(  # Deprecated default key
+            cls='aioworkers.net.web.app.Application',
+        ),
+        web=dict(
             cls='aioworkers.net.web.app.Application',
         ),
     )

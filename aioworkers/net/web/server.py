@@ -12,6 +12,15 @@ from .protocol import Protocol
 
 
 class WebServer(SocketServer, Worker):
+    _handler: Callable[
+        [
+            Mapping,
+            Callable[[], Awaitable],
+            Callable[[Mapping], Awaitable],
+        ],
+        Awaitable,
+    ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._servers = []
@@ -27,8 +36,21 @@ class WebServer(SocketServer, Worker):
 
     async def init(self):
         await super().init()
-        self._handler = self.context.get_object(
-            self.config.get('handler', '.app.handler'))
+
+        handler_path = self.config.get('handler')
+        if not handler_path:
+            # Search default .web Application
+            handler_path = '.web.handler'
+            if self.context.config.get('app.resources'):
+                self.logger.warning(
+                    'Default key for Application is "web". '
+                    'Please rename key "app" to "web" in config.'
+                )
+                if not self.context.config.get('web.resources'):
+                    handler_path = '.app.handler'
+        self.logger.info('Connect to application %s', handler_path)
+        self._handler = self.context.get_object(handler_path)
+
         self.request_factory = self.context.get_object(
             self.config.get('request', 'aioworkers.net.web.request.Request'))
         self.parser_factory = self.context.get_object(
