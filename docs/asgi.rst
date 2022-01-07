@@ -31,7 +31,7 @@ conf.yaml:
 
   http:
     port: 8080
-    handler: my_app:app
+    handler: my_app.app
 
 
 run:
