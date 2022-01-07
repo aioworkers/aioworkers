@@ -44,7 +44,7 @@ class Application(LoggingEntity):
             kwargs = ()
         handlers[method] = Route(h, kwargs)
 
-    async def handler(
+    async def __call__(
         self,
         scope: Mapping,
         receive: Callable[[], Awaitable],

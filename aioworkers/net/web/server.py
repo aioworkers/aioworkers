@@ -37,19 +37,19 @@ class WebServer(SocketServer, Worker):
     async def init(self):
         await super().init()
 
-        handler_path = self.config.get('handler')
-        if not handler_path:
+        application_path = self.config.get('handler')
+        if not application_path:
             # Search default .web Application
-            handler_path = '.web.handler'
+            application_path = '.web'
             if self.context.config.get('app.resources'):
                 self.logger.warning(
                     'Default key for Application is "web". '
                     'Please rename key "app" to "web" in config.'
                 )
                 if not self.context.config.get('web.resources'):
-                    handler_path = '.app.handler'
-        self.logger.info('Connect to application %s', handler_path)
-        self._handler = self.context.get_object(handler_path)
+                    application_path = '.app'
+        self.logger.info('Connect to application %s', application_path)
+        self._handler = self.context.get_object(application_path)
 
         self.request_factory = self.context.get_object(
             self.config.get('request', 'aioworkers.net.web.request.Request'))
