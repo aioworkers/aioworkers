@@ -52,8 +52,6 @@ class WebServer(SocketServer, Worker):
         self.logger.info('Connect to application %s', application_path)
         self._handler = self.context.get_object(application_path)
 
-        self.request_factory = self.context.get_object(
-            self.config.get('request', 'aioworkers.net.web.request.Request'))
         self.parser_factory = self.context.get_object(
             self.config.get('parser', 'httptools.HttpRequestParser')
         )
