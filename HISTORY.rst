@@ -2,7 +2,7 @@
 History
 =======
 
-0.20a4 (2021-12-31)
+0.20a5 (2022-01-07)
 -------------------
 
 * Drop support Python 3.5
@@ -10,6 +10,7 @@ History
 * add stubs by stubgen
 * URI impl (#85)
 * Support run asgi on aioworkers (#85)
+* Add default header Date to net.web (#87)
 
 
 
