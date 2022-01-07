@@ -58,7 +58,7 @@ class AbstractHttpStorage(
         self.session = await self.session_factory(**self.session_params)
         self.context.on_stop.append(self.stop)
 
-    @abstractmethod
+    @abstractmethod  # pragma: no cover
     async def session_factory(self, **kwargs):
         pass
 
