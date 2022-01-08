@@ -1,6 +1,9 @@
 import io
 
+import pytest
+
 from aioworkers import cli, utils
+from aioworkers.core.config import ValueExtractor
 
 
 def test_main(mocker):
@@ -32,3 +35,25 @@ def test_stdin_config():
     utils.dump_to_fd(f, data)
     f.seek(0)
     assert data == utils.load_from_fd(f)
+
+
+@pytest.mark.parametrize(
+    'cfg, count',
+    [
+        (dict(count=1), 1),
+        (dict(count=-12, cpus=1), 12),
+        (dict(count=12, cpus=0), 12),
+        (dict(count=-12, cpus=0), 0),
+        (dict(cpus=0), 0),
+        (dict(cpus=1), 24),
+    ],
+)
+def test_process_iter(cfg, count):
+    processes = cli.process_iter(ValueExtractor(dict(web=cfg)), 24)
+    assert processes == [
+        dict(
+            name=f'web-{n}',
+            groups=(),
+        )
+        for n in range(count)
+    ]

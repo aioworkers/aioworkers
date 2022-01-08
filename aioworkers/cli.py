@@ -196,11 +196,12 @@ def main(
             time.sleep(0.3)
 
 
-def process_iter(cfg):
+def process_iter(cfg, cpus=os.cpu_count() or 1):
     result = []
     for k, v in cfg.items():
-        if 'count' in v:
-            for i in range(v.get_int('count')):
+        if 'count' in v or 'cpus' in v:
+            c = v.get_int('count', 0) + int(cpus * v.get_float('cpus', 0))
+            for i in range(c):
                 result.append(
                     {
                         'name': '{}-{}'.format(k, i),
