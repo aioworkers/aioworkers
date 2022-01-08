@@ -23,13 +23,11 @@ __all__ = (
 def flat(parts):
     if isinstance(parts, str):
         if os.path.isabs(parts):
-            raise ValueError('Path must be relative. '
-                             '[{}]'.format(parts))
+            raise ValueError('Path must be relative. [{}]'.format(parts))
         yield parts
     elif isinstance(parts, PurePath):
         if parts.is_absolute():
-            raise ValueError('Path must be relative. '
-                             '[{}]'.format(parts))
+            raise ValueError('Path must be relative. [{}]'.format(parts))
         yield parts
     elif isinstance(parts, (list, tuple)):
         for p in parts:
@@ -48,7 +46,9 @@ class AsyncFile:
 
     async def read(self, *args, **kwargs):
         return await self.storage.run_in_executor(
-            self.fd.read, *args, **kwargs
+            self.fd.read,
+            *args,
+            **kwargs,
         )
 
     async def write(self, *args, **kwargs):
@@ -214,7 +214,11 @@ class AsyncPath(PurePath):
 
     def open(self, *args, **kwargs):
         return AsyncFileContextManager(
-            self, self.path.open, *args, **kwargs)
+            self,
+            self.path.open,
+            *args,
+            **kwargs,
+        )
 
     @property
     def parent(self):
@@ -226,7 +230,8 @@ class AsyncPath(PurePath):
     def normpath(self):
         return type(self)(
             os.path.normpath(str(self)),
-            storage=self.storage)
+            storage=self.storage,
+        )
 
     def glob(self, pattern):
         return AsyncGlob(self, pattern)
@@ -361,8 +366,7 @@ class BaseFileSystemStorage(
         elif key.is_dir():
             shutil.rmtree(str(key))
         else:
-            with tempfile.NamedTemporaryFile(
-                    dir=self._tmp) as f:
+            with tempfile.NamedTemporaryFile(dir=self._tmp) as f:
                 shutil.move(str(key), f.name)
 
     def path_transform(self, rel_path: str):

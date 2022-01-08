@@ -21,11 +21,23 @@ from .core.plugin import Plugin, search_plugins
 parser = argparse.ArgumentParser(prefix_chars='-+')
 
 group = parser.add_mutually_exclusive_group(required=False)
-group.add_argument('+g', '++groups', nargs='+', action='append',
-                   metavar='GROUP', help='Run groups')
-group.add_argument('-g', '--groups', nargs='*', action='append',
-                   dest='exclude_groups',
-                   metavar='GROUP', help='Run all exclude groups')
+group.add_argument(
+    '+g',
+    '++groups',
+    nargs='+',
+    action='append',
+    metavar='GROUP',
+    help='Run groups',
+)
+group.add_argument(
+    '-g',
+    '--groups',
+    nargs='*',
+    action='append',
+    dest='exclude_groups',
+    metavar='GROUP',
+    help='Run all exclude groups',
+)
 
 parser.add_argument('--multiprocessing', action='store_true')
 parser.add_argument('-i', '--interact', action='store_true')
@@ -47,8 +59,10 @@ class PidFileType(argparse.FileType):
 
 
 parser.add_argument(
-    '--pid-file', help='Process ID file',
-    type=PidFileType('w'))
+    '--pid-file',
+    help='Process ID file',
+    type=PidFileType('w'),
+)
 
 try:
     import uvloop
@@ -61,8 +75,13 @@ else:
 context = Context(Config())
 
 
-def main(*config_files, args=None, config_dirs=(),
-         commands=(), config_dict=None):
+def main(
+    *config_files,
+    args=None,
+    config_dirs=(),
+    commands=(),
+    config_dict=None,
+):
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
@@ -71,11 +90,11 @@ def main(*config_files, args=None, config_dirs=(),
     if not commands:
         p = Path(sys.argv[0])
         if __package__ in (p.parent.name, p.name):
-            commands += __name__,
+            commands += (__name__,)
         elif p.name.startswith('__'):
-            commands += p.parent.name,
+            commands += (p.parent.name,)
         else:
-            commands += p.name,
+            commands += (p.name,)
 
     plugins = search_plugins()
     plugins.extend(search_plugins(*commands, force=True))
@@ -90,8 +109,9 @@ def main(*config_files, args=None, config_dirs=(),
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
         if getattr(args, 'config_stdin', None):
-            assert not args.interact, 'Can not be used --config-stdin' \
-                                      ' with --interact'
+            assert (
+                not args.interact
+            ), 'Can not be used --config-stdin with --interact'
             config_dict = utils.load_from_fd(sys.stdin.buffer)
         if args.logging:
             logging.basicConfig(level=args.logging.upper())
