@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datetime import datetime
 
 from setuptools import find_packages, setup
 
@@ -7,8 +8,16 @@ version = __import__('aioworkers').__version__
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
+history_item = '{} ({})'.format(
+    version,
+    datetime.now().date(),
+)
 with open('HISTORY.rst') as history_file:
     history = history_file.read().split('\n' * 4, 4)
+    history[0] = history[0].replace(
+        'Development\n-----------',
+        history_item + '\n' + '-' * len(history_item),
+    )
     history.pop()
 
 requirements = [
