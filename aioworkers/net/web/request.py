@@ -101,7 +101,10 @@ class Request:
         elif format:
             formatter = registry.get(format)
             if formatter.mimetypes:
-                header = (b'Content-Type', formatter.mimetypes[0].encode("utf-8"))
+                header = (
+                    b'Content-Type',
+                    formatter.mimetypes[0].encode("utf-8"),
+                )
                 bheaders.append(header)
             data = formatter.encode(data)
 

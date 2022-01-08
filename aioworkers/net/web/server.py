@@ -105,4 +105,7 @@ class WebServer(SocketServer, Worker):
             )
 
     async def run(self, value=None):  # type: ignore
-        self.headers[b'Date'] = formatdate(time.time(), usegmt=True).encode("utf-8")
+        self.headers[b'Date'] = formatdate(
+            time.time(),
+            usegmt=True,
+        ).encode("utf-8")
