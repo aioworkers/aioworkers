@@ -469,6 +469,6 @@ class HashFileSystemStorage(NestedFileSystemStorage):
     def path_transform(self, rel_path: str):
         ext = os.path.splitext(rel_path)[-1]
         hash = hashlib.md5()
-        hash.update(rel_path.encode())
+        hash.update(rel_path.encode("utf-8"))
         d = hash.hexdigest() + ext
         return super().path_transform(d)

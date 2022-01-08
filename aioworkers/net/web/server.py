@@ -101,8 +101,8 @@ class WebServer(SocketServer, Worker):
                 "Received request %s %s?%s",
                 scope['method'],
                 scope['path'],
-                scope['query_string'].decode(),
+                scope['query_string'].decode("utf-8"),
             )
 
     async def run(self, value=None):  # type: ignore
-        self.headers[b'Date'] = formatdate(time.time(), usegmt=True).encode()
+        self.headers[b'Date'] = formatdate(time.time(), usegmt=True).encode("utf-8")

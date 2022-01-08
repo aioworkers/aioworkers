@@ -54,7 +54,7 @@ class Request:
                 scheme=self._scope['scheme'],
                 netloc='',
                 path=self._scope.get('path', ''),
-                query=self._scope.get('query_string', b'').decode(),
+                query=self._scope.get('query_string', b'').decode("utf-8"),
                 fragment='',
             )
         )
@@ -68,8 +68,8 @@ class Request:
     def headers(self) -> Mapping[str, str]:
         result = {}
         for k, v in self._scope['headers']:
-            val = v.decode()
-            key = k.decode()
+            val = v.decode("utf-8")
+            key = k.decode("utf-8")
             result[k] = v
             result[key] = val
             result[key.lower()] = val
@@ -91,17 +91,17 @@ class Request:
 
         bheaders = []
         for h, v in headers or ():
-            bheaders.append((h.encode(), v.encode()))
+            bheaders.append((h.encode("utf-8"), v.encode("utf-8")))
 
         if isinstance(data, bytes):
             pass
         elif isinstance(data, str):
-            data = data.encode()
+            data = data.encode("utf-8")
             bheaders.append((b'Content-Type', b'text/plain'))
         elif format:
             formatter = registry.get(format)
             if formatter.mimetypes:
-                header = (b'Content-Type', formatter.mimetypes[0].encode())
+                header = (b'Content-Type', formatter.mimetypes[0].encode("utf-8"))
                 bheaders.append(header)
             data = formatter.encode(data)
 

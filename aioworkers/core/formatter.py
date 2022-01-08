@@ -102,11 +102,11 @@ class StringFormatter(BaseFormatter):
 
     @staticmethod
     def decode(b):
-        return b.decode()
+        return b.decode("utf-8")
 
     @staticmethod
     def encode(b):
-        return b.encode()
+        return b.encode("utf-8")
 
 
 class FromStringFormatter(BaseFormatter):
@@ -114,11 +114,11 @@ class FromStringFormatter(BaseFormatter):
 
     @staticmethod
     def decode(b):
-        return b.encode()
+        return b.encode("utf-8")
 
     @staticmethod
     def encode(b):
-        return b.decode()
+        return b.decode("utf-8")
 
 
 class NewLineFormatter(BaseFormatter):
@@ -136,7 +136,7 @@ class NewLineFormatter(BaseFormatter):
 
 class BytesNewLineFormatter(NewLineFormatter):
     name = 'bnewline'
-    linesep = os.linesep.encode()  # type: ignore
+    linesep = os.linesep.encode("utf-8")  # type: ignore
 
 
 class PickleFormatter(BaseFormatter):
@@ -183,10 +183,10 @@ class JsonFormatter(BaseFormatter):
         self._dumps = json.dumps
 
     def decode(self, b):
-        return self._loads(b.decode())
+        return self._loads(b.decode("utf-8"))
 
     def encode(self, b):
-        return self._dumps(b, cls=self._encoder).encode()
+        return self._dumps(b, cls=self._encoder).encode("utf-8")
 
     @classmethod
     def add_converter(cls, klass, conv, score=0):
@@ -216,7 +216,7 @@ class YamlFormatter(JsonFormatter):
         self._dumps = yaml.dump
 
     def encode(self, b):
-        return self._dumps(b).encode()
+        return self._dumps(b).encode("utf-8")
 
 
 class ZLibFormatter(BaseFormatter):

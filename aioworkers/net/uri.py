@@ -98,7 +98,7 @@ class BaseURI(str):
 
     @classmethod
     def from_bytes(cls: Type[TURI], uri: bytes) -> TURI:
-        result = cls(uri.decode())
+        result = cls(uri.decode("utf-8"))
         return result
 
     @classmethod

@@ -136,7 +136,7 @@ class AbstractHttpStorage(
                         % (
                             url,
                             response.status,
-                            (await response.read()).decode(),
+                            (await response.read()).decode("utf-8"),
                         )
                     )
                 return

@@ -150,7 +150,7 @@ class ConfigFileLoader:
         raise NotImplementedError
 
     def load_bytes(self, b):
-        return self.load_str(b.decode())
+        return self.load_str(b.decode("utf-8"))
 
     def load_fd(self, fd):
         return self._load(fd)
@@ -165,7 +165,7 @@ class ConfigFileLoader:
         from urllib.request import urlopen
 
         with urlopen(url) as r:
-            assert r.code == 200, r.read(255).decode()
+            assert r.code == 200, r.read(255).decode("utf-8")
             ct = r.headers.get('Content-Type')
             mt = ct and ct.split(';')[0]
             assert (

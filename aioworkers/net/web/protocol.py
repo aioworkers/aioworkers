@@ -50,7 +50,7 @@ class ASGIResponseSender:
 
     def _response_head(self, content_length: Optional[int] = None) -> None:
         write = self._transport.write
-        write(f"HTTP/1.1 {self._status} {self._reason}".encode())
+        write(f"HTTP/1.1 {self._status} {self._reason}".encode("utf-8"))
         write(b"\r\nServer: aioworkers")
         write(b"\r\nConnection: close")
         for h, v in self._server.headers.items():
@@ -68,7 +68,7 @@ class ASGIResponseSender:
 
         if content_length:
             write(b"\r\nContent-Length: ")
-            write(str(content_length).encode())
+            write(str(content_length).encode("utf-8"))
 
         write(b"\r\n\r\n")
 
@@ -142,7 +142,7 @@ class Protocol(asyncio.Protocol):
 
     def on_url(self, url: bytes):
         self._scope["http_version"] = self._parser.get_http_version()
-        self._scope["method"] = self._parser.get_method().decode()
+        self._scope["method"] = self._parser.get_method().decode("utf-8")
         parsed_url = self._server.parser_url(url)
         self._scope["raw_path"] = parsed_url.path
         path = parsed_url.path.decode("ascii")
