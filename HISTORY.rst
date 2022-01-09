@@ -15,7 +15,7 @@ Development
 * Default key web.Application is "web" instead of "app" (#88)
 * Fix default encode/decode charset
 * Add cpus factor for processes
-
+* Fix log for ContextProcessor.ready
 
 
 

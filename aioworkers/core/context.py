@@ -262,6 +262,9 @@ class ContextProcessor:
     async def process(self):
         raise NotImplementedError
 
+    def __repr__(self):
+        return self.path
+
 
 class LoggingContextProcessor(ContextProcessor):
     key = 'logging'
