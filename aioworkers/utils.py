@@ -11,11 +11,11 @@ from typing import TYPE_CHECKING, Mapping
 
 try:
     from setproctitle import setproctitle
-except ImportError:
+except ImportError:  # pragma: no cover
     setproctitle = lambda title: None  # noqa
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     cached_property = property
 else:
     cached_property = getattr(functools, 'cached_property', property)
