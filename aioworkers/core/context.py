@@ -262,9 +262,6 @@ class ContextProcessor:
     async def process(self):
         raise NotImplementedError
 
-    def __repr__(self):
-        return self.path
-
 
 class LoggingContextProcessor(ContextProcessor):
     key = 'logging'
@@ -338,6 +335,9 @@ class EntityContextProcessor(ContextProcessor):
 
     async def process(self):
         await self.entity.init()
+
+    def __repr__(self):
+        return self.path
 
 
 class InstanceEntityContextProcessor(EntityContextProcessor):
