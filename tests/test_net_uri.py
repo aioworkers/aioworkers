@@ -15,7 +15,7 @@ def test_netloc():
     assert uri.with_auth('') == URI('http://localhost/a')
     assert uri.with_auth('', password='123') == URI('http://:123@localhost/a')
     assert uri.with_auth('user') == URI('http://user@localhost/a')
-    assert uri.with_hostname('') == URI('http:///a')
+    assert uri.with_host('') == URI('http:///a')
 
 
 def test_uri_parse_bytes():
@@ -48,12 +48,12 @@ def test_with_password():
 
 def test_with_hostname():
     uri = URI('http://user:pass@localhost:90/a?b=9')
-    assert uri.with_hostname('l:99') == URI('http://user:pass@l:99/a?b=9')
+    assert uri.with_host('l:99') == URI('http://user:pass@l:99/a?b=9')
 
 
 def test_with_hostname_port():
     uri = URI('http://user:pass@localhost:90/a?b=9')
-    assert uri.with_hostname('l') == URI('http://user:pass@l:90/a?b=9')
+    assert uri.with_host('l') == URI('http://user:pass@l:90/a?b=9')
 
 
 def test_with_port():

@@ -171,7 +171,7 @@ class BaseURI(str):
     def with_password(self: TURI, password: str) -> TURI:
         return self.with_auth(username=self._split.username, password=password)
 
-    def with_hostname(self: TURI, host: str) -> TURI:
+    def with_host(self: TURI, host: str) -> TURI:
         if ':' in host:
             port = None
         else:
