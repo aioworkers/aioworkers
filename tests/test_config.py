@@ -12,7 +12,8 @@ from aioworkers.core.config import (
     StringReplaceLoader,
     ValueExtractor,
 )
-from aioworkers.net.uri import URI, URL
+from aioworkers.http import URL
+from aioworkers.net.uri import URI
 
 
 def test_dict_create():
