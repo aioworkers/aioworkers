@@ -9,7 +9,8 @@ from collections import ChainMap, OrderedDict
 from pathlib import Path
 from typing import Callable, Dict, Iterator, Mapping, MutableMapping, Set
 
-from aioworkers.net.uri import URI, URL
+from aioworkers.http import URL
+from aioworkers.net.uri import URI
 
 from .. import humanize, utils
 from ..utils import mapping_repr
