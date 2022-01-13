@@ -5,6 +5,11 @@ History
 Development
 -----------
 
+
+
+0.20 (2022-01-13)
+-----------------
+
 * Drop support Python 3.5
 * Add support Python 3.10
 * add stubs by stubgen
