@@ -2,12 +2,14 @@ import contextlib
 import functools
 import importlib.util
 import logging
+import os
 import pickle
+import random
 import struct
 import sys
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 try:
     from setproctitle import setproctitle
@@ -167,3 +169,11 @@ def mapping_repr(*maps, indent=0, **kwargs):
                 result.append(repr(v))
                 result.append('\n')
     return ''.join(result)
+
+
+def random_seed():
+    try:
+        a: Any = os.urandom(64)
+    except NotImplementedError:
+        a = f'{time.time()}{os.getpid()}'
+    random.seed(a)

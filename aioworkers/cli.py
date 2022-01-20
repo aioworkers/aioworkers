@@ -250,6 +250,7 @@ def loop_run(
 ):
     if process_name:
         utils.setproctitle(process_name)
+    utils.random_seed()
     if loop is None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
