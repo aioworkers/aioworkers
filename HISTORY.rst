@@ -5,6 +5,7 @@ History
 Development
 -----------
 
+* Add utils.random_seed and run on current process
 
 
 0.20 (2022-01-13)
