@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.fixture
-def config_yaml(unused_port):
+def config_yaml():
     return """
     e:
         cls: aioworkers.core.base.MultiExecutorEntity

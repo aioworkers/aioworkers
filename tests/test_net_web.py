@@ -10,7 +10,7 @@ def aioworkers(aioworkers):
 
 
 @pytest.fixture
-def config_yaml(unused_port):
+def config_yaml(unused_tcp_port_factory):
     return """
     http.port: {port}
     app.resources:
@@ -25,7 +25,7 @@ def config_yaml(unused_port):
     str_data: asdf
     storage.cls: aioworkers.storage.http.Storage
     """.format(
-        port=unused_port()
+        port=unused_tcp_port_factory()
     )
 
 
