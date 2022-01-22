@@ -3,20 +3,20 @@ name: Tests
 on: [push]
 
 jobs:
-  tests-on-python36:
+  tests-on-python37:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2.4.0
-    - name: Set up Python 3.6
+    - name: Set up Python 3.7
       uses: actions/setup-python@v2.3.1
       with:
-        python-version: 3.6
+        python-version: 3.7
     - name: Install dependencies
       run: |
         pip install -U pip setuptools
-        pip install -U pipenv codecov pytest-asyncio
+        pip install -U pipenv codecov
         pip install -e .
         pipenv install -d --skip-lock --system
     - name: isort
@@ -44,10 +44,10 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
+      max-parallel: 5
       matrix:
         python-version:
-        - '3.7'
+        - '3.6'
         - '3.8'
         - '3.9'
         - '3.10'
@@ -62,7 +62,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -U pip setuptools
-        pip install -U pipenv ipykernel httptools bson msgpack
+        pip install -U pipenv ipykernel httptools bson msgpack pytest-asyncio
         pip install -e .
         pipenv install --skip-lock --system
     - name: Test with pytest
