@@ -6,6 +6,8 @@ Development
 -----------
 
 * Add utils.random_seed and run on current process
+* Use yaml.SafeLoader instead of yaml.Loader
+
 
 
 0.20 (2022-01-13)

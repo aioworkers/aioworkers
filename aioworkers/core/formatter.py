@@ -211,7 +211,7 @@ class YamlFormatter(JsonFormatter):
     def __init__(self):
         import yaml
 
-        Loader = getattr(yaml, 'CLoader', yaml.Loader)
+        Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
         self._loads = lambda x: yaml.load(x, Loader)
         self._dumps = yaml.dump
 

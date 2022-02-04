@@ -180,7 +180,7 @@ class YamlLoader(ConfigFileLoader):
 
     def __init__(self, *args, **kwargs):
         yaml = __import__('yaml')
-        Loader = getattr(yaml, 'CLoader', yaml.Loader)
+        Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
         self._load = lambda data: yaml.load(data, Loader)
 
     def load_str(self, s):
