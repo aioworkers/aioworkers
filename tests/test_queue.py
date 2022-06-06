@@ -2,15 +2,15 @@ from aioworkers.core.config import MergeDict
 from aioworkers.queue.base import Queue, ScoreQueue
 
 
-async def test_queue(loop):
-    q = Queue({}, loop=loop)
+async def test_queue(event_loop):
+    q = Queue({}, loop=event_loop)
     await q.init()
     await q.put(2)
     assert 2 == await q.get()
 
 
-async def test_score_base(loop):
-    q = ScoreQueue({}, loop=loop)
+async def test_score_base(event_loop):
+    q = ScoreQueue({}, loop=event_loop)
     await q.init()
     await q.put(2, 3)
     assert 2 == await q.get()
@@ -19,12 +19,12 @@ async def test_score_base(loop):
     assert not q
 
 
-async def test_score_time(loop):
+async def test_score_time(event_loop):
     q = ScoreQueue(
         MergeDict(
             default_score='time.time',
         ),
-        loop=loop,
+        loop=event_loop,
     )
     await q.init()
     await q.put(2)

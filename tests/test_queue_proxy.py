@@ -8,17 +8,17 @@ from aioworkers.core.context import Context
 from aioworkers.queue import proxy
 
 
-async def test_q(loop):
+async def test_q(event_loop):
     conf = Config()
     conf.update({'q.cls': utils.import_uri(proxy.ProxyQueue)})
 
-    async with Context(conf, loop=loop) as ctx:
+    async with Context(conf, loop=event_loop) as ctx:
         ctx.q.set_queue(Queue())
         await ctx.q.put(1)
         assert 1 == await ctx.q.get()
 
 
-async def test_plq(loop):
+async def test_plq(event_loop):
     conf = Config()
     conf.update(
         {
@@ -27,7 +27,7 @@ async def test_plq(loop):
         }
     )
 
-    async with Context(conf, loop=loop) as ctx:
+    async with Context(conf, loop=event_loop) as ctx:
         nl = os.linesep.encode()
         fin = io.BytesIO(b'123' + nl)
         fout = io.BytesIO()

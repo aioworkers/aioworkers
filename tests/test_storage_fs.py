@@ -111,7 +111,7 @@ async def test_copy(context):
     await storage.move(key2, fstor, key4)
 
 
-async def test_freespace(context, loop):
+async def test_freespace(context):
     storage = context.storage
     key1 = '1'
     key2 = '2'
@@ -119,10 +119,13 @@ async def test_freespace(context, loop):
 
     assert await storage.get_free_space()
 
+    async def _get_free_space_mock():
+        return 1
+
     with mock.patch.object(
         storage,
         'get_free_space',
-        asyncio.coroutine(lambda: 1),
+        _get_free_space_mock,
     ):
         assert 1 == await storage.get_free_space()
         storage.config._val.limit_free_space = 2
