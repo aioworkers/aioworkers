@@ -92,14 +92,10 @@ class Supervisor(Worker):
             then = asyncio.ALL_COMPLETED
         while self._children:
             await self._wait(lambda w: w.start(), children)
-            d, p = await asyncio.wait(
-                [i._future for i in self._children.values()],
-                loop=self.loop,
-                return_when=then,
-            )
+            d, p = await asyncio.wait([i._future for i in self._children.values()], return_when=then)
             if not self._persist:
                 break
-            await asyncio.sleep(1, loop=self.loop)
+            await asyncio.sleep(1)
             children = [i for i in self._children.values() if i._future in d]
 
     async def stop(self, force=False):

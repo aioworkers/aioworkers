@@ -108,13 +108,10 @@ class Worker(AbstractWorker):
         self._is_sleep = True
         try:
             if self._sleep_start:
-                await asyncio.sleep(self._sleep_start, loop=self.loop)
+                await asyncio.sleep(self._sleep_start)
             while True:
                 if self._crontab is not None:
-                    await asyncio.sleep(
-                        self._crontab.next(default_utc=True),
-                        loop=self.loop,
-                    )
+                    await asyncio.sleep(self._crontab.next(default_utc=True))
                 try:
                     await self.work()
                 except asyncio.CancelledError:
@@ -131,7 +128,7 @@ class Worker(AbstractWorker):
                 if not self._persist:
                     return
                 if self._sleep:
-                    await asyncio.sleep(self._sleep, loop=self.loop)
+                    await asyncio.sleep(self._sleep)
         finally:
             self._stopped_at = datetime.datetime.now()
 

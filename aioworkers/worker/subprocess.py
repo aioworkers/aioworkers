@@ -86,7 +86,6 @@ class Subprocess(FormattedEntity, Worker):
             stdin=stdin,
             stdout=stdout,
             stderr=stderr,
-            loop=self.loop,
         )
 
         self.params = dict(self.config.get('params', ()))
