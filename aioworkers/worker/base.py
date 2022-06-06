@@ -175,7 +175,10 @@ class Worker(AbstractWorker):
                 pass
         else:
             self._persist = False
-            await self._future
+            try:
+                await self._future
+            except asyncio.CancelledError:
+                pass
         self._is_sleep = None
 
     async def status(self):
