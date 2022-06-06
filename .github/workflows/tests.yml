@@ -50,7 +50,7 @@ jobs:
         - '3.7'
         - '3.8'
         - '3.9'
-        - pypy3
+        - 'pypy-3.9'
 
     steps:
     - uses: actions/checkout@v2.4.0
