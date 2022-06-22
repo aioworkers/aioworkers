@@ -7,8 +7,8 @@ config = Config()
 config.load(Path(__file__).with_suffix('.yaml'))
 
 
-async def test_autorun(loop):
-    async with Context(config.autorun, loop=loop) as ctx:
+async def test_autorun(event_loop):
+    async with Context(config.autorun, loop=event_loop) as ctx:
         await ctx.sv._future
         assert ctx.sv._started_at
         assert not ctx.sv.running()
@@ -21,8 +21,8 @@ async def run(w, value):
     return value
 
 
-async def test_super_queue(loop):
-    async with Context(config.super.queue, loop=loop) as ctx:
+async def test_super_queue(event_loop):
+    async with Context(config.super.queue, loop=event_loop) as ctx:
         await ctx.q1.put(1)
         result = await ctx.q2.get()
         assert result == 1
@@ -31,8 +31,8 @@ async def test_super_queue(loop):
         assert result == 2
 
 
-async def test_super_crash(loop):
-    async with Context(config.super.queue, loop=loop) as ctx:
+async def test_super_crash(event_loop):
+    async with Context(config.super.queue, loop=event_loop) as ctx:
         ctx.sv['a']._future.cancel()
         await ctx.q1.put(1)
         await ctx.q2.get()

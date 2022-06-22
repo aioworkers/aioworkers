@@ -26,7 +26,7 @@ def test_main(mocker):
 
     context = mocker.patch.object(cli, 'Context')
     context.init = init
-    cli.main_with_conf()
+    cli.main()
 
 
 def test_stdin_config():

@@ -505,6 +505,7 @@ class Context(AbstractEntity, Octopus):
     async def wait_all(self, coros, timeout=None):
         if not coros:
             return
+        coros = [self.loop.create_task(i) if inspect.iscoroutine(i) else i for i in coros]
         d, p = await asyncio.wait(coros, timeout=timeout)
         assert not p, '\n'.join(map(repr, p))
         for f in d:

@@ -45,8 +45,8 @@ def test_octopus_iter():
     assert list(f.find_iter(int))
 
 
-async def test_context_items(loop):
-    f = Context({}, loop=loop)
+async def test_context_items(event_loop):
+    f = Context({}, loop=event_loop)
     f.r = 1
     assert f['r'] == 1
     f['g'] = 2
@@ -59,7 +59,7 @@ async def test_context_items(loop):
     await f.stop()
 
 
-async def test_context_create(loop):
+async def test_context_create(event_loop):
     conf = Config()
     conf.update(
         MergeDict(
@@ -69,7 +69,7 @@ async def test_context_create(loop):
             }
         )
     )
-    c = Context(conf, loop=loop)
+    c = Context(conf, loop=event_loop)
     await c.init()
     await c.start()
     assert c.config.f.e == 1
@@ -122,9 +122,9 @@ def test_group_resolver():
     assert gr.match(None)
 
 
-async def test_signal(loop):
+async def test_signal(event_loop):
     gr = GroupResolver()
-    context = Context({}, loop=loop, group_resolver=gr)
+    context = Context({}, loop=event_loop, group_resolver=gr)
     s = Signal(context)
     s.append(1, ('1',))
     s.append(1)
@@ -132,13 +132,13 @@ async def test_signal(loop):
     await s.send(GroupResolver(all_groups=True))
 
 
-async def test_func(loop):
+async def test_func(event_loop):
     config = MergeDict(
         now={
             'func': 'time.monotonic',
         }
     )
-    context = Context(config, loop=loop)
+    context = Context(config, loop=event_loop)
     async with context:
         assert isinstance(context.now, float)
 
