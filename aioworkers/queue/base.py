@@ -1,5 +1,6 @@
 import asyncio
 import time
+from typing import Any, Callable
 
 from ..core.base import AbstractReader, AbstractWriter
 from ..utils import import_name
@@ -36,6 +37,10 @@ class ScoreQueueMixin:
         default_score: default value score
     """
 
+    default_score: str
+    _default_score: Callable[[Any], float]
+    _loop: asyncio.AbstractEventLoop
+
     def __init__(self, *args, **kwargs):
         self._base_timestamp = time.time()
         self._set_default(kwargs)
@@ -51,14 +56,15 @@ class ScoreQueueMixin:
             self._default_score = import_name(default)
 
     def _loop_time(self) -> float:
-        return self.loop.time() + self._base_timestamp
+        return self._loop.time() + self._base_timestamp
 
     def set_config(self, config):
         super().set_config(config)
         self._set_default(self._config)
 
     async def init(self):
-        self._base_timestamp = -self.loop.time() + time.time()
+        self._loop = asyncio.get_running_loop()
+        self._base_timestamp = -self._loop.time() + time.time()
         await super().init()
 
     def put(self, value, score=None):
