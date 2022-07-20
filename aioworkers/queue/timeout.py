@@ -1,60 +1,31 @@
 import asyncio
 import collections
 import heapq
-import time
+from typing import Any, Deque, NamedTuple, Optional, Tuple
 
 from .base import AbstractQueue, ScoreQueueMixin
 
 
-class TimeoutItem:
-    def __init__(
-        self,
-        value,
-        *,
-        timeout: float = None,
-        add: float = 0,
-    ):
-        self._value = value
-        if timeout is None:
-            timeout = time.time()
-        self._timeout = timeout + add
+class Item(NamedTuple):
+    value: Any
+    timestamp: float
 
-    @property
-    def value(self):
-        return self._value
-
-    @property
-    def timeout(self):
-        return self._timeout
-
-    @timeout.setter
-    def timeout(self, timeout: float):
-        self._timeout = timeout
-
-    def __lt__(self, other):
-        if isinstance(other, TimeoutItem):
-            return self._timeout < other._timeout
-        raise TypeError
-
-    def __iter__(self):
-        return iter((self._timeout, self._value))
-
-    def __repr__(self):
-        return '{}({}, timeout={})'.format(
-            type(self).__name__,
-            repr(self._value),
-            self._timeout,
-        )
+    def __lt__(self, other) -> bool:
+        return self.timestamp < other.timestamp
 
 
 class TimestampQueue(ScoreQueueMixin, AbstractQueue):
     default_score = 'time.time'
+    _getters: Deque[Tuple[bool, asyncio.Future]]
+    _putters: Deque[asyncio.Future]
 
     def __init__(self, *args, **kwargs):
-        self._future = None
         self._queue = []
-        self._waiters = collections.deque()
+        self._getters = collections.deque()
+        self._putters = collections.deque()
         self._add_score = kwargs.pop('add_score', 0)
+        self._maxsize = kwargs.pop('maxsize', 0)
+        self._min_timestamp = 0.0
         super().__init__(*args, **kwargs)
 
     def set_config(self, config):
@@ -64,43 +35,97 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
             null=True,
             default=0,
         )
+        self._maxsize = self.config.get_int(
+            'maxsize',
+            null=True,
+            default=0,
+        )
 
     def set_context(self, context):
         context.on_cleanup.append(self.cleanup)
         return super().set_context(context)
 
-    def cleanup(self):
-        if self._future and not self._future.done():
-            self._future.cancel()
-        for s, i in self._waiters:
-            i.cancel()
+    async def cleanup(self):
+        for s, i in self._getters:
+            if not i.done():
+                i.cancel()
+        for f in self._putters:
+            if not f.done():
+                f.cancel()
+
+    async def __aenter__(self):
+        await self.init()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if not self.loop.is_closed():
+            await self.cleanup()
 
     def __len__(self):
         return len(self._queue)
 
+    def empty(self) -> bool:
+        return not self._queue
+
+    def full(self) -> bool:
+        if 0 >= self._maxsize:
+            return False
+        return len(self) >= self._maxsize
+
     @property
     def loop(self) -> asyncio.AbstractEventLoop:
         if not self._loop:
-            self._loop = asyncio.get_event_loop()
+            self._loop = asyncio.get_running_loop()
         return self._loop
 
-    def get(self, score: bool = False):
-        waiter = self.loop.create_future()
-        if self._queue:
-            item = heapq.nsmallest(1, self._queue)[0]  # type: TimeoutItem
-            if time.time() >= item.timeout:
-                item = self._pop()
-                if score:
-                    waiter.set_result((item.value, item.timeout))
-                else:
-                    waiter.set_result(item.value)
-                return waiter
-            if not self._future or self._future.done():
-                self._future = self.loop.create_task(self._timer())
-        self._waiters.append((score, waiter))
-        return waiter
+    def _schedule(self, item: Item):
+        self._put(item)
+        if not self._min_timestamp or self._min_timestamp > item.timestamp:
+            self._min_timestamp = item.timestamp
+            self._loop.call_at(item.timestamp - self._base_timestamp, self._on_time)
 
-    def _put(self, item: TimeoutItem):
+    async def get(self, score: bool = False, *, timeout: float = None):
+        item = self._pop()
+        if item is None:
+            pass
+        elif item.timestamp > self._loop_time():
+            self._schedule(item)
+        else:
+            self._release_putter()
+            if score:
+                return item.value, item.timestamp
+            else:
+                return item.value
+        waiter = self.loop.create_future()
+        self._getters.append((score, waiter))
+        if timeout:
+            self._loop.call_later(timeout, self._on_timeout, waiter, timeout)
+        return await waiter
+
+    def _on_timeout(self, waiter: asyncio.Future, timeout: float):
+        if not waiter.done():
+            waiter.set_exception(asyncio.TimeoutError(timeout))
+
+    def _send(self, item: Item) -> bool:
+        while self._getters:
+            with_score, f = self._getters.popleft()
+            if f.done():
+                continue
+            elif with_score:
+                f.set_result((item.value, item.timestamp))
+            else:
+                f.set_result(item.value)
+            self._release_putter()
+            return True
+        return False
+
+    def _pop(self) -> Optional[Item]:
+        if self._queue:
+            return heapq.heappop(self._queue)
+        else:
+            return None
+
+    def _put(self, item: Item):
         heapq.heappush(self._queue, item)
 
     async def put(self, value, score=None):
@@ -108,35 +133,36 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
             if callable(self._default_score):
                 score = self._default_score()
             score += self._add_score
-        self._put(TimeoutItem(value, timeout=score))
-        if not self._waiters:
-            return
-        if score > heapq.nsmallest(1, self._queue)[0].timeout:
-            return
-        if self._future and not self._future.done():
-            self._future.cancel()
-        self._future = self.loop.create_task(self._timer())
-
-    def _pop(self) -> TimeoutItem:
-        return heapq.heappop(self._queue)
-
-    async def _timer(self):
-        while self._queue and self._waiters:
-            min_item = heapq.nsmallest(1, self._queue)[0]  # type: TimeoutItem
-            t = min_item.timeout - time.time()
-            if t > 0:
-                await asyncio.sleep(t)
+        item = Item(value=value, timestamp=score)
+        if self._getters:
+            if score < self._loop_time():
+                if self._send(item):
+                    return
+                else:
+                    self._put(item)
             else:
-                while self._waiters:
-                    with_score, f = self._waiters.popleft()
-                    if f.done():
-                        continue
-                    item = self._pop()
-                    if with_score:
-                        f.set_result((item.value, item.timeout))
-                    else:
-                        f.set_result(item.value)
-                    break
+                self._schedule(item)
+        else:
+            self._put(item)
+        if self.full():
+            waiter = self.loop.create_future()
+            self._putters.append(waiter)
+            await waiter
+
+    def _release_putter(self):
+        while self._putters and not self.full():
+            self._putters.popleft().set_result(None)
+
+    def _on_time(self):
+        while self._queue and self._getters:
+            item = self._pop()
+            if not item:
+                break
+            elif item.timestamp > self._loop_time():
+                self._schedule(item)
+                break
+            elif not self._send(item):
+                self._put(item)
 
 
 class UniqueQueue(TimestampQueue):
@@ -144,15 +170,19 @@ class UniqueQueue(TimestampQueue):
         self._values = {}
         super().__init__(*args, **kwargs)
 
-    def _pop(self) -> TimeoutItem:
-        item = heapq.heappop(self._queue)
-        return self._values.pop(item.value)
+    def _pop(self) -> Optional[Item]:
+        while self._queue:
+            item = heapq.heappop(self._queue)
+            if item is self._values.get(item.value):
+                return self._values.pop(item.value)
+        return None
 
-    def _put(self, item: TimeoutItem):
-        old = self._values.get(item.value)
-        if isinstance(old, TimeoutItem):
-            old.timeout = item.timeout
-            heapq.heapify(self._queue)
-        else:
-            super()._put(item)
-            self._values[item.value] = item
+    def _put(self, item: Item):
+        super()._put(item)
+        self._values[item.value] = item
+
+    def __len__(self) -> int:
+        return len(self._values)
+
+    def empty(self) -> bool:
+        return not self._values
