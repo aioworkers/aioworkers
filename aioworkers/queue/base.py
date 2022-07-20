@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from ..core.base import AbstractReader, AbstractWriter
 from ..utils import import_name
@@ -36,19 +37,29 @@ class ScoreQueueMixin:
     """
 
     def __init__(self, *args, **kwargs):
+        self._base_timestamp = time.time()
         self._set_default(kwargs)
         return super().__init__(*args, **kwargs)
 
     def _set_default(self, cfg):
         default = cfg.get('default_score', self.default_score)
-        if isinstance(default, str):
-            self._default_score = import_name(default)
-        else:
+        if not isinstance(default, str):
             self._default_score = default
+        elif default == 'time.time':
+            self._default_score = self._loop_time
+        else:
+            self._default_score = import_name(default)
+
+    def _loop_time(self) -> float:
+        return self.loop.time() + self._base_timestamp
 
     def set_config(self, config):
         super().set_config(config)
         self._set_default(self._config)
+
+    async def init(self):
+        self._base_timestamp = -self.loop.time() + time.time()
+        await super().init()
 
     def put(self, value, score=None):
         if score is None:
