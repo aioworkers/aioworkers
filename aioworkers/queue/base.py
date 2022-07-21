@@ -38,7 +38,7 @@ class ScoreQueueMixin:
     """
 
     default_score: str
-    _default_score: Callable[[Any], float]
+    _default_score: Callable[..., float]
     _loop: asyncio.AbstractEventLoop
 
     def __init__(self, *args, **kwargs):
