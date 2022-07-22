@@ -1,7 +1,7 @@
 import asyncio
 import collections
 import heapq
-from typing import Any, Deque, NamedTuple, Optional, Tuple
+from typing import Any, Deque, List, NamedTuple, Optional, Tuple
 
 from .base import AbstractQueue, ScoreQueueMixin
 
@@ -19,6 +19,7 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
     default_score = 'time.time'
     _getters: Deque[Tuple[bool, asyncio.Future]]
     _putters: Deque[asyncio.Future]
+    _queue: List
 
     def __init__(self, *args, add_score: float = 0, maxsize: int = 0, **kwargs):
         self._queue = []
