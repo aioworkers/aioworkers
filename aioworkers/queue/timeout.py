@@ -1,7 +1,7 @@
 import asyncio
 import collections
 import heapq
-from typing import Any, Deque, NamedTuple, Optional, Tuple
+from typing import Any, Deque, List, NamedTuple, Optional, Tuple
 
 from .base import AbstractQueue, ScoreQueueMixin
 
@@ -9,6 +9,7 @@ from .base import AbstractQueue, ScoreQueueMixin
 class Item(NamedTuple):
     value: Any
     timestamp: float
+    scheduled: bool = False
 
     def __lt__(self, other) -> bool:
         return self.timestamp < other.timestamp
@@ -18,14 +19,14 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
     default_score = 'time.time'
     _getters: Deque[Tuple[bool, asyncio.Future]]
     _putters: Deque[asyncio.Future]
+    _queue: List
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, add_score: float = 0, maxsize: int = 0, **kwargs):
         self._queue = []
         self._getters = collections.deque()
         self._putters = collections.deque()
-        self._add_score = kwargs.pop('add_score', 0)
-        self._maxsize = kwargs.pop('maxsize', 0)
-        self._min_timestamp = 0.0
+        self._add_score = add_score
+        self._maxsize = maxsize
         super().__init__(*args, **kwargs)
 
     def set_config(self, config):
@@ -46,10 +47,12 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
         return super().set_context(context)
 
     async def cleanup(self):
-        for s, i in self._getters:
+        while self._getters:
+            i = self._getters.popleft()[-1]
             if not i.done():
                 i.cancel()
-        for f in self._putters:
+        while self._putters:
+            f = self._putters.popleft()
             if not f.done():
                 f.cancel()
 
@@ -72,15 +75,12 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
             return False
         return len(self) >= self._maxsize
 
-    @property
-    def loop(self) -> asyncio.AbstractEventLoop:
-        if not self._loop:
-            self._loop = asyncio.get_running_loop()
-        return self._loop
-
     def _schedule(self, item: Item):
-        self._put(item)
-        if not self._min_timestamp or self._min_timestamp > item.timestamp:
+        if item.scheduled:
+            self._put(item)
+        else:
+            item = Item(value=item.value, timestamp=item.timestamp, scheduled=True)
+            self._put(item)
             self._min_timestamp = item.timestamp
             self._loop.call_at(item.timestamp - self._base_timestamp, self._on_time)
 
@@ -130,9 +130,7 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
 
     async def put(self, value, score=None):
         if score is None:
-            if callable(self._default_score):
-                score = self._default_score()
-            score += self._add_score
+            score = self._default_score() + self._add_score
         item = Item(value=value, timestamp=score)
         if self._getters:
             if score < self._loop_time():
@@ -150,11 +148,12 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
             await waiter
 
     def _release_putter(self):
-        while self._putters and not self.full():
-            self._putters.popleft().set_result(None)
+        if not self.full():
+            while self._putters:
+                self._putters.popleft().set_result(None)
 
     def _on_time(self):
-        while self._queue and self._getters:
+        while self._getters:
             item = self._pop()
             if not item:
                 break

@@ -175,3 +175,53 @@ async def test_send_score(context, event_loop):
     await context.q.put(1, time.time() + 0.5)
     v, ts = await f
     assert v == 1
+
+
+@pytest.mark.timeout(1)
+async def test_on_time_none(context, event_loop):
+    f = event_loop.create_task(context.q.get())
+    for _ in range(3):
+        event_loop.create_task(context.q.get())
+    await context.q.put(1, time.time() + 0.2)
+    v = await f
+    assert v == 1
+
+
+@pytest.mark.timeout(1)
+async def test_on_time_send(context, event_loop):
+    f1 = event_loop.create_task(context.q.get())
+    await context.q.put(2, time.time() + 0.6)
+    await context.q.put(1, time.time() + 0.2)
+    f2 = event_loop.create_task(context.q.get())
+    v = await f1
+    assert v == 1
+    v = await f2
+    assert v == 2
+
+
+@pytest.mark.timeout(2)
+async def test_on_time_not_send(context, event_loop):
+    try:
+        await context.q.get(timeout=0.1)
+    except asyncio.TimeoutError:
+        pass
+    await context.q.put(2, time.time() + 0.6)
+    await context.q.put(1, time.time() + 0.2)
+    await asyncio.sleep(0.8)
+    f2 = event_loop.create_task(context.q.get())
+    v = await f2
+    assert v == 1
+
+
+@pytest.mark.timeout(1)
+async def test_cleanup(event_loop):
+    async with TimestampQueue(add_score=1, maxsize=2) as q:
+        event_loop.create_task(q.get())
+        for v in range(3):
+            event_loop.create_task(q.put(v))
+        await asyncio.sleep(0.1)
+        assert q.full()
+        assert q._getters
+        assert q._putters
+    assert not q._getters
+    assert not q._putters
