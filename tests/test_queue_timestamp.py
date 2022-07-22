@@ -199,7 +199,7 @@ async def test_on_time_send(context, event_loop):
     assert v == 2
 
 
-@pytest.mark.timeout(1)
+@pytest.mark.timeout(2)
 async def test_on_time_not_send(context, event_loop):
     try:
         await context.q.get(timeout=0.1)
