@@ -1,6 +1,6 @@
 import asyncio
 import time
-from typing import Any, Callable
+from typing import Callable
 
 from ..core.base import AbstractReader, AbstractWriter
 from ..utils import import_name
