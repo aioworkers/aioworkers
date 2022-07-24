@@ -30,6 +30,7 @@ class Request:
         return self._response
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        assert self._response
         await self._response.close()
 
 

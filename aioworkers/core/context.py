@@ -81,7 +81,10 @@ class Octopus(MutableMapping):
     def __len__(self):  # pragma: no cover
         return len(self.__dict__)
 
-    def __repr__(self, *, indent=1, header=False):
+    def __repr__(self):
+        return self.extended_repr()
+
+    def extended_repr(self, *, indent=1, header=False):
         if os.environ.get('AIOWORKERS_MODE') != 'console':
             return '{cls}({id}, attrs=[{attrs}])'.format(
                 cls=self.__class__.__name__,
@@ -107,7 +110,7 @@ class Octopus(MutableMapping):
             result.append(': ')
             if isinstance(v, Octopus):
                 result.append('\n')
-                result.append(v.__repr__(indent=indent + 1, header=False))
+                result.append(v.extended_repr(indent=indent + 1, header=False))
             else:
                 result.append(str(v))
                 result.append('\n')
@@ -250,6 +253,8 @@ class GroupResolver:
 
 
 class ContextProcessor:
+    key: str
+
     def __init__(self, context: 'Context', path: str, value: ValueExtractor):
         self.context = context
         self.path = path
@@ -269,7 +274,7 @@ class LoggingContextProcessor(ContextProcessor):
 
     @classmethod
     def match(cls, context, path, value):
-        if path == cls.key and value and isinstance(value, Mapping):
+        if path == cls.key and value and isinstance(value, ValueExtractor):
             m = cls(context, path, value)
             m.configure(value)
             return m
@@ -287,7 +292,7 @@ class GroupsContextProcessor(ContextProcessor):
 
     @classmethod
     def match(cls, context, path, value):
-        if not isinstance(value, Mapping):
+        if not isinstance(value, ValueExtractor):
             return
         groups = value.get(cls.key)
         if not context._group_resolver.match(groups):
@@ -406,10 +411,10 @@ class RootContextProcessor(ContextProcessor):
         super().__init__(context, path, value)
         self._built = False
         self.on_ready = Signal(context, name='ready')
-        self.processors = OrderedDict((i.key, i) for i in self.processors)
+        self._processors = OrderedDict((i.key, i) for i in self.processors)
 
     def __iter__(self):
-        yield from self.processors.values()
+        yield from self._processors.values()
 
     def processing(self, config, path=None):
         for k, v in config.items():
@@ -421,9 +426,9 @@ class RootContextProcessor(ContextProcessor):
                 if m is None:
                     continue
                 if m.process:
-                    groups = None
+                    groups: Sequence[str] = ()
                     if isinstance(v, Mapping):
-                        groups = v.get('groups')
+                        groups = v.get('groups') or groups
                     self.on_ready.append(m.process, groups)
                 break
             else:

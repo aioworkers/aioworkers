@@ -18,21 +18,20 @@ def kwargs_from_argv(params, ns, argv):
         else:
             parser.add_argument('--' + i, type=p.annotation)
     argv[:] = parser.parse_known_args(argv, namespace=ns)[1]
-    return {
-        k: v for k, v in ns.__dict__.items() if v is not None and k in params
-    }
+    return {k: v for k, v in ns.__dict__.items() if v is not None and k in params}
 
 
 def run(cmd, context, loop=None, ns=None, argv=None):
     loop = loop or context.loop or asyncio.get_event_loop()
 
     def runner(cmd):
+        params: Mapping
         try:
             sig = inspect.signature(cmd)
             params = sig.parameters
 
         except (ValueError, TypeError):
-            params = ()
+            params = {}
         kwargs = kwargs_from_argv(params, ns, argv)
         if 'context' in params:
             kwargs['context'] = context

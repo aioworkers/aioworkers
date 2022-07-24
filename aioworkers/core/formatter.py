@@ -1,6 +1,6 @@
 import os
 from abc import abstractmethod
-from typing import Tuple
+from typing import Callable, List, Tuple, Type, Union
 
 from ..utils import import_name
 from .base import AbstractEntity
@@ -158,17 +158,20 @@ class PickleFormatter(BaseFormatter):
 class JsonFormatter(BaseFormatter):
     name = 'json'
     mimetypes = ('application/json',)
-    converters = [
+    converters: List[Tuple[float, Union[Type, str], Callable]] = [
         (0, 'aioworkers.core.config.ValueExtractor', dict),
     ]
+    _dumps: Callable
+    _loads: Callable
 
     def __init__(self):
         import json
 
-        convs = []
+        convs: List[Tuple[float, Type, Callable]] = []
         for score, klass, conv in self.converters:
             if isinstance(klass, str):
                 klass = import_name(klass)
+            assert isinstance(klass, type)
             convs.append((score, klass, conv))
 
         class Encoder(json.JSONEncoder):
@@ -179,8 +182,8 @@ class JsonFormatter(BaseFormatter):
                 return super().default(o)
 
         self._encoder = Encoder
-        self._loads = json.loads
-        self._dumps = json.dumps
+        setattr(self, '_loads', json.loads)
+        setattr(self, '_dumps', json.dumps)
 
     def decode(self, b):
         return self._loads(b.decode("utf-8"))
@@ -212,8 +215,8 @@ class YamlFormatter(JsonFormatter):
         import yaml
 
         Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
-        self._loads = lambda x: yaml.load(x, Loader)
-        self._dumps = yaml.dump
+        setattr(self, '_loads', lambda x: yaml.load(x, Loader))
+        setattr(self, '_dumps', yaml.dump)
 
     def encode(self, b):
         return self._dumps(b).encode("utf-8")
@@ -224,8 +227,8 @@ class ZLibFormatter(BaseFormatter):
 
     def __init__(self):
         zlib = __import__('zlib')
-        self.decode = zlib.decompress
-        self.encode = zlib.compress
+        setattr(self, 'decode', zlib.decompress)
+        setattr(self, 'encode', zlib.compress)
 
 
 class LzmaFormatter(BaseFormatter):
@@ -236,15 +239,23 @@ class LzmaFormatter(BaseFormatter):
         FILTER_LZMA2 = lzma.FILTER_LZMA2
         filters = [{'id': FILTER_LZMA2}]
         FORMAT_RAW = lzma.FORMAT_RAW
-        self.encode = lambda v: lzma.compress(
-            v,
-            format=FORMAT_RAW,
-            filters=filters,
+        setattr(
+            self,
+            'encode',
+            lambda v: lzma.compress(
+                v,
+                format=FORMAT_RAW,
+                filters=filters,
+            ),
         )
-        self.decode = lambda v: lzma.decompress(
-            v,
-            format=FORMAT_RAW,
-            filters=filters,
+        setattr(
+            self,
+            'decode',
+            lambda v: lzma.decompress(
+                v,
+                format=FORMAT_RAW,
+                filters=filters,
+            ),
         )
 
 
@@ -253,8 +264,8 @@ class MsgPackFormatter(BaseFormatter):
 
     def __init__(self):
         msgpack = __import__('msgpack')
-        self.decode = msgpack.loads
-        self.encode = msgpack.dumps
+        setattr(self, 'decode', msgpack.loads)
+        setattr(self, 'encode', msgpack.dumps)
 
 
 class BsonFormatter(BaseFormatter):
@@ -262,8 +273,8 @@ class BsonFormatter(BaseFormatter):
 
     def __init__(self):
         bson = __import__('bson')
-        self.decode = bson.loads
-        self.encode = bson.dumps
+        setattr(self, 'decode', bson.loads)
+        setattr(self, 'encode', bson.dumps)
 
 
 registry = Registry()

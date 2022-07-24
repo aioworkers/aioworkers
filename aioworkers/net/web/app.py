@@ -35,14 +35,15 @@ class Application(LoggingEntity):
         method = method.upper()
         assert method not in handlers
         h = self.context.get_object(handler)
+        kw: Mapping
         if callable(h):
             try:
-                kwargs = inspect.signature(h).parameters
+                kw = inspect.signature(h).parameters
             except ValueError:
-                kwargs = ()
+                kw = {}
         else:
-            kwargs = ()
-        handlers[method] = Route(h, kwargs)
+            kw = {}
+        handlers[method] = Route(h, kw)
 
     async def __call__(
         self,

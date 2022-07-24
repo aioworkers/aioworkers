@@ -7,7 +7,7 @@ from aioworkers.net.sender import AbstractSender
 
 
 class SMTP(ExecutorEntity, LoggingEntity, AbstractSender):
-    _conn = None  # type: Optional[smtplib.SMTP]
+    _conn: Optional[smtplib.SMTP] = None
 
     def set_config(self, config):
         config = config.new_child({self.PARAM_EXECUTOR: 1})
@@ -19,6 +19,7 @@ class SMTP(ExecutorEntity, LoggingEntity, AbstractSender):
 
     async def send_message(self, msg):
         await self.connect()
+        assert self._conn
         m = await self.make_message(msg)
         await self.run_in_executor(self._conn.send_message, m)
         self.logger.debug('Sent message: %s', m['Subject'])
@@ -56,6 +57,7 @@ class SMTP(ExecutorEntity, LoggingEntity, AbstractSender):
         host = self.config.get('host', 'localhost')
         port = self.config.get_int('port', 0)
         self.logger.info('Connect to %s', host)
+        conn: smtplib.SMTP
         if self.config.get('ssl'):
             conn = smtplib.SMTP_SSL(host, port)
         else:

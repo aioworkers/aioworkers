@@ -35,6 +35,8 @@ class AbstractHttpStorage(
         format: [json|str|bytes], default json
     """
 
+    session: Any
+
     def __init__(self, *args, **kwargs):
         self.session = None
         super().__init__(*args, **kwargs)
@@ -123,7 +125,9 @@ class AbstractHttpStorage(
         from aioworkers.storage.filesystem import FileSystemStorage
 
         if not isinstance(storage_dest, FileSystemStorage):
-            return super().copy(key_source, storage_dest, key_dest)
+            super_copy = getattr(super(), 'copy', None)
+            if super_copy:
+                return super_copy(key_source, storage_dest, key_dest)
         url = self.raw_key(key_source)
         async with self.session(url, method='get') as response:
             if response.status == 404:

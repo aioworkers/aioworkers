@@ -1,8 +1,8 @@
 import functools
 import logging
 import sys
-from pathlib import Path
-from typing import Dict, Iterable, Optional
+from pathlib import Path, PurePath
+from typing import Dict, Iterable, Optional, Sequence, Union
 
 from . import config, formatter
 
@@ -45,10 +45,10 @@ def get_names() -> Iterable[str]:
 
 
 @functools.lru_cache(None)
-def search_plugins(*modules, force=False):
+def search_plugins(*modules: str, force=False):
     result = []
     if not modules:
-        modules = get_names()
+        modules = tuple(get_names())
     for name in modules:
         plugin = load_plugin(name, force=force)
         if plugin:
@@ -58,9 +58,9 @@ def search_plugins(*modules, force=False):
 
 
 class Plugin:
-    formatters = ()
-    config_loaders = ()
-    configs = ()
+    formatters: Sequence[formatter.BaseFormatter] = ()
+    config_loaders: Sequence[config.ConfigFileLoader] = ()
+    configs: Sequence[Union[str, PurePath]] = ()
 
     def __init__(self):
         for f in self.formatters:

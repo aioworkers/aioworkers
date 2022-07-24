@@ -9,6 +9,7 @@ import sys
 import time
 from functools import partial, reduce
 from pathlib import Path
+from typing import List
 from urllib.parse import splittype  # type: ignore
 from urllib.request import urlopen
 
@@ -153,18 +154,18 @@ def main(
                 print(PROMPT)
                 logger = multiprocessing.get_logger()
                 processes = process_iter(config.get('processes', {}))
-                for p in processes:
-                    logger.info('Create process %s', p['name'])
-                    p['process'] = create_process(p)
+                for process in processes:
+                    logger.info('Create process %s', process['name'])
+                    process['process'] = create_process(process)
                 while True:
                     multiprocessing.connection.wait(
                         map(lambda x: x['process'].sentinel, processes),
                     )
-                    for p in processes:
-                        proc = p['process']  # type: multiprocessing.Process
+                    for process in processes:
+                        proc = process['process']  # type: multiprocessing.Process
                         if not proc.is_alive():
-                            logger.critical('Recreate process %s', p['name'])
-                            p['process'] = create_process(p)
+                            logger.critical('Recreate process %s', process['name'])
+                            process['process'] = create_process(process)
                     time.sleep(1)
 
         elif args.interact:
@@ -182,8 +183,8 @@ def main(
     except KeyboardInterrupt:
         pass
     finally:
-        for p in multiprocessing.active_children():
-            os.kill(p.pid, signal.SIGTERM)
+        for process in multiprocessing.active_children():
+            os.kill(process.pid, signal.SIGTERM)
         t = time.monotonic()
         sentinels = [p.sentinel for p in multiprocessing.active_children()]
         while sentinels and time.monotonic() - t < args.shutdown_timeout:
@@ -191,8 +192,8 @@ def main(
             sentinels = [p.sentinel for p in multiprocessing.active_children()]
         while multiprocessing.active_children():
             print('killall children')
-            for p in multiprocessing.active_children():
-                os.kill(p.pid, signal.SIGKILL)
+            for process in multiprocessing.active_children():
+                os.kill(process.pid, signal.SIGKILL)
             time.sleep(0.3)
 
 
@@ -306,7 +307,7 @@ class ExtendAction(argparse.Action):
 
 class plugin(Plugin):
     def add_arguments(self, parser):
-        default = []
+        default: List[UriType] = []
         parser.set_defaults(config=default)
         parser.add_argument(
             '-c',

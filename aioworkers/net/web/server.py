@@ -50,7 +50,7 @@ class WebServer(SocketServer, Worker):
                 if not self.context.config.get('web.resources'):
                     application_path = '.app'
         self.logger.info('Connect to application %s', application_path)
-        self._handler = self.context.get_object(application_path)
+        self._handler = self.context.get_object(application_path)  # type: ignore
 
         self.parser_factory = self.context.get_object(
             self.config.get('parser', 'httptools.HttpRequestParser')
