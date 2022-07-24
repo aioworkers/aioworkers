@@ -274,7 +274,7 @@ class LoggingContextProcessor(ContextProcessor):
 
     @classmethod
     def match(cls, context, path, value):
-        if path == cls.key and value and isinstance(value, ValueExtractor):
+        if path == cls.key and value and isinstance(value, Mapping):
             m = cls(context, path, value)
             m.configure(value)
             return m
@@ -292,7 +292,7 @@ class GroupsContextProcessor(ContextProcessor):
 
     @classmethod
     def match(cls, context, path, value):
-        if not isinstance(value, ValueExtractor):
+        if not isinstance(value, Mapping):
             return
         groups = value.get(cls.key)
         if not context._group_resolver.match(groups):
