@@ -117,40 +117,6 @@ class AbstractHttpStorage(
         url = self.raw_key(key)
         return self.request(url)
 
-    async def copy(self, key_source, storage_dest, key_dest):
-        """Return True if data are copied
-        * optimized for http->fs copy
-        * not supported return_status
-        """
-        from aioworkers.storage.filesystem import FileSystemStorage
-
-        if not isinstance(storage_dest, FileSystemStorage):
-            super_copy = getattr(super(), 'copy', None)
-            if super_copy:
-                return super_copy(key_source, storage_dest, key_dest)
-            else:
-                raise RuntimeError('%s not supported copy' % self.__class__)
-        url = self.raw_key(key_source)
-        async with self.session(url, method='get') as response:
-            if response.status == 404:
-                return
-            elif response.status >= 400:
-                if self.logger.getEffectiveLevel() == logging.DEBUG:
-                    self.logger.debug(
-                        'HttpStorage request to %s '
-                        'returned code %s:\n%s'
-                        % (
-                            url,
-                            response.status,
-                            (await response.read()).decode("utf-8"),
-                        )
-                    )
-                return
-            async with storage_dest.raw_key(key_dest).open('wb') as f:
-                async for chunk in response.content.iter_any():
-                    await f.write(chunk)
-                return True
-
 
 class RoStorage(ExecutorEntity, AbstractHttpStorage):
     def set_config(self, config):
