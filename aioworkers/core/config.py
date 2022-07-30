@@ -429,7 +429,7 @@ class ValueExtractor(Mapping):
                 raise ValueError(m)
             else:
                 maps[id(m)] = m
-        return cls(ChainMap(*maps.values()))  # type: ignore
+        return ValueExtractor(ChainMap(*maps.values()))  # type: ignore
 
     def __setattr__(self, key, value):
         if not self.__dict__.get('_setattr', True):
