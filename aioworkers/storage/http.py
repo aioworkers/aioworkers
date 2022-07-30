@@ -128,6 +128,8 @@ class AbstractHttpStorage(
             super_copy = getattr(super(), 'copy', None)
             if super_copy:
                 return super_copy(key_source, storage_dest, key_dest)
+            else:
+                raise RuntimeError('%s not supported copy' % self.__class__)
         url = self.raw_key(key_source)
         async with self.session(url, method='get') as response:
             if response.status == 404:
