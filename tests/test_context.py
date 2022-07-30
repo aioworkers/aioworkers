@@ -21,7 +21,7 @@ def test_octopus():
     f['d.w.f'] = 4
     assert dir(f)
     assert repr(f)
-    assert f.__repr__(header=True)
+    assert f.extended_repr(header=True)
     assert f.items()
     f.s = 'w'
     assert callable(f['s.upper'])

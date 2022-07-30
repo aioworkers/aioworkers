@@ -90,7 +90,7 @@ class AbstractNestedEntity(AbstractEntity):
         await super().init()
         if self._children:
             await self.context.wait_all(
-                [c.init() for c in self._children.values()]
+                [c.init() for c in self._children.values()],
             )
 
     def get_child_config(
@@ -119,6 +119,7 @@ class AbstractNestedEntity(AbstractEntity):
             return instance
 
         c = self.get_child_config(item, config)
+        assert c
         str_cls = c.get('cls')
         if str_cls is None or str_cls is self._config.cls:
             cls = self.item_factory or type(self)
@@ -223,7 +224,7 @@ class MultiExecutorEntity(AbstractEntity):
             if isinstance(p, int):
                 ex = self.executor_factory(max_workers=p)
             elif isinstance(p, str):
-                ex = self._context.get(p)
+                ex = self.context.get(p)
             else:
                 ex = self.executor_factory()
             self._executors[executor_name] = ex

@@ -3,6 +3,7 @@ import collections
 import datetime
 from abc import abstractmethod
 from functools import partial
+from typing import Any, Dict, Tuple
 
 from ..core.base import AbstractNamedEntity, LoggingEntity
 from ..utils import import_name
@@ -36,6 +37,7 @@ class Worker(AbstractWorker):
         output: str.path to instance of AbstractWriter
     """
 
+    counter: Dict
     _crontab = None
     _sleep = None
     _sleep_start = None
@@ -70,7 +72,7 @@ class Worker(AbstractWorker):
 
         if self.config.get('run'):
             run = import_name(self.config.run)
-            self.run = partial(run, self)
+            self.run = partial(run, self)  # type: ignore
 
         if self.input is not None or self.output is not None:
             self._persist = True
@@ -95,7 +97,7 @@ class Worker(AbstractWorker):
     async def work(self):
         self._is_sleep = False
         if self.input is not None:
-            args = (await self.input.get(),)
+            args: Tuple[Any, ...] = (await self.input.get(),)
         else:
             args = ()
         self.counter['run'] += 1
@@ -167,13 +169,14 @@ class Worker(AbstractWorker):
         if not self.running():
             pass
         elif force or self._is_sleep:
+            assert self._future
             self._future.cancel()
             self._stopped_at = datetime.datetime.now()
             try:
                 await self._future
             except asyncio.CancelledError:
                 pass
-        else:
+        elif self._future:
             self._persist = False
             try:
                 await self._future

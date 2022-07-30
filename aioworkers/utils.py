@@ -9,7 +9,7 @@ import struct
 import sys
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any, Dict, Mapping
 
 try:
     from setproctitle import setproctitle
@@ -83,6 +83,7 @@ def module_path(str_module, return_str=False):
         m = sys.modules[str_module]
     else:
         m = import_name(str_module)
+    assert m.__file__
     p = Path(m.__file__).parent
     if return_str:
         return str(p)
@@ -90,7 +91,7 @@ def module_path(str_module, return_str=False):
 
 
 def method_replicate_result(key):
-    futures = {}
+    futures: Dict = {}
 
     def wrapped(coro):
         @functools.wraps(coro)

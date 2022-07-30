@@ -1,6 +1,6 @@
 import weakref
 from itertools import cycle
-from typing import Any, Hashable
+from typing import Any, Hashable, MutableMapping
 
 from . import base
 
@@ -68,6 +68,8 @@ class Cache(base.AbstractStorage):
 
 
 class FutureStorage(base.AbstractStorage):
+    _futures: MutableMapping
+
     def __init__(self, *args, **kwargs):
         self._futures = {}
         super().__init__(*args, **kwargs)

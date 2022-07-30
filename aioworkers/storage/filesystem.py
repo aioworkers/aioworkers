@@ -103,6 +103,7 @@ class AsyncFileContextManager:
         return self.af
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        assert self.af is not None, "File not opened"
         await self.af.close()
         self.af = None
 
@@ -192,17 +193,17 @@ class AsyncPath(PurePath):
         )
 
     def _make_child(self, args):
-        k = super()._make_child(args)
+        k = super()._make_child(args)  # type: ignore
         k._init(self.storage)
         return k
 
     @classmethod
     def _from_parts(cls, args, init=True):
         self = object.__new__(cls)
-        drv, root, parts = self._parse_args(args)
-        self._drv = drv
-        self._root = root
-        self._parts = parts
+        drv, root, parts = self._parse_args(args)  # type: ignore
+        self._drv = drv  # type: ignore
+        self._root = root  # type: ignore
+        self._parts = parts  # type: ignore
         if init:
             storage = None
             for t in args:

@@ -148,6 +148,7 @@ class Subprocess(FormattedEntity, Worker):
         process = await self.create_subprocess(*cmd)
         self._processes[process.pid] = process
         if self._config_stdin:
+            assert process.stdin
             utils.dump_to_fd(process.stdin, self.context.config)
             await process.stdin.drain()
         if self._wait:

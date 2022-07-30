@@ -1,4 +1,3 @@
-import logging
 from abc import abstractmethod
 from typing import Any, FrozenSet, Mapping, Sequence, Union
 
@@ -34,6 +33,8 @@ class AbstractHttpStorage(
         template: url template
         format: [json|str|bytes], default json
     """
+
+    session: Any
 
     def __init__(self, *args, **kwargs):
         self.session = None
@@ -114,36 +115,6 @@ class AbstractHttpStorage(
     def get(self, key):
         url = self.raw_key(key)
         return self.request(url)
-
-    async def copy(self, key_source, storage_dest, key_dest):
-        """Return True if data are copied
-        * optimized for http->fs copy
-        * not supported return_status
-        """
-        from aioworkers.storage.filesystem import FileSystemStorage
-
-        if not isinstance(storage_dest, FileSystemStorage):
-            return super().copy(key_source, storage_dest, key_dest)
-        url = self.raw_key(key_source)
-        async with self.session(url, method='get') as response:
-            if response.status == 404:
-                return
-            elif response.status >= 400:
-                if self.logger.getEffectiveLevel() == logging.DEBUG:
-                    self.logger.debug(
-                        'HttpStorage request to %s '
-                        'returned code %s:\n%s'
-                        % (
-                            url,
-                            response.status,
-                            (await response.read()).decode("utf-8"),
-                        )
-                    )
-                return
-            async with storage_dest.raw_key(key_dest).open('wb') as f:
-                async for chunk in response.content.iter_any():
-                    await f.write(chunk)
-                return True
 
 
 class RoStorage(ExecutorEntity, AbstractHttpStorage):

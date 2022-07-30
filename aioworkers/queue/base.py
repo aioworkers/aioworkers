@@ -1,6 +1,8 @@
 import asyncio
 import time
-from typing import Callable
+from typing import Callable, cast
+
+from aioworkers.core.config import ValueExtractor
 
 from ..core.base import AbstractReader, AbstractWriter
 from ..utils import import_name
@@ -40,6 +42,7 @@ class ScoreQueueMixin:
     default_score: str
     _default_score: Callable[..., float]
     _loop: asyncio.AbstractEventLoop
+    _config: ValueExtractor
 
     def __init__(self, *args, **kwargs):
         self._base_timestamp = time.time()
@@ -49,23 +52,23 @@ class ScoreQueueMixin:
     def _set_default(self, cfg):
         default = cfg.get('default_score', self.default_score)
         if not isinstance(default, str):
-            self._default_score = default
+            setattr(self, '_default_score', default)
         elif default == 'time.time':
-            self._default_score = self._loop_time
+            setattr(self, '_default_score', self._loop_time)
         else:
-            self._default_score = import_name(default)
+            setattr(self, '_default_score', import_name(default))
 
     def _loop_time(self) -> float:
         return self._loop.time() + self._base_timestamp
 
     def set_config(self, config):
-        super().set_config(config)
+        cast(AbstractQueue, super()).set_config(config)
         self._set_default(self._config)
 
     async def init(self):
         self._loop = asyncio.get_running_loop()
         self._base_timestamp = -self._loop.time() + time.time()
-        await super().init()
+        await cast(AbstractQueue, super()).init()
 
     def put(self, value, score=None):
         if score is None:

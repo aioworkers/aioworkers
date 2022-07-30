@@ -2,10 +2,11 @@ import asyncio
 import concurrent.futures
 from functools import partial
 from threading import Thread
+from typing import Dict
 
 
 def _await(coro, context):
-    f = concurrent.futures.Future()
+    f: concurrent.futures.Future = concurrent.futures.Future()
 
     async def wrap(coro):
         try:
@@ -29,7 +30,7 @@ def shell(run):
         from IPython.terminal.embed import InteractiveShellEmbed
 
         shell = InteractiveShellEmbed.instance()
-        _f = concurrent.futures.Future()
+        _f: concurrent.futures.Future = concurrent.futures.Future()
 
         def _thread():
             context = _f.result()
@@ -62,13 +63,13 @@ def kernel(run):
     from tornado import ioloop
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.start = lambda: None  # without run_forever
+    setattr(io_loop, 'start', lambda: None)  # without run_forever
 
     kernelapp._ctrl_c_message = 'IPKernelApp running'
 
     app = kernelapp.IPKernelApp.instance()
     app.initialize(['aioworkers'])
-    namespace = {}
+    namespace: Dict = {}
     app.kernel.user_ns = namespace
 
     class PseudoFuture:

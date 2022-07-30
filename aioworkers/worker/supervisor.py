@@ -86,13 +86,17 @@ class Supervisor(Worker):
 
     async def work(self):
         children = list(self._children.values())
+        then: str
         if self._persist:
             then = asyncio.FIRST_EXCEPTION
         else:
             then = asyncio.ALL_COMPLETED
         while self._children:
             await self._wait(lambda w: w.start(), children)
-            d, p = await asyncio.wait([i._future for i in self._children.values()], return_when=then)
+            d, p = await asyncio.wait(
+                [i._future for i in self._children.values()],
+                return_when=then,
+            )
             if not self._persist:
                 break
             await asyncio.sleep(1)

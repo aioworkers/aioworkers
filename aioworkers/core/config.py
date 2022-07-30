@@ -7,7 +7,19 @@ import re
 from abc import abstractmethod
 from collections import ChainMap, OrderedDict
 from pathlib import Path
-from typing import Callable, Dict, Iterator, Mapping, MutableMapping, Set
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from aioworkers.http import URL
 from aioworkers.net.uri import URI
@@ -143,8 +155,10 @@ def merge(source: Mapping, destination: MutableMapping):
 
 
 class ConfigFileLoader:
-    extensions = ()  # type: tuple
-    mime_types = ()  # type: tuple
+    extensions: Tuple[str, ...] = ()
+    mime_types: Tuple[str, ...] = ()
+
+    _load: Callable
 
     @abstractmethod  # pragma: no cover
     def load_str(self, s):
@@ -181,7 +195,7 @@ class YamlLoader(ConfigFileLoader):
     def __init__(self, *args, **kwargs):
         yaml = __import__('yaml')
         Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
-        self._load = lambda data: yaml.load(data, Loader)
+        setattr(self, '_load', lambda data: yaml.load(data, Loader))
 
     def load_str(self, s):
         return self._load(s)
@@ -193,21 +207,25 @@ class JsonLoader(ConfigFileLoader):
 
     def __init__(self, *args, **kwargs):
         json = __import__('json')
-        self._load = json.load
+        setattr(self, '_load', json.load)
         self._loads = json.loads
 
     def load_str(self, s):
         return self._loads(s)
 
 
+TValueMatcher = TypeVar('TValueMatcher', bound='ValueMatcher')
+
+
 class ValueMatcher:
     fn = None  # type: Callable
 
-    def __init__(self, value):
+    def __init__(self, value: Any):
         self._value = value
 
+    @classmethod
     @abstractmethod  # pragma: no cover
-    def match(cls, value):
+    def match(cls: Type[TValueMatcher], value: Any) -> TValueMatcher:
         raise NotImplementedError
 
     @abstractmethod  # pragma: no cover
@@ -372,7 +390,7 @@ registry(JsonLoader)
 registry(IniLoader)
 
 
-extractors = {
+extractors: Mapping[str, Callable] = {
     'get_int': int,
     'get_float': float,
     'get_bool': BooleanValueMatcher.fn,
@@ -385,41 +403,50 @@ extractors = {
 }
 
 
+TValueExtractor = TypeVar('TValueExtractor', bound='ValueExtractor')
+
+
 class ValueExtractor(Mapping):
-    def __init__(self, mapping):
+    def __init__(self, mapping: Union[TValueExtractor, Mapping]):
         if isinstance(mapping, ValueExtractor):
-            self._val = mapping._val
+            self._val: Mapping = mapping._val
         else:
             self._val = mapping
         self._setattr = False
 
     @classmethod
-    def _mapping_factory(cls, *mappings: MutableMapping) -> 'ValueExtractor':
-        maps: Dict[int, MutableMapping] = OrderedDict()
+    def _mapping_factory(
+        cls: Type[TValueExtractor], *mappings: Mapping
+    ) -> TValueExtractor:
+        maps: Dict[int, Mapping] = OrderedDict()
         for m in mappings:
             if isinstance(m, ValueExtractor):
                 m = m._val
             if isinstance(m, ChainMap):
                 for m in m.maps:
                     maps[id(m)] = m
-            elif not isinstance(m, MutableMapping):
+            elif not isinstance(m, Mapping):
                 raise ValueError(m)
             else:
                 maps[id(m)] = m
-        return ValueExtractor(ChainMap(*maps.values()))
+        return ValueExtractor(ChainMap(*maps.values()))  # type: ignore
 
     def __setattr__(self, key, value):
         if not self.__dict__.get('_setattr', True):
             raise RuntimeError('Set attribute not supported')
         super().__setattr__(key, value)
 
-    def new_child(self, *mappings, **kwargs) -> 'ValueExtractor':
+    def new_child(
+        self: TValueExtractor, *mappings: Mapping, **kwargs
+    ) -> TValueExtractor:
         return self._mapping_factory(*mappings, kwargs, self._val)
 
-    def new_parent(self, *mappings, **kwargs) -> 'ValueExtractor':
+    def new_parent(
+        self: TValueExtractor, *mappings: Mapping, **kwargs
+    ) -> TValueExtractor:
         return self._mapping_factory(self._val, *mappings, kwargs)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         v = self._val[item]
         if isinstance(v, Mapping):
             return self._mapping_factory(v)
@@ -597,6 +624,7 @@ class Config(ValueExtractor):
 
     def load(self, *filenames, base=None):
         if base is None:
+            assert isinstance(self._val, MergeDict)
             config = self._val
         else:
             config = base
@@ -633,6 +661,7 @@ class Config(ValueExtractor):
         for d in mappings:
             if isinstance(d, ValueExtractor):
                 d = d.__getstate__()
+            assert isinstance(self._val, MergeDict)
             self._update(self._val, d)
 
     def load_plugins(self, *modules, force=True):

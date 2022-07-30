@@ -8,6 +8,13 @@ from aioworkers.core.config import ValueExtractor
 
 def test_main(mocker):
     mocker.patch.object(cli, 'asyncio')
+    mocker.patch('os.kill')
+
+    actives = [[mocker.Mock()]] * 7
+    actives[-3] = []
+    iter_actives = iter(actives)
+    mocker.patch('multiprocessing.active_children', lambda: next(iter_actives, ()))
+    mocker.patch('multiprocessing.connection')
 
     parser = mocker.patch.object(cli, 'parser')
     ns = mocker.Mock()
@@ -16,6 +23,7 @@ def test_main(mocker):
     ns.multiprocessing = False
     ns.groups = None
     ns.exclude_groups = None
+    ns.shutdown_timeout = 1
     parser.parse_known_args.return_value = ns, ()
 
     mocker.patch.object(cli, 'logging')
