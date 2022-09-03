@@ -1,5 +1,5 @@
 import uuid
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 import pytest
 
