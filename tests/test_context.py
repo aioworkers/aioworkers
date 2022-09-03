@@ -8,6 +8,7 @@ from aioworkers.core.context import (
     Octopus,
     Signal,
 )
+from aioworkers.queue.timeout import TimestampQueue
 
 
 def test_octopus():
@@ -148,3 +149,8 @@ def test_create_entity():
         EntityContextProcessor(None, 'x', {'cls': 'time.time'})
     with pytest.raises(TypeError):
         EntityContextProcessor(None, 'x', {'cls': 'aioworkers.humanize.size'})
+
+
+async def test_precreate_entity():
+    async with Context(queue=TimestampQueue()) as ctx:
+        assert isinstance(ctx.queue, TimestampQueue)

@@ -459,6 +459,12 @@ class Context(AbstractEntity, Octopus):
         self.logger = logging.getLogger('aioworkers')
         root_processor = kwargs.pop('root_processor', RootContextProcessor)
         self.processors = root_processor(self)
+
+        for p, e in list(kwargs.items()):
+            if isinstance(e, AbstractEntity):
+                kwargs.pop(p)
+                self.__dict__[p] = e
+                e.set_config(ValueExtractor(name=p))
         super().__init__(*args, **kwargs)
 
     def set_group_resolver(self, gr):
