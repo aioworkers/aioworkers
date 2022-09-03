@@ -8,6 +8,7 @@ Contents:
 
    config
    entity
+   entity_link
    context
    cli
    queue
