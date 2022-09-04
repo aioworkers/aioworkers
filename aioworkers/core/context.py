@@ -619,6 +619,9 @@ class Context(AbstractEntity, Octopus):
         await self._on_cleanup.send(self._group_resolver)
 
     def get_object(self, path):
-        if path.startswith('.'):
-            return self[path[1:]]
+        if path.startswith("."):
+            try:
+                return super().__getitem__(path[1:])
+            except Exception:
+                raise KeyError(path)
         return import_name(path)

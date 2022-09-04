@@ -154,3 +154,11 @@ def test_create_entity():
 async def test_precreate_entity():
     async with Context(queue=TimestampQueue()) as ctx:
         assert isinstance(ctx.queue, TimestampQueue)
+
+
+async def test_get_object():
+    async with Context({"a": 1}, q=TimestampQueue()) as ctx:
+        assert ctx.get_object(".q") is not None
+
+        with pytest.raises(KeyError):
+            assert ctx.get_object(".a")
