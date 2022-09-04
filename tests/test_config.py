@@ -185,6 +185,11 @@ def test_value_extractor_uri():
     assert e.get_url('a') == URL('/a')
 
 
+def test_value_extractor_kwargs():
+    e = ValueExtractor(a=1)
+    assert e.get_int("a") == 1
+
+
 def test_value_extractor_path():
     e = ValueExtractor(os.environ)
     if os.name == 'nt':
