@@ -9,6 +9,8 @@ Development
 * Improve Python 3.10 support and drop 3.6 (#103) @rossnomann
 * Add utils.random_seed and run on current process
 * Use yaml.SafeLoader instead of yaml.Loader
+* Context kwargs with instance of Entity (#113)
+* ValueExtractor support kwargs (#113)
 
 
 
