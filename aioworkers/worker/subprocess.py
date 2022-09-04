@@ -3,7 +3,19 @@ import shlex
 import subprocess
 import sys
 import weakref
-from typing import Mapping, Sequence
+from asyncio.subprocess import Process
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
+
+from aioworkers.core.config import ValueExtractor
 
 from .. import utils
 from ..core.formatter import FormattedEntity
@@ -25,118 +37,123 @@ class Subprocess(FormattedEntity, Worker):
         format: [json|str|bytes]
     """
 
+    _event: asyncio.Event
+    _subprocess_kwargs: MutableMapping[str, Any]
+    _processes: MutableMapping[int, Process]
+    _cmd: Tuple[str, ...]
+    _shell: bool
+    _keeper: Optional[asyncio.Task]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._processes = weakref.WeakValueDictionary()
-        self._cmd = ''
+        self._cmd = ()
         self._shell = False
         self._config_stdin = False
         self._wait = True
         self._daemon = False
         self._keeper = None
-        self.params = {}
+        self.params = {"python": sys.executable, "worker": self}
+        self._subprocess_kwargs = {}
 
-    async def init(self):
-        if self.config.get('stdin'):
-            stdin = getattr(subprocess, self.config.get('stdin'))
-        elif 'stdin' in self.config:
-            stdin = None
-        else:
-            stdin = subprocess.PIPE
+    def set_config(self, config: ValueExtractor):
+        super().set_config(config)
 
-        if self.config.get('stdout'):
-            stdout = getattr(subprocess, self.config.get('stdout'))
-        elif 'stdout' in self.config:
-            stdout = None
-        else:
-            stdout = subprocess.PIPE
+        if self.config.get("stdin"):
+            stdin = getattr(subprocess, self.config.get("stdin"))
+            self._subprocess_kwargs["stdin"] = stdin
+        elif "stdin" not in self.config:
+            self._subprocess_kwargs["stdin"] = subprocess.PIPE
 
-        if self.config.get('stderr'):
-            stderr = getattr(subprocess, self.config.get('stderr'))
-        else:
-            stderr = None
-        self._wait = self.config.get('wait', True)
+        if self.config.get("stdout"):
+            stdout = getattr(subprocess, self.config.get("stdout"))
+            self._subprocess_kwargs["stdout"] = stdout
+        elif "stdout" not in self.config:
+            self._subprocess_kwargs["stdout"] = subprocess.PIPE
+
+        if self.config.get("stderr"):
+            stderr = getattr(subprocess, self.config.get("stderr"))
+            self._subprocess_kwargs["stderr"] = stderr
+
+        self._wait = self.config.get("wait", True)
 
         self._config_stdin = False
 
-        if 'aioworkers' in self.config:
-            cmd = ['{python}', '-m', 'aioworkers', '--config-stdin']
-            value = self.config['aioworkers']
+        is_shell = False
+        if "aioworkers" in self.config:
+            cmd = ["{python}", "-m", "aioworkers", "--config-stdin"]
+            value = self.config["aioworkers"]
             if isinstance(value, str):
                 cmd.append(value)
-                cmd = ' '.join(cmd)
+                cmd = [" ".join(cmd)]
+                is_shell = True
             elif isinstance(value, list):
                 cmd.extend(value)
             else:
                 raise TypeError(value)
-            stdin = subprocess.PIPE
+            self._subprocess_kwargs["stdin"] = subprocess.PIPE
             self._config_stdin = True
-        elif 'cmd' in self.config:
-            cmd = self.config['cmd']
         else:
-            raise ValueError
-        self._cmd = cmd
-        self._shell = self.config.get('shell', isinstance(cmd, str))
-        if self._shell:
-            coro = asyncio.create_subprocess_shell
-        else:
-            coro = asyncio.create_subprocess_exec
-        self.create_subprocess = lambda *args: coro(
-            *args,
-            stdin=stdin,
-            stdout=stdout,
-            stderr=stderr,
-        )
+            cmd = self.config.get("cmd")
+            if isinstance(cmd, str):
+                cmd = [cmd]
+                is_shell = True
+            elif not isinstance(cmd, (list, tuple)):
+                raise ValueError(cmd)
+        self._cmd = tuple(cmd)
+        self._shell = self.config.get("shell", is_shell)
 
-        self.params = dict(self.config.get('params', ()))
-        self.params.setdefault('python', sys.executable)
-        self.params.setdefault('config', self.config)
-        self.params.setdefault('worker', self)
+        self.params.update(dict(self.config.get("params", ())))
+        self.params.setdefault("config", self.config)
 
-        self._daemon = self.config.get('daemon')
+        self._daemon = self.config.get("daemon")
         self._keeper = None
         if self._daemon:
             self._wait = False
+
+    async def init(self):
         self._event = asyncio.Event()
         self._event.clear()
         await super().init()
 
     @property
-    def process(self):
+    def process(self) -> Optional[Process]:
         for p in self._processes.values():
             if p.returncode is None:
                 return p
+        return None
 
-    def make_command(self, value):
-        cmd = self._cmd
-        args = ()
+    def create_subprocess(self, *args) -> Coroutine[Any, Any, Process]:
+        c: Callable[..., Coroutine[Any, Any, Process]]
+        if self._shell:
+            c = asyncio.create_subprocess_shell
+        else:
+            c = asyncio.create_subprocess_exec
+        return c(*args, **self._subprocess_kwargs)
+
+    def make_command(self, value: Any = None) -> Tuple[str, ...]:
+        args: Sequence[str] = ()
         m = dict(self.params)
         if isinstance(value, Mapping):
             m.update(value)
-        elif isinstance(value, Sequence):
-            args = value
         elif isinstance(value, str):
             args = (value,)
+        elif isinstance(value, Sequence):
+            args = value
 
-        is_cmd_str = isinstance(cmd, str)
+        cmd = [part.format_map(m) for part in self._cmd]
 
-        if is_cmd_str:
-            cmd = cmd.format_map(m)
-        else:
-            cmd = [part.format_map(m) for part in cmd]
+        if self._shell:
             cmd.extend(args)
-
-        if self._shell and not is_cmd_str:
-            cmd = ' '.join(cmd)
-        elif not self._shell and is_cmd_str:
-            cmd = shlex.split(cmd)
-        if isinstance(cmd, str):
-            cmd = (cmd,)
-        return cmd
+            return (" ".join(cmd),)
+        elif not self._shell and len(self._cmd) == 1:
+            cmd = shlex.split(cmd[0])
+        cmd.extend(args)
+        return tuple(cmd)
 
     async def run_cmd(self, *args, **kwargs):
         if len(args) > 1:
-            value = args
+            value: Any = args
         elif args:
             value = args[0]
         elif kwargs:
@@ -144,7 +161,7 @@ class Subprocess(FormattedEntity, Worker):
         else:
             value = None
         cmd = self.make_command(value)
-        self.logger.info(' '.join(cmd))
+        self.logger.info(" ".join(cmd))
         process = await self.create_subprocess(*cmd)
         self._processes[process.pid] = process
         if self._config_stdin:
