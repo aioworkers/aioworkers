@@ -14,9 +14,9 @@ async def test_autorun(event_loop):
             autorun=True,
             sleep=1,
             cmd="echo",
-            stdin='PIPE',
-            stdout='PIPE',
-            stderr='PIPE',
+            stdin="PIPE",
+            stdout="PIPE",
+            stderr="PIPE",
         )
     )
     async with Context(config, loop=event_loop) as context:
