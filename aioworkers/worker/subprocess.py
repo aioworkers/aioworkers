@@ -94,7 +94,7 @@ class Subprocess(FormattedEntity, Worker):
             self._subprocess_kwargs["stdin"] = subprocess.PIPE
             self._config_stdin = True
         else:
-            cmd = self.config.get("cmd")
+            cmd = self.config.get("cmd") or ()
             if isinstance(cmd, str):
                 cmd = [cmd]
                 is_shell = True
