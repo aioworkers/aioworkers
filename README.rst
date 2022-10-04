@@ -21,6 +21,10 @@ aioworkers
 .. image:: https://img.shields.io/pypi/dm/aioworkers.svg
     :target: https://pypi.org/project/aioworkers
 
+.. image:: https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg
+   :alt: Hatch project
+   :target: https://github.com/pypa/hatch
+
 
 Easy configurable workers based on asyncio
 
