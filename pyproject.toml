@@ -100,7 +100,7 @@ testpaths = ["tests", "aioworkers"]
 addopts = ["-s", "--doctest-modules"]
 
 [tool.coverage.run]
-branch = true
+branch = false
 parallel = true
 omit = [
     "aioworkers/__init__.py",
