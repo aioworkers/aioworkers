@@ -142,7 +142,7 @@ dependencies = [
 ]
 [tool.hatch.envs.style.scripts]
 check = [
-    "flake8 aioworkers tests",
+    "flake8 --max-line-length 120 aioworkers tests",
     "isort --check-only --diff aioworkers tests",
     "black --check --diff aioworkers tests",
     "mypy aioworkers tests",

@@ -31,7 +31,7 @@ jobs:
         isort -c aioworkers tests
     - name: flake8
       run: |
-        flake8 aioworkers tests
+        flake8 --max-line-length 120 aioworkers tests
     - name: mypy
       run: |
         mypy aioworkers tests
