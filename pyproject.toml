@@ -1,0 +1,154 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aioworkers"
+dynamic = [
+    "version",
+    "readme",
+]
+description = "Easy configurable workers based on asyncio"
+license = "Apache-2.0"
+requires-python = ">=3.7"
+authors = [
+    { name = "Alexander Malev", email = "yttrium@somedev.ru" },
+]
+keywords = [
+    "aioworkers",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = []
+
+[project.optional-dependencies]
+aiohttp = [
+    "aioworkers-aiohttp",
+    "uvloop",
+]
+sentry = [
+    "aioworkers-sentry",
+]
+prometheus = [
+    "aioworkers-prometheus",
+]
+web = [
+    "httptools",
+    "uvloop",
+    "pyyaml",
+]
+cron = [
+    "crontab",
+]
+
+[project.scripts]
+aioworkers = "aioworkers.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/aioworkers/aioworkers"
+Documentation = "https://aioworkers.readthedocs.io"
+Issues = "https://github.com/aioworkers/aioworkers/issues"
+Source = "https://github.com/aioworkers/aioworkers"
+
+[tool.hatch.version]
+path = "aioworkers/__init__.py"
+
+[tool.hatch.metadata.hooks.custom]
+readme_content_type = "text/x-rst"
+readme = "README.rst"
+history = "HISTORY.rst"
+
+[tool.hatch.build]
+ignore-vcs = true
+include = [
+    "/aioworkers",
+]
+
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "pytest-aioworkers",
+    "pytest-timeout",
+    "pytest-mock",
+    "pyyaml",
+    "msgpack",
+    "bson",
+    "ipykernel",
+    "httptools",
+    "crontab",
+]
+[tool.hatch.envs.default.scripts]
+cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=aioworkers --cov=tests --cov-report=html"
+no-cov = "cov --no-cov"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests", "aioworkers"]
+addopts = ["-s", "--doctest-modules"]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+omit = [
+    "aioworkers/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.black]
+line-length = 120
+target-version = ["py37", "py38", "py39", "py310"]
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+
+[tool.mypy]
+follow_imports = "silent"
+strict_optional = true
+warn_redundant_casts = true
+ignore_missing_imports = true
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.hatch.envs.style]
+detached = true
+dependencies = [
+    "flake8",
+    "black",
+    "isort",
+    "mypy",
+]
+[tool.hatch.envs.style.scripts]
+check = [
+    "flake8 aioworkers tests",
+    "isort --check-only --diff aioworkers tests",
+    "black --check --diff aioworkers tests",
+    "mypy aioworkers tests",
+]
+fmt = [
+    "isort aioworkers tests",
+    "black aioworkers tests",
+    "check",
+]
