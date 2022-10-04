@@ -139,6 +139,8 @@ dependencies = [
     "black",
     "isort",
     "mypy",
+    "types-PyYAML",
+    "types-setuptools",
 ]
 [tool.hatch.envs.style.scripts]
 check = [

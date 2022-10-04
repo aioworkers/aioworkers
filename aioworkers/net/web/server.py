@@ -14,7 +14,6 @@ from .protocol import Protocol
 class WebServer(SocketServer, Worker):
     _handler: Callable[
         [
-            Any,
             Mapping,
             Callable[[], Awaitable],
             Callable[[Mapping], Awaitable],
