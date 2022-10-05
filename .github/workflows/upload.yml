@@ -18,6 +18,9 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade hatch mypy
     - name: Build and publish
+      env:
+        HATCH_INDEX_USER: __token__
+        HATCH_INDEX_AUTH: ${{ secrets.HATCH_INDEX_AUTH }}
       run: |
         hatch version $GITHUB_REF_NAME
         stubgen aioworkers -o ./
