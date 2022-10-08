@@ -5,7 +5,7 @@ import mimetypes
 import os
 import re
 from abc import abstractmethod
-from collections import ChainMap, OrderedDict
+from collections import ChainMap, OrderedDict, abc
 from pathlib import Path
 from typing import (
     Any,
@@ -406,7 +406,7 @@ extractors: Mapping[str, Callable] = {
 TValueExtractor = TypeVar('TValueExtractor', bound='ValueExtractor')
 
 
-class ValueExtractor(Mapping):
+class ValueExtractor(abc.Mapping):
     def __init__(self, mapping: Union[TValueExtractor, Mapping] = None, **kwargs):
         if isinstance(mapping, ValueExtractor):
             self._val: Mapping = mapping._val
