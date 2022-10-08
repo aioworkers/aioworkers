@@ -17,12 +17,19 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade hatch mypy
-    - name: Build and publish
-      env:
-        HATCH_INDEX_USER: __token__
-        HATCH_INDEX_AUTH: ${{ secrets.HATCH_INDEX_AUTH }}
+    - name: Build
       run: |
         hatch version $GITHUB_REF_NAME
         stubgen aioworkers -o ./
         hatch build
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist
+    - name: Publish
+      env:
+        HATCH_INDEX_USER: __token__
+        HATCH_INDEX_AUTH: ${{ secrets.HATCH_INDEX_AUTH }}
+      run: |
         hatch publish
