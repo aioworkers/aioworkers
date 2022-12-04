@@ -84,7 +84,7 @@ class TimestampQueue(ScoreQueueMixin, AbstractQueue):
             self._min_timestamp = item.timestamp
             self._loop.call_at(item.timestamp - self._base_timestamp, self._on_time)
 
-    async def get(self, score: bool = False, *, timeout: float = None):
+    async def get(self, score: bool = False, *, timeout: Optional[float] = None):
         item = self._pop()
         if item is None:
             pass

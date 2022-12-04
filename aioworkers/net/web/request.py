@@ -3,9 +3,9 @@ from typing import (
     Any,
     Awaitable,
     Callable,
-    List,
     Mapping,
     Optional,
+    Sequence,
     Tuple,
 )
 from urllib.parse import SplitResult
@@ -81,7 +81,7 @@ class Request:
         status: int = 200,
         reason: str = '',
         format: Optional[str] = None,
-        headers: List[Tuple[str, str]] = None,
+        headers: Sequence[Tuple[str, str]] = (),
     ):
         if self._finised:
             return

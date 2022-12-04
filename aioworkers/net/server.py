@@ -1,5 +1,5 @@
 import socket
-from typing import List
+from typing import List, Optional
 
 from ..core.base import LoggingEntity
 
@@ -22,7 +22,7 @@ class SocketServer(LoggingEntity):
         super().set_context(context)
         context.on_cleanup.append(self.cleanup)
 
-    def bind(self, port: int, host: str = None) -> List[socket.socket]:
+    def bind(self, port: int, host: Optional[str] = None) -> List[socket.socket]:
         if not port:
             return []
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

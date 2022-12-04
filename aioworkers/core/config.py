@@ -407,7 +407,11 @@ TValueExtractor = TypeVar('TValueExtractor', bound='ValueExtractor')
 
 
 class ValueExtractor(abc.Mapping):
-    def __init__(self, mapping: Union[TValueExtractor, Mapping] = None, **kwargs):
+    def __init__(
+        self,
+        mapping: Union[TValueExtractor, Mapping, None] = None,
+        **kwargs,
+    ):
         if isinstance(mapping, ValueExtractor):
             self._val: Mapping = mapping._val
         elif kwargs:

@@ -1,9 +1,9 @@
 import re
 from math import log2
-from typing import Union
+from typing import Sequence, Union
 
 
-def size(value: int, suffixes: list = None) -> str:
+def size(value: int, suffixes: Sequence[str] = ()) -> str:
     """
     >>> size(1024)
     '1 KB'

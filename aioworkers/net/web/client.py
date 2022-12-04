@@ -69,7 +69,7 @@ class Session:
     def __init__(
         self,
         runner: Callable[..., Awaitable[Any]],
-        headers: Mapping = None,
+        headers: Optional[Mapping] = None,
         conn_timeout: float = 60,
         read_timeout: float = 60,
         handlers: Optional[Tuple[urllib.request.BaseHandler]] = None,
