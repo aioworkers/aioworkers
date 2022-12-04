@@ -139,7 +139,7 @@ class Signal:
     LOG_RUN = 'To emit in %s'
     LOG_END = '[%s/%s] End for %s'
 
-    def __init__(self, context: 'Context', name: str = None):
+    def __init__(self, context: 'Context', name: Optional[str] = None):
         self._counter = 0
         self._signals = []  # type: List
         self._context = context
