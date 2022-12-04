@@ -11,6 +11,7 @@ Development
 * Use yaml.SafeLoader instead of yaml.Loader
 * Context kwargs with instance of Entity (#113)
 * ValueExtractor support kwargs (#113)
+* Links between entities (#112)
 
 
 
