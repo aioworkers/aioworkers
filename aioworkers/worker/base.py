@@ -3,9 +3,10 @@ import collections
 import datetime
 from abc import abstractmethod
 from functools import partial
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-from ..core.base import AbstractNamedEntity, LoggingEntity
+from ..core.base import AbstractNamedEntity, LoggingEntity, link
+from ..queue.base import AbstractQueue
 from ..utils import import_name
 
 
@@ -47,6 +48,9 @@ class Worker(AbstractWorker):
     _future = None
     _persist = False
 
+    input: Optional[AbstractQueue] = link(nullable=True)
+    output: Optional[AbstractQueue] = link(nullable=True)
+
     def __init__(self, *args, **kwargs):
         self.counter = collections.Counter()
         super().__init__(*args, **kwargs)
@@ -85,14 +89,6 @@ class Worker(AbstractWorker):
         if self.config.get('autorun'):
             self.context.on_start.append(self.start, groups)
         self.context.on_stop.append(self.stop, groups)
-
-    @property
-    def input(self):
-        return self.context[self.config.get('input')]
-
-    @property
-    def output(self):
-        return self.context[self.config.get('output')]
 
     async def work(self):
         self._is_sleep = False

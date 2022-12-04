@@ -79,9 +79,11 @@ class Supervisor(Worker):
         return cls(conf, context=self.context, loop=self.loop)
 
     async def get(self):
+        assert self.input is not None
         return await self.input.get()
 
     async def put(self, *args, **kwargs):
+        assert self.output is not None
         return await self.output.put(*args, **kwargs)
 
     async def work(self):

@@ -1,10 +1,11 @@
 import asyncio
 import logging
+import warnings
 from abc import ABC, abstractmethod
 from functools import partial
-from typing import Mapping, Optional
+from typing import Any, Mapping, Optional, Tuple, Type, Union
 
-from ..utils import import_name
+from ..utils import import_name, import_uri
 from .config import ValueExtractor
 
 
@@ -13,6 +14,7 @@ class AbstractEntity(ABC):
         self._loop = kwargs.pop('loop', None)
         self._config = ValueExtractor(kwargs)
         self._context = None
+        self._links = {}
         if context is not None:
             self.set_context(context)
         if config is not None:
@@ -30,6 +32,7 @@ class AbstractEntity(ABC):
         else:
             raise TypeError('Config must be instance of ValueExtractor')
         self._config = config.new_parent(self._config)
+        self._links.clear()
 
     @property
     def context(self):
@@ -50,6 +53,64 @@ class AbstractEntity(ABC):
     @property
     def loop(self):
         return self._loop
+
+
+class Link:
+    def __init__(self, *path: Union[str, int], nullable=False, key: str = ""):
+        self._path: Tuple[Union[str, int], ...] = path
+        self._name: str = key
+        self._nullable: bool = nullable
+        self._cls: Optional[Type] = None
+
+    def __set_name__(self, owner, name):
+        cls = owner.__annotations__.get(name)
+        if isinstance(cls, type):
+            self._cls = cls
+        self._name = name
+
+    def __get__(self, obj: AbstractEntity, owner: Type[AbstractEntity]) -> Any:
+        links: dict = obj._links
+        result: Any = links.get(self._name, ...)
+        if result is ...:
+            path: Optional[str] = obj.config.get(self._name)
+            if path:
+                if not path.startswith('.'):
+                    name = getattr(obj, 'name', None) or import_uri(owner)
+                    warnings.warn(
+                        f"Deprecated path on context without dot at start {path} in key {name}.{self._name}",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
+                    path = '.' + path
+                result = obj.context.get_object(path)
+                if not isinstance(result, AbstractEntity):
+                    raise TypeError(result, f"Expect Entity by {path}")
+            elif not self._nullable:
+                raise KeyError(self._name)
+            else:
+                links[self._name] = None
+                return None
+            r: Any = result
+            for p in self._path:
+                if isinstance(p, int):
+                    r = r[p]
+                elif hasattr(r, p):
+                    r = getattr(r, p)
+                else:
+                    r = r[p]
+
+                if r is None and self._nullable:
+                    return None
+
+            if self._cls and not isinstance(r, self._cls):
+                raise TypeError(r, f'Expected {self._cls}')
+            links[self._name] = r
+            result = r
+        return result
+
+
+def link(*path, nullable=False) -> Any:
+    return Link(*path, nullable=nullable)
 
 
 class AbstractNamedEntity(AbstractEntity):
