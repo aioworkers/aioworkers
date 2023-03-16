@@ -218,7 +218,7 @@ class Signal:
                 opt_awaitable = self._run_sync(name, i)
                 if opt_awaitable is None:
                     continue
-                awaitable = self._run_async(name, opt_awaitable)
+                awaitable = self._run_async(name, opt_awaitable, finish_only=True)
                 coro = wraps(i)(lambda x: x)(awaitable)
             else:
                 continue
