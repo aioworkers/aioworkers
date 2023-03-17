@@ -204,22 +204,14 @@ class Signal:
             name = instance and repr(instance) or repr(i)
             if isinstance(instance, AbstractEntity):
                 name = instance.config.get('name') or repr(instance)
-            if asyncio.iscoroutinefunction(i):
-                params = inspect.signature(i).parameters
-                if 'context' in params:
-                    awaitable = i(self._context)
-                else:
-                    awaitable = i()
-                awaitable = self._run_async(name, awaitable)
-                coro = wraps(i)(lambda x: x)(awaitable)
-            elif isinstance(i, Awaitable):
-                coro = self._run_async(name, i)
-            elif callable(i):
+            if callable(i):
                 opt_awaitable = self._run_sync(name, i)
                 if opt_awaitable is None:
                     continue
                 awaitable = self._run_async(name, opt_awaitable, finish_only=True)
                 coro = wraps(i)(lambda x: x)(awaitable)
+            elif isinstance(i, Awaitable):
+                coro = self._run_async(name, i)
             else:
                 continue
             coros.append(coro)
