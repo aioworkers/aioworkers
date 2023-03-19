@@ -161,8 +161,9 @@ class Signal:
             groups = {str(g) for g in groups}
         self._signals.append((signal, groups))
 
-    async def _run_async(self, name: str, awaitable: Awaitable) -> None:
-        self._logger.info(self.LOG_RUN, name)
+    async def _run_async(self, name: str, awaitable: Awaitable, finish_only: bool = False) -> None:
+        if not finish_only:
+            self._logger.info(self.LOG_RUN, name)
         await awaitable
         self._counter += 1
         self._logger.info(
@@ -172,14 +173,16 @@ class Signal:
             name,
         )
 
-    def _run_sync(self, name: str, func: Callable) -> None:
+    def _run_sync(self, name: str, func: Callable) -> Optional[Awaitable]:
         params = inspect.signature(func).parameters
         self._logger.info(self.LOG_RUN, name)
         try:
             if 'context' in params:
-                func(self._context)
+                result = func(self._context)
             else:
-                func()
+                result = func()
+            if isinstance(result, Awaitable):
+                return result
             self._counter += 1
             self._logger.info(
                 self.LOG_END,
@@ -189,6 +192,7 @@ class Signal:
             )
         except Exception:
             self._logger.exception('Error on run signal %s', self._name)
+        return None
 
     def _send(self, group_resolver: 'GroupResolver') -> List[Awaitable]:
         self._counter = 0
@@ -200,19 +204,14 @@ class Signal:
             name = instance and repr(instance) or repr(i)
             if isinstance(instance, AbstractEntity):
                 name = instance.config.get('name') or repr(instance)
-            if asyncio.iscoroutinefunction(i):
-                params = inspect.signature(i).parameters
-                if 'context' in params:
-                    awaitable = i(self._context)
-                else:
-                    awaitable = i()
-                awaitable = self._run_async(name, awaitable)
+            if callable(i):
+                opt_awaitable = self._run_sync(name, i)
+                if opt_awaitable is None:
+                    continue
+                awaitable = self._run_async(name, opt_awaitable, finish_only=True)
                 coro = wraps(i)(lambda x: x)(awaitable)
             elif isinstance(i, Awaitable):
                 coro = self._run_async(name, i)
-            elif callable(i):
-                self._run_sync(name, i)
-                continue
             else:
                 continue
             coros.append(coro)
