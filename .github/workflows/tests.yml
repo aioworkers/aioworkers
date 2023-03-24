@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3.4.0
+    - uses: actions/checkout@v3.5.0
     - name: Set up Python 3.10
       uses: actions/setup-python@v4.5.0
       with:
@@ -60,7 +60,7 @@ jobs:
         - 'pypy-3.9'
 
     steps:
-    - uses: actions/checkout@v3.4.0
+    - uses: actions/checkout@v3.5.0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4.5.0
       with:
@@ -84,7 +84,7 @@ jobs:
         python-version: [3.7]
 
     steps:
-    - uses: actions/checkout@v3.4.0
+    - uses: actions/checkout@v3.5.0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4.5.0
       with:
@@ -108,7 +108,7 @@ jobs:
         python-version: [3.7]
 
     steps:
-      - uses: actions/checkout@v3.4.0
+      - uses: actions/checkout@v3.5.0
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4.5.0
         with:
