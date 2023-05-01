@@ -11,34 +11,59 @@ on:
 
 jobs:
   tests:
+    strategy:
+      max-parallel: 7
+      matrix:
+        os:
+          - ubuntu-latest
+        python-version:
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - pypy-3.7
+        include:
+          - os: ubuntu-latest
+            python-version: '3.7'
+            coverage: true
+            lint: true
+          - os: macOS-latest
+            python-version: '3.7'
+          - os: windows-latest
+            python-version: '3.7'
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3.5.2
-    - name: Set up Python 3.10
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4.6.0
       with:
-        python-version: '3.10'
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        pip install -U pip setuptools
-        pip install -U pipenv codecov
-        pip install -e .
-        pipenv install -d --skip-lock --system
+        pip install -U hatch
     - name: isort
+      if: ${{ matrix.lint }}
       run: |
         isort -c aioworkers tests
     - name: flake8
+      if: ${{ matrix.lint }}
       run: |
         flake8 --max-line-length 120 aioworkers tests
     - name: mypy
+      if: ${{ matrix.lint }}
       run: |
-        mypy aioworkers tests
-    - name: Test with pytest
+        hatch run style:mypy aioworkers tests
+    - name: Test with pytest & coverage
       run: |
-        pytest --cov=aioworkers --cov-report=xml
+        hatch run cov
+    - name: coverage.xml
+      if: ${{ matrix.coverage }}
+      run: |
+        hatch run coverage report
+        hatch run coverage xml
     - name: Upload coverage to Codecov
+      if: ${{ matrix.coverage }}
       uses: codecov/codecov-action@v3.1.3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -46,82 +71,3 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
-
-  tests-on-ubuntu:
-
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
-      matrix:
-        python-version:
-        - '3.7'
-        - '3.8'
-        - '3.9'
-        - 'pypy-3.9'
-
-    steps:
-    - uses: actions/checkout@v3.5.2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4.6.0
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install -U pip setuptools
-        pip install -U pipenv ipykernel httptools bson msgpack pytest-asyncio
-        pip install -e .
-        pipenv install --skip-lock --system
-    - name: Test with pytest
-      run: |
-        pytest
-
-  tests-on-macos:
-
-    runs-on: macOS-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.7]
-
-    steps:
-    - uses: actions/checkout@v3.5.2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4.6.0
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install -U pip setuptools
-        pip install -U pipenv codecov
-        pip install -e .
-        pipenv install -d --skip-lock --system
-    - name: Test with pytest
-      run: |
-        pytest
-
-  tests-on-windows:
-
-    runs-on: windows-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.7]
-
-    steps:
-      - uses: actions/checkout@v3.5.2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4.6.0
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          pip install -U pip setuptools
-          pip install -U pipenv codecov bson msgpack
-          pip install -e .
-          pip install pytest-aioworkers
-          pipenv install --skip-lock --system
-        continue-on-error: true
-      - name: Test with pytest
-        run: |
-          pytest
-        continue-on-error: true
