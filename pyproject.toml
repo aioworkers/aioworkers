@@ -78,8 +78,7 @@ include = [
 dependencies = [
     "pytest",
     "pytest-cov",
-    "pytest-asyncio",
-    "pytest-aioworkers",
+    "pytest-aioworkers[asyncio,aiohttp]",
     "pytest-timeout",
     "pytest-mock",
     "pyyaml",
