@@ -103,7 +103,7 @@ include = [
 features = [
     "dev-test",
     "web",
-    "crontab",
+    "cron",
 ]
 [tool.hatch.envs.default.scripts]
 cov = "coverage run -m pytest && coverage report"
