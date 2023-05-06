@@ -73,7 +73,6 @@ dev-test = [
     "ipykernel==6.16.2",
     "ipython==7.34.0",
     "httptools==0.5.0",
-    "uvloop==0.17.0",
 ]
 
 [project.scripts]
@@ -102,7 +101,6 @@ include = [
 [tool.hatch.envs.default]
 features = [
     "dev-test",
-    "web",
     "cron",
 ]
 [tool.hatch.envs.default.scripts]
