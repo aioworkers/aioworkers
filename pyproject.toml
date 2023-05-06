@@ -117,7 +117,7 @@ addopts = ["-s", "--doctest-modules"]
 
 [tool.coverage.run]
 branch = false
-parallel = true
+parallel = false
 omit = [
     "aioworkers/__init__.py",
     "hatch_build.py",
