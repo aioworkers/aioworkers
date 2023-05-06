@@ -5,19 +5,19 @@ import logging.config
 import os
 from collections import OrderedDict
 from functools import wraps
+from typing import Iterable  # noqa
+from typing import Tuple  # noqa
+from typing import Type  # noqa
 from typing import (
     Awaitable,
     Callable,
     FrozenSet,
-    Iterable,
     List,
     Mapping,
     MutableMapping,
     Optional,
     Sequence,
     Set,
-    Tuple,
-    Type,
     TypeVar,
     Union,
 )
