@@ -1,10 +1,12 @@
+from typing import Optional
+
 from aioworkers.core.base import AbstractWriter, LoggingEntity
 from aioworkers.net.sender import AbstractSender
 from aioworkers.worker.base import Worker as BaseWorker
 
 
 class Facade(LoggingEntity, AbstractSender):
-    _queue = None  # type: AbstractWriter
+    _queue: Optional[AbstractWriter] = None
 
     async def init(self):
         await super().init()

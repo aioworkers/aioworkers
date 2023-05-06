@@ -128,13 +128,13 @@ strict_optional = true
 warn_redundant_casts = true
 ignore_missing_imports = true
 
-[tool.flake8]
-max-line-length = 120
+[tool.ruff]
+line-length = 120
 
 [tool.hatch.envs.style]
 detached = true
 dependencies = [
-    "flake8",
+    "ruff",
     "black",
     "isort",
     "mypy",
@@ -143,7 +143,7 @@ dependencies = [
 ]
 [tool.hatch.envs.style.scripts]
 check = [
-    "flake8 --max-line-length 120 aioworkers tests",
+    "ruff check aioworkers tests",
     "isort --check-only --diff aioworkers tests",
     "black --check --diff aioworkers tests",
     "mypy aioworkers tests",

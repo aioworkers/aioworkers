@@ -522,7 +522,7 @@ class ValueExtractor(abc.Mapping):
         if isinstance(self._val, ChainMap):
             maps = iter(reversed(self._val.maps))
             stack = []
-            keys = set()  # type: Set[str]
+            keys: Set[str] = set()
             for m in maps:
                 if isinstance(m, MergeDict):
                     keys.update(m)
