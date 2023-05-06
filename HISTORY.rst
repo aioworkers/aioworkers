@@ -5,6 +5,17 @@ History
 Development
 -----------
 
+
+
+0.21.1 (2023-03-20)
+-------------------
+
+* Check awaitable for non coro from cython
+
+
+0.21 (2022-12-11)
+-----------------
+
 * Improve timeout queue (#108, #109)
 * Improve Python 3.10 support and drop 3.6 (#103) @rossnomann
 * Add utils.random_seed and run on current process
