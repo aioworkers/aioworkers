@@ -204,15 +204,21 @@ class YamlLoader(ConfigFileLoader):
 class TomlLoader(ConfigFileLoader):
     extensions = (".toml",)
 
+    _load: Callable
+    _load_fd: Callable
+
     def __init__(self, *args, **kwargs):
         try:
             import tomllib
         except ImportError:
             import tomli as tomllib
         setattr(self, '_load', tomllib.loads)
-        setattr(self, 'load_fd', lambda tio: tomllib.load(tio.buffer))
+        setattr(self, '_load_fd', tomllib.load)
 
-    def load_str(self, s):
+    def load_fd(self, fd) -> Mapping:
+        return self._load_fd(fd.buffer)
+
+    def load_str(self, s: str) -> Mapping:
         return self._load(s)
 
 
