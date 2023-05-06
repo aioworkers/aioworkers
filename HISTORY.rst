@@ -5,6 +5,9 @@ History
 Development
 -----------
 
+* Support py3.11 (#142)
+* Support toml config (#136)
+
 
 
 0.21.1 (2023-03-20)
