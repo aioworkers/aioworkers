@@ -53,6 +53,27 @@ cron = [
 toml = [
     "tomli ; python_version < '3.11'",
 ]
+dev-lint = [
+    "black==23.3.0",
+    "isort==5.12.0",
+    "mypy==1.2.0",
+    "ruff==0.0.265",
+    "types-PyYAML",
+]
+dev-test = [
+    "coverage[toml]==7.2.5",
+    "pytest==7.3.1",
+    "pytest-aioworkers[asyncio,aiohttp]==0.4",
+    "pytest-mock==3.10.0",
+    "pytest-timeout==2.1.0",
+    "pyyaml==6.0",
+    "msgpack==1.0.5",
+    "bson==0.5.10",
+    "ipykernel==6.16.2",
+    "ipython==7.34.0",
+    "httptools==0.5.0",
+    "uvloop==0.17.0",
+]
 
 [project.scripts]
 aioworkers = "aioworkers.cli:main"
@@ -78,22 +99,17 @@ include = [
 ]
 
 [tool.hatch.envs.default]
-dependencies = [
-    "pytest",
-    "pytest-cov",
-    "pytest-aioworkers[asyncio,aiohttp]",
-    "pytest-timeout",
-    "pytest-mock",
-    "pyyaml",
-    "msgpack",
-    "bson",
-    "ipykernel",
-    "httptools",
+features = [
+    "dev-test",
+    "web",
     "crontab",
 ]
 [tool.hatch.envs.default.scripts]
-cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=aioworkers --cov=tests --cov-report=html"
+cov = "coverage run -m pytest && coverage report"
 no-cov = "cov --no-cov"
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -135,14 +151,8 @@ ignore_missing_imports = true
 line-length = 120
 
 [tool.hatch.envs.style]
-detached = true
-dependencies = [
-    "ruff",
-    "black",
-    "isort",
-    "mypy",
-    "types-PyYAML",
-    "types-setuptools",
+features = [
+    "dev-lint",
 ]
 [tool.hatch.envs.style.scripts]
 check = [
