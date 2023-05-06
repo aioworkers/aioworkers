@@ -11,6 +11,12 @@ aioworkers
 .. image:: https://codecov.io/gh/aioworkers/aioworkers/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/aioworkers/aioworkers
 
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v0.json
+   :target: https://github.com/charliermarsh/ruff
+
+.. image:: https://img.shields.io/badge/types-Mypy-blue.svg
+   :target: https://github.com/python/mypy
+
 .. image:: https://readthedocs.org/projects/aioworkers/badge/?version=latest
   :target: https://aioworkers.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
