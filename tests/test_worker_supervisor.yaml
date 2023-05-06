@@ -11,8 +11,8 @@ super.queue:
   cls: aioworkers.core.context.Context
   sv:
     autorun: true
-    input: q1
-    output: q2
+    input: .q1
+    output: .q2
     children: [a]
     cls: aioworkers.worker.supervisor.Supervisor
     child:

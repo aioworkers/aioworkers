@@ -10,7 +10,7 @@ class Facade(LoggingEntity, AbstractSender):
 
     async def init(self):
         await super().init()
-        self._queue = self.context[self.config.queue]
+        self._queue = self.context.get_object(self.config.queue)
 
     async def send_message(self, msg):
         await self._queue.put(msg)
