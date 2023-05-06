@@ -22,13 +22,17 @@ jobs:
           - '3.10'
           - pypy-3.8
           - pypy-3.9
+        continue-on-error:
+          - false
         include:
           - os: ubuntu-latest
             python-version: '3.8'
             coverage: true
             lint: true
+            continue-on-error: false
           - os: macOS-latest
             python-version: '3.8'
+            continue-on-error: false
           - os: windows-latest
             python-version: '3.8'
             continue-on-error: true
