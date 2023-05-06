@@ -10,6 +10,7 @@ from aioworkers.core.config import (
     IniLoader,
     MergeDict,
     StringReplaceLoader,
+    TomlLoader,
     ValueExtractor,
 )
 from aioworkers.http import URL
@@ -151,6 +152,18 @@ def test_ini():
             assert v == [1, 2]
         else:
             assert False
+
+
+def test_toml_path():
+    loader = TomlLoader()
+    cfg = loader.load_path("pyproject.toml")
+    assert cfg["project"], cfg
+
+
+def test_toml_str():
+    loader = TomlLoader()
+    cfg = loader.load_str("[project]\na = 1")
+    assert cfg["project"], cfg
 
 
 def test_string_replacer():

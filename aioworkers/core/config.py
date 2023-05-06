@@ -201,6 +201,27 @@ class YamlLoader(ConfigFileLoader):
         return self._load(s)
 
 
+class TomlLoader(ConfigFileLoader):
+    extensions = (".toml",)
+
+    _load: Callable
+    _load_fd: Callable
+
+    def __init__(self, *args, **kwargs):
+        try:
+            import tomllib
+        except ImportError:
+            import tomli as tomllib
+        setattr(self, '_load', tomllib.loads)
+        setattr(self, '_load_fd', tomllib.load)
+
+    def load_fd(self, fd) -> Mapping:
+        return self._load_fd(fd.buffer)
+
+    def load_str(self, s: str) -> Mapping:
+        return self._load(s)
+
+
 class JsonLoader(ConfigFileLoader):
     extensions = ('.json',)
     mime_types = ('application/json',)
@@ -388,6 +409,7 @@ registry = Registry()
 registry(YamlLoader)
 registry(JsonLoader)
 registry(IniLoader)
+registry(TomlLoader)
 
 
 extractors: Mapping[str, Callable] = {
