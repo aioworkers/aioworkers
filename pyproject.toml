@@ -70,7 +70,7 @@ dev-test = [
     "pyyaml==6.0",
     "msgpack==1.0.5",
     "bson==0.5.10",
-    "ipykernel==6.16.2",
+    "ipykernel==6.22.0",
     "ipython==7.34.0",
     "httptools==0.5.0",
 ]
