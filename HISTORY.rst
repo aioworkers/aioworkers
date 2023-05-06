@@ -10,7 +10,7 @@ Development
 0.21.1 (2023-03-20)
 -------------------
 
-* Check awaitable for non coro from cython
+* Check awaitable for non coro from cython (#127)
 
 
 0.21 (2022-12-11)
