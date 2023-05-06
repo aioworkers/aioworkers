@@ -6,7 +6,7 @@ def config_yaml():
     return """
     local_sender:
         cls: aioworkers.net.sender.proxy.Facade
-        queue: queue1
+        queue: .queue1
 
     queue1:
         cls: aioworkers.queue.base.Queue
@@ -14,12 +14,12 @@ def config_yaml():
     worker:
         cls: aioworkers.net.sender.proxy.Worker
         autorun: true
-        input: queue1
+        input: .queue1
         sender: remote_sender
 
     remote_sender:
         cls: aioworkers.net.sender.proxy.Facade
-        queue: queue2
+        queue: .queue2
 
     queue2:
         cls: aioworkers.queue.base.Queue

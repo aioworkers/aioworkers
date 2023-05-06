@@ -69,9 +69,9 @@ class Supervisor(Worker):
         conf = self.get_child_config(*args, **kwargs)
         add = {}
         if not conf.get('input') and self.input is not None:
-            add['input'] = self.name
+            add['input'] = "." + self.name
         if not conf.get('output') and self.output is not None:
-            add['output'] = self.name
+            add['output'] = "." + self.name
         cls = conf.get_obj('cls')
         add['name'] = '.'.join([self.name, conf.get('name', 'child')])
         if add:
