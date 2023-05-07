@@ -157,10 +157,17 @@ async def test_precreate_entity():
 
 
 async def test_get_object():
-    async with Context({
-        "a": 1,
-        "x": {"y": {"groups": ["a"]}}
-    }, q=TimestampQueue()) as ctx:
+    async with Context(
+        {
+            "a": 1,
+            "x": {
+                "y": {
+                    "groups": ["a"],
+                }
+            },
+        },
+        q=TimestampQueue(),
+    ) as ctx:
         assert ctx.get_object(".q") is not None
 
         assert ctx.get_object(".a")
