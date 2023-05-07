@@ -383,19 +383,15 @@ class Registry(dict):
     def __call__(self, cls):
         for ext in cls.extensions:
             if not isinstance(ext, str):
-                raise ValueError(
-                    'Extension expect string, given {!r}'.format(ext)
-                )
+                raise ValueError(f"Extension expect string, given {ext!r}")
             elif ext in self:
-                raise ValueError('Duplicate extension {}'.format(ext))
+                raise ValueError(f"Duplicate extension {ext}")
             self[ext] = cls
         for mime in cls.mime_types:
             if not isinstance(mime, str):
-                raise ValueError(
-                    'MimeType expect string, given {!r}'.format(mime)
-                )
+                raise ValueError(f"MimeType expect string, given {mime!r}")
             elif mime in self:
-                raise ValueError('Duplicate MimeType {}'.format(mime))
+                raise ValueError(f"Duplicate MimeType {mime}")
             self[mime] = cls
 
     def get(self, key):
@@ -445,7 +441,8 @@ class ValueExtractor(abc.Mapping):
 
     @classmethod
     def _mapping_factory(
-        cls: Type[TValueExtractor], *mappings: Mapping
+        cls: Type[TValueExtractor],
+        *mappings: Mapping,
     ) -> TValueExtractor:
         maps: Dict[int, Mapping] = OrderedDict()
         for m in mappings:
@@ -466,12 +463,16 @@ class ValueExtractor(abc.Mapping):
         super().__setattr__(key, value)
 
     def new_child(
-        self: TValueExtractor, *mappings: Mapping, **kwargs
+        self: TValueExtractor,
+        *mappings: Mapping,
+        **kwargs,
     ) -> TValueExtractor:
         return self._mapping_factory(*mappings, kwargs, self._val)
 
     def new_parent(
-        self: TValueExtractor, *mappings: Mapping, **kwargs
+        self: TValueExtractor,
+        *mappings: Mapping,
+        **kwargs,
     ) -> TValueExtractor:
         return self._mapping_factory(self._val, *mappings, kwargs)
 

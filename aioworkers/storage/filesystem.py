@@ -33,9 +33,7 @@ def flat(parts):
         for p in parts:
             yield from flat(p)
     else:
-        raise TypeError(
-            'Key must be relative path [str or Path]. ' 'But {}'.format(parts)
-        )
+        raise TypeError(f"Key must be relative path [str or Path]. But {parts}")
 
 
 class AsyncFile:
@@ -52,9 +50,7 @@ class AsyncFile:
         )
 
     async def write(self, *args, **kwargs):
-        return await self.storage.run_in_executor(
-            self.fd.write, *args, **kwargs
-        )
+        return await self.storage.run_in_executor(self.fd.write, *args, **kwargs)
 
     async def __aenter__(self):
         assert not self._closed
@@ -134,9 +130,7 @@ class AsyncPath(PurePath):
             cls = AsyncWindowsPath if os.name == 'nt' else AsyncPosixPath
         self = cls._from_parts(args, init=False)
         if not self._flavour.is_supported:
-            raise NotImplementedError(
-                "cannot instantiate %r on your system" % (cls.__name__,)
-            )
+            raise NotImplementedError(f"cannot instantiate {cls.__name__} on your system")
         if storage is None:
             for i in args:
                 if isinstance(i, AsyncPath):
@@ -156,9 +150,7 @@ class AsyncPath(PurePath):
         return await self.storage.run_in_executor(self.path.exists)
 
     async def mkdir(self, *args, **kwargs):
-        return await self.storage.run_in_executor(
-            self.path.mkdir, *args, **kwargs
-        )
+        return await self.storage.run_in_executor(self.path.mkdir, *args, **kwargs)
 
     async def stat(self) -> os.stat_result:
         return await self.storage.run_in_executor(self.path.stat)
@@ -188,9 +180,7 @@ class AsyncPath(PurePath):
         )
 
     async def write_bytes(self, *args, **kwargs):
-        return await self.storage.run_in_executor(
-            self.path.write_bytes, *args, **kwargs
-        )
+        return await self.storage.run_in_executor(self.path.write_bytes, *args, **kwargs)
 
     def _make_child(self, args):
         k = super()._make_child(args)  # type: ignore
@@ -267,7 +257,6 @@ class BaseFileSystemStorage(
     FormattedEntity,
     base.AbstractStorage,
 ):
-
     PARAM_LIMIT_FREE_SPACE = 'limit_free_space'
 
     def __init__(self, *args, **kwargs):
@@ -283,7 +272,7 @@ class BaseFileSystemStorage(
         if isinstance(result, int):
             result <<= 20  # int in MB
         elif isinstance(result, float):
-            result *= 2 ** 20  # float in MB
+            result *= 2**20  # float in MB
         elif isinstance(result, str):
             result = humanize.parse_size(result)
         return result

@@ -117,18 +117,13 @@ class Resources(Iterable):
         if not resources:
             return
         elif not isinstance(resources, Mapping):
-            raise TypeError(
-                'Resources should be described in dict %s' % resources
-            )
+            raise TypeError(f"Resources should be described in dict {resources}")
         prefix += resources.get('prefix', '')
         for name, sub in resources.items():
-
             if name == 'prefix':
                 continue
             elif not isinstance(sub, Mapping):
-                raise TypeError(
-                    'Resource should be described in dict %s' % sub
-                )
+                raise TypeError(f"Resource should be described in dict {sub}")
             routes = dict(sub)
             priority = routes.pop('priority', 0)
             if 'include' in routes:

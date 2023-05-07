@@ -67,9 +67,7 @@ class Worker(AbstractWorker):
             default=None,
             null=True,
         )
-        self._sleep_start = self.config.get_duration(
-            'sleep_start', default=None, null=True
-        )
+        self._sleep_start = self.config.get_duration("sleep_start", default=None, null=True)
 
     async def init(self):
         await super().init()

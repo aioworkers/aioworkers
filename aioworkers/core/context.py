@@ -311,17 +311,9 @@ class EntityContextProcessor(ContextProcessor):
                 signature = inspect.signature(cls)
                 signature.bind(config=None, context=None, loop=None)
             except TypeError as e:
-                raise TypeError(
-                    'Error while creating entity on {} from {}: {}'.format(
-                        path, value[self.key], e
-                    )
-                )
+                raise TypeError(f"Error while creating entity on {path} from {value[self.key]}: {e}")
             except ValueError as e:
-                raise ValueError(
-                    'Error while checking entity on {} from {}: {}'.format(
-                        path, value[self.key], e
-                    )
-                )
+                raise ValueError(f"Error while checking entity on {path} from {value[self.key]}: {e}")
             entity = cls(value, context=context, loop=context.loop)
         context[path] = entity
         self.entity = entity
