@@ -618,6 +618,27 @@ class Context(AbstractEntity, Octopus):
         await self._on_cleanup.send(self._group_resolver)
 
     def get_object(self, path):
-        if path.startswith('.'):
-            return self[path[1:]]
+        if path.startswith(DOT):
+            item = path[1:]
+
+            try:
+                return super().__getitem__(item)
+            except KeyError:
+                pass
+
+            cfg = self._config
+            for i in item.split(DOT):
+                try:
+                    cfg = cfg[i]
+                except KeyError:
+                    break
+                if isinstance(cfg, Mapping):
+                    groups = cfg.get(GroupsContextProcessor.key)
+                    if groups:
+                        raise RuntimeError(f"Access to inactive path '{path}', rerun with any group: {groups}")
+            else:
+                return cfg
+
+            raise KeyError(path)
+
         return import_name(path)
