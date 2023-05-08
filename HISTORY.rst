@@ -7,6 +7,8 @@ Development
 
 * Support py3.11 (#142)
 * Support toml config (#136)
+* Detect inactive path in get_object (#144)
+* Fix warnings with get_object (#143)
 * Config KeyError with full path (#145)
 
 
