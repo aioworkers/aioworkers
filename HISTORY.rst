@@ -7,6 +7,7 @@ Development
 
 * Support py3.11 (#142)
 * Support toml config (#136)
+* Config KeyError with full path (#145)
 
 
 
