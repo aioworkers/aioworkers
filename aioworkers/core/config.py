@@ -500,7 +500,10 @@ class ValueExtractor(abc.Mapping):
         if item.startswith('_'):
             raise AttributeError(item)
         elif item not in extractors:
-            v = self._val[item]
+            try:
+                v = self._val[item]
+            except KeyError:
+                raise AttributeError(item)
             if not isinstance(v, Mapping):
                 return v
             return self._mapping_factory(v)
