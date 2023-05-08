@@ -477,7 +477,10 @@ class ValueExtractor(abc.Mapping):
         return self._mapping_factory(self._val, *mappings, kwargs)
 
     def __getitem__(self, item: str) -> Any:
-        v = self._val[item]
+        try:
+            v = self._val[item]
+        except KeyError:
+            raise KeyError(item)
         if isinstance(v, Mapping):
             return self._mapping_factory(v)
         return v
@@ -509,7 +512,10 @@ class ValueExtractor(abc.Mapping):
             elif null:
                 val = self._val.get(key)
             else:
-                val = self._val[key]
+                try:
+                    val = self._val[key]
+                except KeyError:
+                    raise KeyError(key)
             if val is None and null:
                 return val
             return converter(val)
@@ -713,8 +719,10 @@ class Config(ValueExtractor):
     def __getitem__(self, item):
         if item == 'logging':
             return self.logging
-        else:
+        try:
             return super().__getitem__(item)
+        except KeyError:
+            raise KeyError(item)
 
     def __contains__(self, item):
         if item == 'logging':
