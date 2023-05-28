@@ -56,6 +56,9 @@ cron = [
 toml = [
     "tomli ; python_version < '3.11'",
 ]
+interactive = [
+    "ipykernel",
+]
 dev-test = [
     "coverage[toml]==7.2.6",
     "pytest==7.3.1",
@@ -65,11 +68,11 @@ dev-test = [
     "pyyaml==6.0",
     "msgpack==1.0.5",
     "bson==0.5.10",
-    "ipykernel==6.23.1 ; python_version >= '3.8'",
-    "ipykernel ; python_version < '3.8'",
-    "ipython==8.13.2 ; python_version >= '3.8'",
-    "ipython ; python_version < '3.8'",
     "httptools==0.5.0",
+]
+dev-interactive = [
+    "ipykernel==6.23.1",
+    "ipython==8.13.2",
 ]
 dev-lint = [
     "ruff==0.0.270",
@@ -103,6 +106,7 @@ include = [
 [tool.hatch.envs.default]
 features = [
     "dev-test",
+    "interactive",
     "cron",
 ]
 [tool.hatch.envs.default.scripts]
