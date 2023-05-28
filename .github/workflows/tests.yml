@@ -41,41 +41,40 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3.5.2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4.6.1
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install -U hatch
-    - name: isort
-      if: ${{ matrix.lint }}
-      run: |
-        hatch run style:isort -c aioworkers tests
-    - name: ruff
-      if: ${{ matrix.lint }}
-      run: |
-        hatch run style:ruff check aioworkers tests
-    - name: mypy
-      if: ${{ matrix.lint }}
-      run: |
-        hatch run style:mypy aioworkers tests
-    - name: Test with pytest & coverage
-      run: |
-        hatch run cov
-      continue-on-error: ${{ matrix.continue-on-error }}
-    - name: coverage.xml
-      if: ${{ matrix.coverage }}
-      run: |
-        hatch run coverage report
-        hatch run coverage xml
-    - name: Upload coverage to Codecov
-      if: ${{ matrix.coverage }}
-      uses: codecov/codecov-action@v3.1.4
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
+      - uses: actions/checkout@v3.5.2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4.6.1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install -U hatch
+      - name: ruff
+        if: ${{ matrix.lint }}
+        run: |
+          hatch run lint:ruff check aioworkers tests
+      - name: isort
+        if: ${{ matrix.lint }}
+        run: |
+          hatch run lint:isort -c aioworkers tests
+      - name: mypy
+        if: ${{ matrix.lint }}
+        run: |
+          hatch run lint:mypy aioworkers tests
+      - name: Tests with coverage
+        run: |
+          hatch run cov
+        continue-on-error: ${{ matrix.continue-on-error }}
+      - name: coverage.xml
+        if: ${{ matrix.coverage }}
+        run: |
+          hatch run coverage xml
+      - name: Upload coverage to Codecov
+        if: ${{ matrix.coverage }}
+        uses: codecov/codecov-action@v3.1.4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true

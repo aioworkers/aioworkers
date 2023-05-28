@@ -12,7 +12,7 @@ description = "Easy configurable workers based on asyncio"
 license = "Apache-2.0"
 requires-python = ">=3.7"
 authors = [
-    { name = "Alexander Malev", email = "yttrium@somedev.ru" },
+    { name = "Alexander Malev", email = "malev@somedev.ru" },
 ]
 keywords = [
     "aioworkers",
@@ -29,6 +29,8 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = []
 
@@ -54,14 +56,6 @@ cron = [
 toml = [
     "tomli ; python_version < '3.11'",
 ]
-dev-lint = [
-    "black==23.3.0",
-    "isort==5.12.0",
-    "mypy==1.3.0",
-    "ruff==0.0.270",
-    "types-PyYAML",
-    "types-setuptools",
-]
 dev-test = [
     "coverage[toml]==7.2.6",
     "pytest==7.3.1",
@@ -75,9 +69,14 @@ dev-test = [
     "ipython==7.34.0",
     "httptools==0.5.0",
 ]
-
-[project.scripts]
-aioworkers = "aioworkers.cli:main"
+dev-lint = [
+    "ruff==0.0.270",
+    "isort==5.12.0",
+    "black==23.3.0",
+    "mypy==1.3.0",
+    "types-PyYAML",
+    "types-setuptools",
+]
 
 [project.urls]
 Homepage = "https://github.com/aioworkers/aioworkers"
@@ -105,22 +104,39 @@ features = [
     "cron",
 ]
 [tool.hatch.envs.default.scripts]
-cov = "coverage run -m pytest && coverage report"
-no-cov = "cov --no-cov"
+cov = [
+    "coverage run -m pytest",
+    "coverage report",
+]
 
-[[tool.hatch.envs.test.matrix]]
-python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+[[tool.hatch.envs.all.matrix]]
+python = [
+    "3.7",
+    "3.8",
+    "3.9",
+    "3.10",
+    "3.11",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests", "aioworkers"]
-addopts = ["-s", "--doctest-modules"]
+testpaths = [
+    "aioworkers",
+    "tests",
+]
+addopts = [
+    "-s",
+    "--doctest-modules",
+]
 
 [tool.coverage.run]
 branch = false
 parallel = false
+source = [
+    "aioworkers",
+    "tests",
+]
 omit = [
-    "aioworkers/__init__.py",
     "hatch_build.py",
 ]
 
@@ -133,7 +149,13 @@ exclude_lines = [
 
 [tool.black]
 line-length = 120
-target-version = ["py37", "py38", "py39", "py310", "py311"]
+target-version = [
+    "py37",
+    "py38",
+    "py39",
+    "py310",
+    "py311",
+]
 skip-string-normalization = true
 
 [tool.isort]
@@ -150,19 +172,36 @@ ignore_missing_imports = true
 [tool.ruff]
 line-length = 120
 
-[tool.hatch.envs.style]
+[tool.hatch.envs.lint]
+python = "3.8"
 features = [
     "dev-lint",
 ]
-[tool.hatch.envs.style.scripts]
-check = [
-    "ruff check aioworkers tests",
-    "isort --check-only --diff aioworkers tests",
-    "black --check --diff aioworkers tests",
-    "mypy aioworkers tests",
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:aioworkers tests}"
+style = [
+    "ruff {args:aioworkers tests}",
+    "isort --check-only --diff {args:aioworkers tests}",
 ]
 fmt = [
-    "isort aioworkers tests",
-    "black aioworkers tests",
-    "check",
+    "ruff --fix {args:aioworkers tests}",
+    "isort {args:aioworkers tests}",
+    "style",
+]
+all = [
+    "style",
+    "typing",
+]
+
+[tool.hatch.envs.template]
+detached = true
+dependencies = [
+    "scaraplate",
+]
+[tool.hatch.envs.template.scripts]
+update = [
+    "scaraplate rollup --no-input {args:../cookiecutter-aioworkers-plugin} ."
+]
+clone = [
+    "git clone https://github.com/aioworkers/cookiecutter-aioworkers-plugin {args:../cookiecutter-aioworkers-plugin}"
 ]
