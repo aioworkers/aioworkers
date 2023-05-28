@@ -65,10 +65,10 @@ dev-test = [
     "pyyaml==6.0",
     "msgpack==1.0.5",
     "bson==0.5.10",
-    "ipykernel==6.23.1 ; python_version >= 3.8",
-    "ipykernel ; python_version < 3.8",
-    "ipython==8.13.2 ; python_version >= 3.8",
-    "ipython ; python_version < 3.8",
+    "ipykernel==6.23.1 ; python_version >= '3.8'",
+    "ipykernel ; python_version < '3.8'",
+    "ipython==8.13.2 ; python_version >= '3.8'",
+    "ipython ; python_version < '3.8'",
     "httptools==0.5.0",
 ]
 dev-lint = [
