@@ -83,6 +83,9 @@ dev-lint = [
     "types-setuptools",
 ]
 
+[project.scripts]
+aioworkers = "aioworkers.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/aioworkers/aioworkers"
 Documentation = "https://aioworkers.readthedocs.io"
