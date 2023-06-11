@@ -503,15 +503,22 @@ class Context(AbstractEntity, Octopus):
             self.set_loop(asyncio.get_event_loop())
         await self.processors.process(self.config)
 
-    async def wait_all(self, coros, timeout=None):
+    async def wait_all(self, coros, raises: bool = False):
         if not coros:
             return
         coros = [self.loop.create_task(i) if inspect.iscoroutine(i) else i for i in coros]
-        d, p = await asyncio.wait(coros, timeout=timeout)
-        assert not p, '\n'.join(map(repr, p))
+        d, p = await asyncio.wait(coros)
+        errors = []
         for f in d:
             if f.exception():
-                self.logger.exception('ERROR', exc_info=f.exception())
+                errors.append(f)
+        if errors:
+            if raises:
+                *errors, err = errors
+            for f in errors:
+                self.logger.exception("ERROR", exc_info=f.exception())
+            if raises:
+                await err
 
     async def connect(self):
         await self.on_connect.send(self._group_resolver)
