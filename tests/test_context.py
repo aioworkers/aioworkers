@@ -102,7 +102,7 @@ async def test_context_create(event_loop):
     c.on_connect.append(handler_raise_value())
 
     with pytest.raises((ValueError, TimeoutError)):
-        await c.connect(timeout=0.1)
+        await c.on_connect.send(c._group_resolver, timeout=0.1)
 
     def handler_sync():
         raise ValueError
