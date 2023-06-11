@@ -10,6 +10,10 @@ Development
 * Detect inactive path in get_object (#144)
 * Fix warnings with get_object (#143)
 * Config KeyError with full path (#145)
+* Separated logger for named signal (#160)
+* Add param raises to Context.wait_all (#161)
+* Signal raises error by @aamalev (#162)
+* Add connect_timeout and sent_start to Context (#163)
 
 
 
