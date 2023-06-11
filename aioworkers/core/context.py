@@ -512,7 +512,9 @@ class RootContextProcessor(ContextProcessor):
 class Context(AbstractEntity, Octopus):
     def __init__(self, *args, **kwargs):
         self._group_resolver = kwargs.pop('group_resolver', GroupResolver())
+        self._connect_timeout = kwargs.pop("connect_timeout", 0)
         self._on_connect = Signal(self, name='connect')
+        self._sent_start = kwargs.pop("sent_start", True)
         self._on_start = Signal(self, name='start')
         self._on_stop = Signal(self, name='stop')
         self._on_disconnect = Signal(self, name='disconnect')
@@ -591,8 +593,8 @@ class Context(AbstractEntity, Octopus):
             if raises:
                 await err
 
-    async def connect(self):
-        await self.on_connect.send(self._group_resolver)
+    async def connect(self, timeout: Optional[float] = None):
+        await self.on_connect.send(self._group_resolver, timeout=timeout)
 
     async def start(self):
         await self.on_start.send(self._group_resolver)
@@ -677,12 +679,14 @@ class Context(AbstractEntity, Octopus):
 
     async def __aenter__(self):
         await self.init()
-        await self.connect()
-        await self.start()
+        await self.connect(timeout=self._connect_timeout)
+        if self._sent_start:
+            await self.start()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.stop()
+        if self._sent_start:
+            await self.stop()
         await self.disconnect()
         await self._on_cleanup.send(self._group_resolver)
 
