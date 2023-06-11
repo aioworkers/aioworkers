@@ -15,6 +15,10 @@ aioworkers
   :target: https://github.com/charliermarsh/ruff
   :alt: Code style: ruff
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+  :target: https://github.com/psf/black
+  :alt: Code style: black
+
 .. image:: https://img.shields.io/badge/types-Mypy-blue.svg
   :target: https://github.com/python/mypy
   :alt: Code style: Mypy

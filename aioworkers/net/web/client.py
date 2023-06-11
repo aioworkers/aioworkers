@@ -79,9 +79,7 @@ class Session:
         self._conn_timeout = conn_timeout
         self._read_timeout = read_timeout
         if handlers is None:
-            handlers = (
-                urllib.request.HTTPCookieProcessor(),
-            )
+            handlers = (urllib.request.HTTPCookieProcessor(),)
         self.opener = urllib.request.build_opener(*handlers)
         if headers:
             if isinstance(headers, Mapping):

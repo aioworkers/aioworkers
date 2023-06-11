@@ -75,22 +75,12 @@ class MergeDict(dict):
 
             if replace and is_dict:
                 d[z] = type(self)(value)
-            elif (
-                replace
-                or not is_dict
-                or z not in d
-                or not isinstance(d[z], dict)
-            ):
+            elif replace or not is_dict or z not in d or not isinstance(d[z], dict):
                 d[z] = value
             else:
                 d[z].update(value)
 
-        elif (
-            not replace
-            and is_dict
-            and key in self
-            and isinstance(self[key], type(self))
-        ):
+        elif not replace and is_dict and key in self and isinstance(self[key], type(self)):
             self[key].update(value)
 
         else:
@@ -181,11 +171,9 @@ class ConfigFileLoader:
 
         with urlopen(url) as r:
             assert r.code == 200, r.read(255).decode("utf-8")
-            ct = r.headers.get('Content-Type')
-            mt = ct and ct.split(';')[0]
-            assert (
-                not self.mime_types or mt in self.mime_types
-            ), 'Unexpected mime_type {}'.format(mt)
+            ct = r.headers.get("Content-Type")
+            mt = ct and ct.split(";")[0]
+            assert not self.mime_types or mt in self.mime_types, f"Unexpected mime_type {mt}"
             return self.load_bytes(r.read())
 
 
@@ -613,9 +601,9 @@ class Config(ValueExtractor):
             dest = self.logging
             if '.' not in k:
                 pass
-            elif k.startswith('loggers'):
-                k = k[len('loggers.'):]
-                dest = dest['loggers']
+            elif k.startswith("loggers"):
+                k = k[len("loggers.") :]
+                dest = dest["loggers"]
                 if not isinstance(v, Mapping):
                     logger, k = k.rsplit('.', 1)
                     dest.setdefault(logger, {})[k] = v
@@ -648,11 +636,7 @@ class Config(ValueExtractor):
                 flater(d, key)
             else:
                 self._env[key] = d
-        return {
-            k: os.environ[name]
-            for k, name in self._env.items()
-            if name in os.environ
-        }
+        return {k: os.environ[name] for k, name in self._env.items() if name in os.environ}
 
     def _update(self, conf: MergeDict, data: dict) -> None:
         self._update_logging(data)

@@ -57,6 +57,10 @@ jobs:
         if: ${{ matrix.lint }}
         run: |
           hatch run lint:isort -c aioworkers tests
+      - name: black
+        if: ${{ matrix.lint }}
+        run: |
+          hatch run lint:black --check --diff aioworkers tests
       - name: mypy
         if: ${{ matrix.lint }}
         run: |

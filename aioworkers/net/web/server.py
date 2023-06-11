@@ -42,22 +42,15 @@ class WebServer(SocketServer, Worker):
             # Search default .web Application
             application_path = '.web'
             if self.context.config.get('app.resources'):
-                self.logger.warning(
-                    'Default key for Application is "web". '
-                    'Please rename key "app" to "web" in config.'
-                )
+                self.logger.warning("Default key for Application is 'web'. Please rename key 'app' to 'web' in config.")
                 if not self.context.config.get('web.resources'):
                     application_path = '.app'
         self.logger.info('Connect to application %s', application_path)
         self._handler = self.context.get_object(application_path)  # type: ignore
 
-        self.parser_factory = self.context.get_object(
-            self.config.get('parser', 'httptools.HttpRequestParser')
-        )
-        self.parser_url = self.context.get_object(
-            self.config.get('parser_url', 'httptools.parse_url')
-        )
-        self.url = URL('http://{host}:{port}/'.format_map(self.config))
+        self.parser_factory = self.context.get_object(self.config.get("parser", "httptools.HttpRequestParser"))
+        self.parser_url = self.context.get_object(self.config.get("parser_url", "httptools.parse_url"))
+        self.url = URL("http://{host}:{port}/".format_map(self.config))
 
     async def start(self):
         await super().start()

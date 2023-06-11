@@ -191,10 +191,12 @@ typing = "mypy --install-types --non-interactive {args:aioworkers tests}"
 style = [
     "ruff {args:aioworkers tests}",
     "isort --check-only --diff {args:aioworkers tests}",
+    "black --check --diff {args:aioworkers tests}",
 ]
 fmt = [
     "ruff --fix {args:aioworkers tests}",
     "isort {args:aioworkers tests}",
+    "black {args:aioworkers tests}",
     "style",
 ]
 all = [

@@ -43,9 +43,7 @@ class ASGIResponseSender:
 
     def _response_start(self, message: Mapping) -> None:
         self._status = message["status"]
-        self._reason = (
-            message.get("reason") or self.status_reason.get(self._status) or ""
-        )
+        self._reason = message.get("reason") or self.status_reason.get(self._status) or ""
         self._headers = message.get("headers") or ()
 
     def _response_head(self, content_length: Optional[int] = None) -> None:
@@ -156,9 +154,7 @@ class Protocol(asyncio.Protocol):
 
     def on_headers_complete(self):
         self._transport.pause_reading()
-        self._server._loop.create_task(
-            self._server.handler(self._scope, self._receiver, self._sender)
-        )
+        self._server._loop.create_task(self._server.handler(self._scope, self._receiver, self._sender))
 
     def on_body(self, body: bytes):
         self._body_future.set_result(body)

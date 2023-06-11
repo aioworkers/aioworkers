@@ -90,17 +90,12 @@ class Octopus(MutableMapping):
             return '{cls}({id}, attrs=[{attrs}])'.format(
                 cls=self.__class__.__name__,
                 id=id(self),
-                attrs=', '.join(
-                    x for x in self.__dict__
-                    if not x.startswith('_')
-                ),
+                attrs=", ".join(x for x in self.__dict__ if not x.startswith("_")),
             )
 
         result = []
         if header:
-            result.extend(
-                ['  ' * indent, '<', self.__class__.__name__, '>\n']
-            )
+            result.extend(["  " * indent, "<", self.__class__.__name__, ">\n"])
             indent += 1
 
         for k, v in sorted(self.__dict__.items()):
@@ -617,10 +612,7 @@ class Context(AbstractEntity, Octopus):
         result = []
         if self.config:
             result.extend(self.config)
-            result.extend(
-                k for k in super().__dir__()
-                if k not in self.config
-            )
+            result.extend(k for k in super().__dir__() if k not in self.config)
         else:
             result.extend(super().__dir__())
         return result

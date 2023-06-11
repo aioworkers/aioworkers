@@ -47,8 +47,9 @@ parser.add_argument('-l', '--logging', help='logging level')
 parser.add_argument('--shutdown-timeout', type=float, default=60)
 
 
-PROMPT = "======== Running aioworkers ========\n" \
-    "(Press CTRL+C to quit)"
+PROMPT = """======== Running aioworkers ========
+(Press CTRL+C to quit)
+"""
 
 
 class PidFileType(argparse.FileType):
@@ -110,9 +111,7 @@ def main(
         if getattr(args, 'config', None):
             config_files += tuple(args.config)
         if getattr(args, 'config_stdin', None):
-            assert (
-                not args.interact
-            ), 'Can not be used --config-stdin with --interact'
+            assert not args.interact, "Can not be used --config-stdin with --interact"
             config_dict = utils.load_from_fd(sys.stdin.buffer)
         if args.logging:
             logging.basicConfig(level=args.logging.upper())
@@ -275,9 +274,7 @@ def loop_run(
         loop.stop()
 
     with utils.monkey_close(loop), context:
-        context.loop.add_signal_handler(
-            signal.SIGTERM, lambda *args: loop.create_task(shutdown())
-        )
+        context.loop.add_signal_handler(signal.SIGTERM, lambda *args: loop.create_task(shutdown()))
         if future is not None:
             future.set_result(context)
         for cmd in cmds:
