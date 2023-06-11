@@ -5,6 +5,11 @@ History
 Development
 -----------
 
+
+
+0.22 (2023-06-12)
+-----------------
+
 * Support py3.11 (#142)
 * Support toml config (#136)
 * Detect inactive path in get_object (#144)
