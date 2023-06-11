@@ -51,7 +51,7 @@ class AbstractEntity(ABC):
         self._loop = loop
 
     @property
-    def loop(self):
+    def loop(self) -> asyncio.AbstractEventLoop:
         return self._loop
 
 

@@ -12,6 +12,7 @@ from typing import (
     Awaitable,
     Callable,
     FrozenSet,
+    Iterator,
     List,
     Mapping,
     MutableMapping,
@@ -254,9 +255,9 @@ class Signal:
                     opt_awaitable = self._run_sync(name, i)
                 except Exception as e:
                     if coroutine:
-                        awaitable = self._context.loop.create_future()
-                        awaitable.set_exception(e)
-                        coro = wraps(i)(lambda x: x)(awaitable)
+                        fut = self._context.loop.create_future()
+                        fut.set_exception(e)
+                        coro = wraps(i)(lambda x: x)(fut)
                     else:
                         errors.append(e)
                         continue
@@ -474,7 +475,7 @@ class RootContextProcessor(ContextProcessor):
         self.on_ready = Signal(context, name='ready')
         self._processors = OrderedDict((i.key, i) for i in self.processors)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[ContextProcessor]:
         yield from self._processors.values()
 
     def processing(self, config, path=None):

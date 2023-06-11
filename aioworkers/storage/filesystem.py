@@ -125,6 +125,8 @@ class AsyncGlob:
 
 
 class AsyncPath(PurePath):
+    storage: "FileSystemStorage"
+
     def __new__(cls, *args, storage=None):
         if cls is AsyncPath:
             cls = AsyncWindowsPath if os.name == 'nt' else AsyncPosixPath

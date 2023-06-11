@@ -5,6 +5,8 @@ from ..core.base import LoggingEntity
 
 
 class SocketServer(LoggingEntity):
+    _sockets: List[socket.socket]
+
     def __init__(self, *args, **kwargs):
         self._sockets = []
         super().__init__(*args, **kwargs)
