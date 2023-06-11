@@ -144,16 +144,15 @@ class Signal:
         self._signals = []  # type: List
         self._context = context
         self._name = name or str(id(self))
+        logger_name = "aioworkers.signals"
+        if name:
+            logger_name += f".{name}"
+            name = logger_name
+        else:
+            name = f"{logger_name}.{self._name}"
         self._logger = NameLogger(
-            logging.getLogger('aioworkers.signals'),
-            {
-                'name': '.'.join(
-                    [
-                        'aioworkers.signals',
-                        self._name,
-                    ]
-                ),
-            },
+            logging.getLogger(logger_name),
+            {"name": name},
         )
 
     def append(self, signal: Callable, groups: TSeq = ()):
