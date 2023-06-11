@@ -138,6 +138,7 @@ class Octopus(MutableMapping):
 class Signal:
     LOG_RUN = 'To emit in %s'
     LOG_END = '[%s/%s] End for %s'
+    LOG_EXC = "[%s/%s] Exception %s %s"
 
     def __init__(self, context: 'Context', name: Optional[str] = None):
         self._counter = 0
@@ -160,17 +161,47 @@ class Signal:
             groups = {str(g) for g in groups}
         self._signals.append((signal, groups))
 
-    async def _run_async(self, name: str, awaitable: Awaitable, finish_only: bool = False) -> None:
+    async def _run_async(
+        self,
+        name: str,
+        awaitable: Awaitable,
+        finish_only: bool = False,
+        timeout: Optional[float] = None,
+    ) -> None:
         if not finish_only:
             self._logger.info(self.LOG_RUN, name)
-        await awaitable
-        self._counter += 1
-        self._logger.info(
-            self.LOG_END,
-            self._counter,
-            len(self._signals),
-            name,
-        )
+        if timeout:
+            awaitable = asyncio.wait_for(awaitable, timeout=timeout)
+        try:
+            await awaitable
+        except asyncio.TimeoutError as e:
+            self._counter += 1
+            self._logger.warning(
+                self.LOG_EXC,
+                self._counter,
+                len(self._signals),
+                name,
+                e,
+            )
+            raise TimeoutError(f"{self._name} from {name}")
+        except Exception as e:
+            self._counter += 1
+            self._logger.warning(
+                self.LOG_EXC,
+                self._counter,
+                len(self._signals),
+                name,
+                e,
+            )
+            raise
+        else:
+            self._counter += 1
+            self._logger.info(
+                self.LOG_END,
+                self._counter,
+                len(self._signals),
+                name,
+            )
 
     def _run_sync(self, name: str, func: Callable) -> Optional[Awaitable]:
         params = inspect.signature(func).parameters
@@ -180,8 +211,19 @@ class Signal:
                 result = func(self._context)
             else:
                 result = func()
-            if isinstance(result, Awaitable):
-                return result
+        except Exception as e:
+            self._counter += 1
+            self._logger.warning(
+                self.LOG_EXC,
+                self._counter,
+                len(self._signals),
+                name,
+                e,
+            )
+            raise
+        if isinstance(result, Awaitable):
+            return result
+        else:
             self._counter += 1
             self._logger.info(
                 self.LOG_END,
@@ -189,12 +231,16 @@ class Signal:
                 len(self._signals),
                 name,
             )
-        except Exception:
-            self._logger.exception('Error on run signal %s', self._name)
-        return None
+            return None
 
-    def _send(self, group_resolver: 'GroupResolver') -> List[Awaitable]:
+    def _send(
+        self,
+        group_resolver: "GroupResolver",
+        timeout: Optional[float] = None,
+        coroutine: bool = True,
+    ) -> List[Awaitable]:
         self._counter = 0
+        errors = []
         coros = []  # type: List
         for i, g in self._signals:
             if not group_resolver.match(g):
@@ -204,22 +250,47 @@ class Signal:
             if isinstance(instance, AbstractEntity):
                 name = instance.config.get('name') or repr(instance)
             if callable(i):
-                opt_awaitable = self._run_sync(name, i)
-                if opt_awaitable is None:
-                    continue
-                awaitable = self._run_async(name, opt_awaitable, finish_only=True)
-                coro = wraps(i)(lambda x: x)(awaitable)
+                try:
+                    opt_awaitable = self._run_sync(name, i)
+                except Exception as e:
+                    if coroutine:
+                        awaitable = self._context.loop.create_future()
+                        awaitable.set_exception(e)
+                        coro = wraps(i)(lambda x: x)(awaitable)
+                    else:
+                        errors.append(e)
+                        continue
+                else:
+                    if opt_awaitable is None:
+                        continue
+                    elif not coroutine:
+                        continue
+                    awaitable = self._run_async(
+                        name,
+                        opt_awaitable,
+                        finish_only=True,
+                        timeout=timeout,
+                    )
+                    coro = wraps(i)(lambda x: x)(awaitable)
             elif isinstance(i, Awaitable):
-                coro = self._run_async(name, i)
+                coro = self._run_async(name, i, timeout=timeout)
             else:
                 continue
             coros.append(coro)
+        if errors:
+            raise errors[0]
         return coros
 
-    def send(self, group_resolver, *, coroutine=True):
-        coros = self._send(group_resolver)
+    def send(
+        self,
+        group_resolver: "GroupResolver",
+        *,
+        coroutine: bool = True,
+        timeout: Optional[float] = None,
+    ):
+        coros = self._send(group_resolver, timeout=timeout, coroutine=coroutine)
         if coroutine:
-            return self._context.wait_all(coros)
+            return self._context.wait_all(coros, raises=True)
 
 
 class GroupResolver:

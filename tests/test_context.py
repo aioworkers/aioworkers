@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from aioworkers.core.config import Config, MergeDict
@@ -72,27 +74,45 @@ async def test_context_create(event_loop):
     )
     c = Context(conf, loop=event_loop)
     await c.init()
-    await c.start()
     assert c.config.f.e == 1
     with pytest.raises(AttributeError):
         c.r
     with pytest.raises(KeyError):
         c['r']
 
-    async def handler(context):
+    async def handler_empty(context):
         pass
 
-    c.on_stop.append(handler)
+    c.on_connect.append(handler_empty)
 
-    async def handler():
+    async def handler_sleep_2():
+        await asyncio.sleep(2)
+
+    c.on_connect.append(handler_sleep_2)
+
+    def handler_sync():
         raise ValueError
 
-    c.on_stop.append(handler)
-    c.on_stop.append(handler())
+    c.on_connect.append(handler_sync)
 
+    async def handler_raise_value():
+        raise ValueError
+
+    c.on_connect.append(handler_raise_value)
+    c.on_connect.append(handler_raise_value())
+
+    with pytest.raises((ValueError, TimeoutError)):
+        await c.connect(timeout=0.1)
+
+    def handler_sync():
+        raise ValueError
+
+    c.on_stop.append(handler_sync)
     c.on_stop.append(1)
 
-    await c.stop()
+    # raise from sync handler
+    with pytest.raises(ValueError):
+        c.on_stop.send(c._group_resolver, coroutine=False)
 
 
 def test_group_resolver():
