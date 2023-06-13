@@ -29,8 +29,4 @@ def test_get_plugin_loaders(mocker):
     assert "" not in loaders
     assert __name__ in loaders
     for k, v in loaders.items():
-        if v.entry_point:
-            with pytest.raises(TypeError):
-                assert v.load()
-        else:
-            assert v.load()
+        assert v.load()

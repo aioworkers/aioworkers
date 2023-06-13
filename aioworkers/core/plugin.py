@@ -142,15 +142,15 @@ class PluginLoader:
         return cls(module, ep)
 
     def load(self) -> Optional[Plugin]:
-        if self.entry_point is not None:
-            factory = self.entry_point.load()
-            return factory()
-
-        try:
-            m = __import__(self.module, fromlist=['plugin'])
-        except ImportError:
-            return None
-        plugin = getattr(m, 'plugin', m)
+        if self.entry_point is None:
+            try:
+                m = __import__(self.module, fromlist=['plugin'])
+            except ImportError:
+                return None
+            else:
+                plugin = getattr(m, 'plugin', m)
+        else:
+            plugin = self.entry_point.load()
         if callable(plugin):
             plugin = plugin()
         if not isinstance(plugin, Plugin):
