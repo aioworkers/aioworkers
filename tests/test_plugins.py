@@ -3,7 +3,8 @@ import sys
 
 import pytest
 
-from aioworkers.core.plugin import ProxyPlugin, search_plugins
+from aioworkers.core import plugin as core_plugin
+from aioworkers.core.plugin import ProxyPlugin, get_plugin_loaders, search_plugins
 
 
 class plugin:
@@ -19,3 +20,17 @@ def test_proxy_plugin(name, mocker):
     assert p.get_config() == {}
     p.add_arguments(mocker.Mock())
     p.parse_known_args(args=[], namespace=argparse.Namespace())
+
+
+def test_get_plugin_loaders(mocker):
+    mocker.patch.object(core_plugin, "get_names", lambda *a: [__name__])
+    get_plugin_loaders()
+    loaders = get_plugin_loaders("pytest11")
+    assert "" not in loaders
+    assert __name__ in loaders
+    for k, v in loaders.items():
+        if v.entry_point:
+            with pytest.raises(TypeError):
+                assert v.load()
+        else:
+            assert v.load()

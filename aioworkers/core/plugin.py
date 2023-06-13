@@ -1,12 +1,28 @@
 import functools
 import logging
 import sys
+from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import Dict, Iterable, Optional, Sequence, Union
+from typing import Dict, Iterable, Mapping, Optional, Sequence, Union
 
 from . import config, formatter
 
 logger = logging.getLogger(__name__)
+
+if sys.version_info < (3, 8):
+    from pkg_resources import EntryPoint, iter_entry_points
+else:
+    from importlib.metadata import EntryPoint, entry_points
+
+    def iter_entry_points(group: str, name: Optional[str] = None):
+        assert not name
+        eps = entry_points()
+        if sys.version_info < (3, 10):
+            group_eps = eps.get(group, ())
+        else:
+            group_eps = eps.select(group=group)
+        for entry_point in group_eps:
+            yield entry_point
 
 
 def load_plugin(
@@ -21,27 +37,28 @@ def load_plugin(
         pass
     elif module in sys.modules:
         return None
-    try:
-        m = __import__(module, fromlist=['plugin'])
-    except ImportError:
-        return None
-    plugin = getattr(m, 'plugin', m)
-    if callable(plugin):
-        plugin = plugin()
-    if not isinstance(plugin, Plugin):
-        plugin = ProxyPlugin(plugin)
+
+    loaders = get_plugin_loaders()
+    pl = loaders.get(module) or PluginLoader(module)
+    plugin = pl.load()
     cache[module] = plugin
     return plugin
 
 
 @functools.lru_cache(None)
-def get_names() -> Iterable[str]:
+def get_names(group="aioworkers") -> Iterable[str]:
+    dedup = set()
     for s in sys.path:
         path = Path(s)
         if not path.is_dir():
             continue
-        for i in path.glob('aioworkers*'):
-            yield i.with_suffix('').name
+        for i in path.glob(f"{group}_*"):
+            name = i.name
+            if name in dedup:
+                continue
+            elif "-" not in name:
+                dedup.add(name)
+                yield name
 
 
 @functools.lru_cache(None)
@@ -105,3 +122,51 @@ class ProxyPlugin(Plugin):
             if path.name == '__init__.py':
                 self.configs = tuple(path.parent.glob('plugin*'))
         super().__init__()
+
+
+@dataclass
+class PluginLoader:
+    module: str
+    entry_point: Optional[EntryPoint] = None
+
+    @classmethod
+    def from_entry_point(cls, ep: EntryPoint) -> "PluginLoader":
+        if sys.version_info < (3, 8):
+            module = ep.module_name
+        elif sys.version_info < (3, 9):
+            m = ep.pattern.match(ep.value)
+            assert m is not None, f"Not valid value of EntryPoint {ep.value}"
+            module = m.group("module")
+        else:
+            module = ep.module
+        return cls(module, ep)
+
+    def load(self) -> Optional[Plugin]:
+        if self.entry_point is not None:
+            factory = self.entry_point.load()
+            return factory()
+
+        try:
+            m = __import__(self.module, fromlist=['plugin'])
+        except ImportError:
+            return None
+        plugin = getattr(m, 'plugin', m)
+        if callable(plugin):
+            plugin = plugin()
+        if not isinstance(plugin, Plugin):
+            plugin = ProxyPlugin(plugin)
+        return plugin
+
+
+@functools.lru_cache(None)
+def get_plugin_loaders(group="aioworkers") -> Mapping[str, PluginLoader]:
+    modules_with_ep = set()
+    result = {}
+    for ep in iter_entry_points(group):
+        pl = PluginLoader.from_entry_point(ep)
+        modules_with_ep.add(pl.module.split(".", 1)[0])
+        result[pl.module] = pl
+    for module in get_names(group):
+        if module not in modules_with_ep:
+            result[module] = PluginLoader(module)
+    return result
