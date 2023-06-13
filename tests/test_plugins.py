@@ -4,7 +4,12 @@ import sys
 import pytest
 
 from aioworkers.core import plugin as core_plugin
-from aioworkers.core.plugin import ProxyPlugin, get_plugin_loaders, search_plugins
+from aioworkers.core.plugin import (
+    PluginLoader,
+    ProxyPlugin,
+    get_plugin_loaders,
+    search_plugins,
+)
 
 
 class plugin:
@@ -23,14 +28,14 @@ def test_proxy_plugin(name, mocker):
 
 
 def test_search_plugins(mocker):
-    mocker.patch.object(core_plugin, "get_names", lambda *a: [__name__])
-    plugins = search_plugins()
+    pls = {__name__: PluginLoader(__name__)}
+    mocker.patch.object(core_plugin, "get_plugin_loaders", lambda *a: pls)
+    plugins = search_plugins(force=True)
     assert len(plugins) == 1
 
 
 def test_get_plugin_loaders(mocker):
     mocker.patch.object(core_plugin, "get_names", lambda *a: [__name__])
-    get_plugin_loaders()
     loaders = get_plugin_loaders("pytest11")
     assert "" not in loaders
     assert __name__ in loaders

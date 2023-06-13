@@ -64,13 +64,21 @@ def get_names(group="aioworkers") -> Iterable[str]:
 @functools.lru_cache(None)
 def search_plugins(*modules: str, force=False):
     result = []
+    pls = get_plugin_loaders()
     if not modules:
-        modules = tuple(get_names())
-    for name in modules:
-        plugin = load_plugin(name, force=force)
-        if plugin:
-            logger.info('Loaded plugin {} from {}'.format(plugin, name))
-            result.append(plugin)
+        modules = tuple(pls)
+    for module in modules:
+        if not force and module in sys.modules:
+            continue
+        pl = pls.get(module) or PluginLoader(module)
+        plugin = pl.load()
+        if not plugin:
+            continue
+        elif pl.entry_point is None:
+            logger.info("Loaded plugin %s", module)
+        else:
+            logger.info("Loaded plugin %s", pl.entry_point)
+        result.append(plugin)
     return result
 
 
