@@ -1,5 +1,6 @@
 import argparse
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -7,7 +8,9 @@ from aioworkers.core import plugin as core_plugin
 from aioworkers.core.plugin import (
     PluginLoader,
     ProxyPlugin,
+    get_names,
     get_plugin_loaders,
+    load_plugin,
     search_plugins,
 )
 
@@ -25,6 +28,19 @@ def test_proxy_plugin(name, mocker):
     assert p.get_config() == {}
     p.add_arguments(mocker.Mock())
     p.parse_known_args(args=[], namespace=argparse.Namespace())
+
+
+def test_get_names(mocker):
+    mocker.patch.object(sys, "path", [Path(__file__).parent])
+    modules = get_names("test")
+    assert modules
+
+
+def test_load_plugin(mocker):
+    pls = {__name__: PluginLoader(__name__)}
+    mocker.patch.object(core_plugin, "get_plugin_loaders", lambda *a: pls)
+    plugin = load_plugin(__name__, force=True)
+    assert plugin
 
 
 def test_search_plugins(mocker):
