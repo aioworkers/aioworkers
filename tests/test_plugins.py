@@ -22,6 +22,12 @@ def test_proxy_plugin(name, mocker):
     p.parse_known_args(args=[], namespace=argparse.Namespace())
 
 
+def test_search_plugins(mocker):
+    mocker.patch.object(core_plugin, "get_names", lambda *a: [__name__])
+    plugins = search_plugins()
+    assert len(plugins) == 1
+
+
 def test_get_plugin_loaders(mocker):
     mocker.patch.object(core_plugin, "get_names", lambda *a: [__name__])
     get_plugin_loaders()
