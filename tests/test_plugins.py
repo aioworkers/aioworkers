@@ -39,6 +39,10 @@ def test_get_names(mocker):
 def test_load_plugin(mocker):
     pls = {__name__: PluginLoader(__name__)}
     mocker.patch.object(core_plugin, "get_plugin_loaders", lambda *a: pls)
+    plugin = load_plugin(__name__)
+    assert not plugin
+    plugin = load_plugin(__name__, force=True)
+    assert plugin
     plugin = load_plugin(__name__, force=True)
     assert plugin
 
