@@ -1,6 +1,5 @@
 import argparse
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -30,10 +29,16 @@ def test_proxy_plugin(name, mocker):
     p.parse_known_args(args=[], namespace=argparse.Namespace())
 
 
-def test_get_names(mocker):
-    mocker.patch.object(sys, "path", [Path(__file__).parent])
-    modules = get_names("test")
+def test_get_names():
+    modules = get_names("pytest")
     assert modules
+
+
+def test_plugin_loader():
+    pl = PluginLoader("datetime")
+    assert pl.load()
+    pl = PluginLoader("import-error-module")
+    assert not pl.load()
 
 
 def test_load_plugin(mocker):
@@ -48,10 +53,19 @@ def test_load_plugin(mocker):
 
 
 def test_search_plugins(mocker):
+    plugins = search_plugins(__name__, "import-error")
+    assert len(plugins) == 0
+
     pls = {__name__: PluginLoader(__name__)}
     mocker.patch.object(core_plugin, "get_plugin_loaders", lambda *a: pls)
     plugins = search_plugins(force=True)
     assert len(plugins) == 1
+
+    for ep in core_plugin.iter_entry_points("pytest11"):
+        pl = PluginLoader.from_entry_point(ep)
+        pls[pl.module] = pl
+
+    assert search_plugins("pytest_aioworkers.plugin", force=True)
 
 
 def test_get_plugin_loaders(mocker):

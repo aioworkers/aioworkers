@@ -9,7 +9,7 @@ from . import config, formatter
 
 logger = logging.getLogger(__name__)
 
-if sys.version_info < (3, 8):
+if sys.version_info < (3, 8):  # no cov
     from pkg_resources import EntryPoint, iter_entry_points
 else:
     from importlib.metadata import EntryPoint, entry_points
@@ -19,7 +19,7 @@ else:
         eps = entry_points()
         if sys.version_info < (3, 10):
             group_eps = eps.get(group, ())
-        else:
+        else:  # no cov
             group_eps = eps.select(group=group)
         for entry_point in group_eps:
             yield entry_point
@@ -54,9 +54,7 @@ def get_names(group="aioworkers") -> Iterable[str]:
             continue
         for i in path.glob(f"{group}_*"):
             name = i.name
-            if name in dedup:
-                continue
-            elif "-" not in name:
+            if name not in dedup and "-" not in name:
                 dedup.add(name)
                 yield name
 
@@ -118,13 +116,12 @@ class ProxyPlugin(Plugin):
             if v:
                 setattr(self, i, v)
 
+        p = None
         if hasattr(self._original, '__file__'):
             p = self._original.__file__
         elif hasattr(self._original, '__module__'):
             mod = sys.modules[self._original.__module__]
             p = mod.__file__
-        else:
-            p = None
         if not self.configs and p is not None:
             path = Path(p)
             if path.name == '__init__.py':
@@ -139,13 +136,13 @@ class PluginLoader:
 
     @classmethod
     def from_entry_point(cls, ep: EntryPoint) -> "PluginLoader":
-        if sys.version_info < (3, 8):
+        if sys.version_info < (3, 8):  # no cov for 3.8
             module = ep.module_name
         elif sys.version_info < (3, 9):
             m = ep.pattern.match(ep.value)
             assert m is not None, f"Not valid value of EntryPoint {ep.value}"
             module = m.group("module")
-        else:
+        else:  # no cov for 3.8
             module = ep.module
         return cls(module, ep)
 
