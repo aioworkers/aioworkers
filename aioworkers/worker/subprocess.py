@@ -45,7 +45,6 @@ class Subprocess(FormattedEntity, Worker):
     _keeper: Optional[asyncio.Task]
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self._processes = weakref.WeakValueDictionary()
         self._cmd = ()
         self._shell = False
@@ -55,6 +54,7 @@ class Subprocess(FormattedEntity, Worker):
         self._keeper = None
         self.params = {"python": sys.executable, "worker": self}
         self._subprocess_kwargs = {}
+        super().__init__(*args, **kwargs)
 
     def set_config(self, config: ValueExtractor):
         super().set_config(config)
