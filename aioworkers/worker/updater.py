@@ -2,7 +2,10 @@ import atexit
 import os
 import sys
 
-import pkg_resources
+if sys.version_info < (3, 8):  # no cov
+    from pkg_resources import get_distribution as distribution
+else:
+    from importlib.metadata import distribution
 
 from aioworkers.worker.subprocess import Subprocess
 
@@ -36,12 +39,11 @@ class BaseUpdater(Subprocess):
         await self.run_cmd()
 
     async def run(self, value=None):
-        if not await self.can_update():
-            return
-        await self.update()
-        if await self.can_restart():
-            await self.wait_restart()
-            await self.restart()
+        if await self.can_update():
+            await self.update()
+            if await self.can_restart():
+                await self.wait_restart()
+                await self.restart()
 
 
 class PipUpdater(BaseUpdater):
@@ -67,9 +69,11 @@ class PipUpdater(BaseUpdater):
     @classmethod
     def version(cls, package):
         try:
-            return pkg_resources.get_distribution(package).version
-        except pkg_resources.DistributionNotFound:
+            d = distribution(package)
+        except Exception:
             pass
+        else:
+            return d.version
 
     async def update(self):
         package = self.config.package
