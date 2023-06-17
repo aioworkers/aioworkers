@@ -31,3 +31,9 @@ async def test_run(context, mocker, make_coro, p):
     with mock.patch.object(w._loop, 'stop'):
         await w()
     await w.update()
+
+
+async def test_version(context):
+    w = context.pip_updater
+    assert w.version("pip")
+    assert not w.version("123")
