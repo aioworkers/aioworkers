@@ -264,6 +264,8 @@ def loop_run(
     if not cmds:
         cmds = ['run_forever']
         prompt and print(prompt)
+    else:
+        context._sent_start = False
     argv = argv or []
     ns = ns or argparse.Namespace()
 
