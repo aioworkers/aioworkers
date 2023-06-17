@@ -39,12 +39,11 @@ class BaseUpdater(Subprocess):
         await self.run_cmd()
 
     async def run(self, value=None):
-        if not await self.can_update():
-            return
-        await self.update()
-        if await self.can_restart():
-            await self.wait_restart()
-            await self.restart()
+        if await self.can_update():
+            await self.update()
+            if await self.can_restart():
+                await self.wait_restart()
+                await self.restart()
 
 
 class PipUpdater(BaseUpdater):
