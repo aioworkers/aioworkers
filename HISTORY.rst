@@ -5,6 +5,10 @@ History
 Development
 -----------
 
+* Load plugins from entry_points (#165)
+* Fix race init for Subprocess (#168)
+* Skip start step on run command (#169)
+
 
 
 0.22 (2023-06-12)
