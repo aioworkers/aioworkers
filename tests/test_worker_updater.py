@@ -19,6 +19,7 @@ def config(config):
             autorun=False,
         ),
     )
+    config.update({"pip_updater.find-links": ""})
     return config
 
 
