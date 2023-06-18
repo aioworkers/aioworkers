@@ -24,7 +24,7 @@ def test_main(mocker):
     ns.groups = None
     ns.exclude_groups = None
     ns.shutdown_timeout = 1
-    parser.parse_known_args.return_value = ns, ()
+    parser.parse_known_args.return_value = ns, [__file__]
 
     mocker.patch.object(cli, 'logging')
     mocker.patch('aioworkers.core.interact.shell')
