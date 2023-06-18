@@ -1,4 +1,6 @@
+import argparse
 import io
+import tempfile
 
 import pytest
 
@@ -18,13 +20,13 @@ def test_main(mocker):
 
     parser = mocker.patch.object(cli, 'parser')
     ns = mocker.Mock()
-    ns.config = ()
+    ns.config = {"a": 1}
     ns.config_stdin = False
     ns.multiprocessing = False
     ns.groups = None
     ns.exclude_groups = None
     ns.shutdown_timeout = 1
-    parser.parse_known_args.return_value = ns, ()
+    parser.parse_known_args.return_value = ns, [__file__]
 
     mocker.patch.object(cli, 'logging')
     mocker.patch('aioworkers.core.interact.shell')
@@ -34,6 +36,11 @@ def test_main(mocker):
 
     context = mocker.patch.object(cli, 'Context')
     context.init = init
+    cli.main()
+    cli.main(commands=("aioworkers.cli",))
+
+    mocker.patch.object(cli.sys, "argv", [__file__, "-h"])
+    mocker.patch.object(cli.sys, "path", [])
     cli.main()
 
 
@@ -69,4 +76,39 @@ def test_process_iter(cfg, count):
 
 @pytest.mark.timeout(5)
 def test_loop_run():
-    cli.loop_run(cmds=['time.time'])
+    cli.loop_run(
+        cmds=['time.time'],
+        process_name="pytest",
+        conf={},
+    )
+
+
+def test_pidfile():
+    p = cli.PidFileType("w")
+    with tempfile.NamedTemporaryFile() as t:
+        f = p(t.name)
+    assert f is not None
+
+
+def test_uritype(mocker):
+    mocker.patch.object(cli, "urlopen")
+    p = cli.UriType()
+
+    with tempfile.NamedTemporaryFile() as t:
+        f = p(t.name)
+    assert f is not None
+
+    f = p("http://localhost")
+    assert f is not None
+
+
+def test_plugin():
+    parser = argparse.ArgumentParser()
+    p = cli.plugin()
+    p.add_arguments(parser)
+
+
+def test_create_process():
+    p = cli.create_process({"name": "", "groups": []})
+    p.kill()
+    p.join()
