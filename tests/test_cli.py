@@ -37,6 +37,7 @@ def test_main(mocker):
     context = mocker.patch.object(cli, 'Context')
     context.init = init
     cli.main()
+    cli.main(commands=("aioworkers.cli",))
 
 
 def test_stdin_config():
