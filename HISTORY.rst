@@ -8,6 +8,8 @@ Development
 * Load plugins from entry_points (#165)
 * Fix race init for Subprocess (#168)
 * Skip start step on run command (#169)
+* Use metadata on new python version (#170)
+* Use logging option first (#171)
 
 
 
