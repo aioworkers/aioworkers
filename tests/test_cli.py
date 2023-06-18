@@ -1,4 +1,6 @@
+import argparse
 import io
+import tempfile
 
 import pytest
 
@@ -70,3 +72,34 @@ def test_process_iter(cfg, count):
 @pytest.mark.timeout(5)
 def test_loop_run():
     cli.loop_run(cmds=['time.time'])
+
+
+def test_pidfile():
+    p = cli.PidFileType("w")
+    with tempfile.NamedTemporaryFile() as t:
+        f = p(t.name)
+    assert f is not None
+
+
+def test_uritype(mocker):
+    mocker.patch.object(cli, "urlopen")
+    p = cli.UriType()
+
+    with tempfile.NamedTemporaryFile() as t:
+        f = p(t.name)
+    assert f is not None
+
+    f = p("http://localhost")
+    assert f is not None
+
+
+def test_plugin():
+    parser = argparse.ArgumentParser()
+    p = cli.plugin()
+    p.add_arguments(parser)
+
+
+def test_create_process():
+    p = cli.create_process({"name": "", "groups": []})
+    p.kill()
+    p.join()
