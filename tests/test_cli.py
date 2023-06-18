@@ -20,7 +20,7 @@ def test_main(mocker):
 
     parser = mocker.patch.object(cli, 'parser')
     ns = mocker.Mock()
-    ns.config = ()
+    ns.config = {"a": 1}
     ns.config_stdin = False
     ns.multiprocessing = False
     ns.groups = None
@@ -38,6 +38,10 @@ def test_main(mocker):
     context.init = init
     cli.main()
     cli.main(commands=("aioworkers.cli",))
+
+    mocker.patch.object(cli.sys, "argv", [__file__, "-h"])
+    mocker.patch.object(cli.sys, "path", [])
+    cli.main()
 
 
 def test_stdin_config():
@@ -72,7 +76,11 @@ def test_process_iter(cfg, count):
 
 @pytest.mark.timeout(5)
 def test_loop_run():
-    cli.loop_run(cmds=['time.time'])
+    cli.loop_run(
+        cmds=['time.time'],
+        process_name="pytest",
+        conf={},
+    )
 
 
 def test_pidfile():
