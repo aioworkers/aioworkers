@@ -9,7 +9,7 @@ import sys
 import time
 from functools import partial, reduce
 from pathlib import Path
-from typing import List
+from typing import List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import splittype  # type: ignore
 from urllib.request import urlopen
 
@@ -78,19 +78,35 @@ context = Context(Config())
 
 
 def main(
-    *config_files,
-    args=None,
-    config_dirs=(),
-    commands=(),
-    config_dict=None,
+    *config_files: str,
+    args: Optional[argparse.Namespace] = None,
+    config_dirs: Sequence[Path] = (),
+    commands: Tuple[str, ...] = (),
+    config_dict: Optional[Mapping] = None,
 ):
+    argv = sys.argv.copy()
+
+    need_help = False
+    for h in ("--help", "-h"):
+        if h in argv:
+            argv.remove(h)
+            need_help = True
+            break
+
+    args, argv = parser.parse_known_args(argv, namespace=args)
+    if args.logging:
+        logging.basicConfig(level=args.logging.upper())
+
+    if need_help:
+        argv.append("--help")
+
     cwd = os.getcwd()
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
     context.config.search_dirs.extend(config_dirs)
 
     if not commands:
-        p = Path(sys.argv[0])
+        p = Path(argv.pop(0))
         if __package__ in (p.parent.name, p.name):
             commands += (__name__,)
         elif p.name.startswith('__'):
@@ -103,27 +119,22 @@ def main(
     for i in plugins:
         i.add_arguments(parser)
 
-    if args is None:
-        args, argv = parser.parse_known_args()
-        cmds = list(commands)
-        while argv and not argv[0].startswith('-'):
-            cmds.append(argv.pop(0))
-        if getattr(args, 'config', None):
-            config_files += tuple(args.config)
-        if getattr(args, 'config_stdin', None):
-            assert not args.interact, "Can not be used --config-stdin with --interact"
-            config_dict = utils.load_from_fd(sys.stdin.buffer)
-        if args.logging:
-            logging.basicConfig(level=args.logging.upper())
-    else:
-        cmds, argv = list(commands), []
+    args, argv = parser.parse_known_args(argv, namespace=args)
+    cmds = list(commands)
+    while argv and not argv[0].startswith(tuple(parser.prefix_chars)):
+        cmds.append(argv.pop(0))
+    if getattr(args, "config", None):
+        config_files += tuple(args.config)
+    if getattr(args, "config_stdin", None):
+        assert not args.interact, "Can not be used --config-stdin with --interact"
+        config_dict = utils.load_from_fd(sys.stdin.buffer)
 
     config = context.config
     plugins.extend(search_plugins(*cmds))
-    for p in plugins:
-        args, argv = p.parse_known_args(args=argv, namespace=args)
-        config.load(*p.configs)
-        config.update(p.get_config())
+    for plgn in plugins:
+        args, argv = plgn.parse_known_args(args=argv, namespace=args)
+        config.load(*plgn.configs)
+        config.update(plgn.get_config())
     cmds = [cmd for cmd in cmds if cmd not in sys.modules]
 
     config.load(*config_files)
@@ -132,6 +143,8 @@ def main(
     def sum_g(list_groups):
         if list_groups:
             return set(reduce(operator.add, list_groups))
+
+    assert args is not None
 
     run = partial(
         loop_run,
