@@ -132,9 +132,9 @@ class Octopus(MutableMapping):
 
 
 class Signal:
-    LOG_RUN = 'To emit in %s'
-    LOG_END = '[%s/%s] End for %s'
-    LOG_EXC = "[%s/%s] Exception %s %s"
+    LOG_RUN = "To emit in '%s'"
+    LOG_END = "[%s/%s] End for '%s'"
+    LOG_EXC = "[%s/%s] End for '%s' with Exception %s"
 
     def __init__(self, context: 'Context', name: Optional[str] = None):
         self._counter = 0
