@@ -36,5 +36,6 @@ class SocketServer(LoggingEntity):
         return [sock]
 
     def cleanup(self):
-        for s in self._sockets:
+        while self._sockets:
+            s = self._sockets.pop()
             s.close()
