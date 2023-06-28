@@ -1,3 +1,5 @@
+import socket
+
 import pytest
 
 from aioworkers.storage import StorageError
@@ -13,7 +15,7 @@ def aioworkers(aioworkers):
 def config_yaml(unused_tcp_port_factory):
     return """
     http.port: {port}
-    app.resources:
+    web.resources:
         /api:
             get: .data
         /api/str:
@@ -51,4 +53,29 @@ async def test_web_server(context):
     d = await context.storage.set(url / 'api/bin', b'123')
     assert d == {'body': '123'}
     with pytest.raises(StorageError):
-        await context.storage.set(url / 'api/not/found', b'123')  # 404
+        await context.storage.set(url / 'api/not/found/%aa', b'123')  # 404
+
+
+@pytest.mark.parametrize(
+    "connection,smsg",
+    [
+        ("close", "GET /api/str HTTP/1.0\r\n\r\n"),
+        ("keep-alive", "GET /api/str HTTP/1.0\r\nConnection: keep-alive\r\n\r\n"),
+        ("keep-alive", "GET /api/str HTTP/1.1\r\nConnection: keep-alive\r\n\r\n"),
+        ("keep-alive", "GET /api/str HTTP/1.1\r\n\r\n"),
+    ],
+)
+async def test_keep_alive(context, event_loop, connection, smsg):
+    http_version = "1.0" if "1.0" in smsg else "1.1"
+    msg = smsg.encode("utf-8")
+    r = f"HTTP/{http_version} 200 OK\r\nServer: aioworkers\r\nConnection: {connection}\r\n"
+    conn = socket.create_connection((None, context.config.http.port))
+
+    for _ in range(4 if connection == "keep-alive" else 1):
+        conn.send(msg)
+        response = b""
+        while b"asdf" not in response:
+            response += await event_loop.run_in_executor(None, conn.recv, 1024)
+        assert response.decode("utf-8").startswith(r)
+
+    await event_loop.run_in_executor(None, conn.close)

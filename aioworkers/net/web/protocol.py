@@ -97,7 +97,7 @@ class ASGIResponseSender:
                         if value == b"close":
                             self._header_connection = value
                             close = True
-                            break
+                        break
                 else:
                     if self._http_version == "1.0":
                         self._header_connection = b"close"
@@ -207,7 +207,8 @@ class Protocol(asyncio.Protocol):
 
     def connection_lost(self, exc):
         if not self._body_future.done():
-            self._body_future.set_exception(ConnectionResetError())
+            exc = exc or ConnectionResetError()
+            self._body_future.set_exception(exc)
 
     def on_chunk_header(self):  # no cov
         pass  # logger.info('on_chunk_header')
