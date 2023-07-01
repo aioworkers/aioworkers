@@ -164,10 +164,19 @@ class Protocol(asyncio.Protocol):
     def data_received(self, data):
         try:
             self._parser.feed_data(data)
-        except Exception:
+        except Exception as e:
             logger.exception("Request feed error")
-            self._sender._response_start(dict(status=500))
+            self._sender._response_start(
+                dict(
+                    status=500,
+                    reason=str(e),
+                )
+            )
             self._sender._response_body({})
+            if self._transport.can_write_eof():
+                self._transport.write_eof()
+            else:
+                self._transport.close()
 
     def on_message_begin(self):
         if self._body_future.done():
@@ -175,6 +184,7 @@ class Protocol(asyncio.Protocol):
         self._headers = []
         self._scope = {
             "type": "http",
+            "http_version": "1.1",
             "asgi": {"version": "3.0", "spec_version": "2.1"},
             "scheme": "http",
             "headers": self._headers,

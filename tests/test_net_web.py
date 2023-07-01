@@ -80,3 +80,12 @@ async def test_keep_alive(context, event_loop, connection, smsg):
         assert "keep-alive" not in smsg or b"keep-alive" in response
 
     await event_loop.run_in_executor(None, conn.close)
+
+
+async def test_parse_error(context, event_loop):
+    conn = socket.create_connection((None, context.config.http.port))
+    conn.send(b"GET/api/str HTTP/1.1\r\n\r\n")
+    r = "HTTP/1.1 500 Expected space after method\r\nServer: aioworkers\r\n"
+    response = await event_loop.run_in_executor(None, conn.recv, 1024)
+    assert response.decode("utf-8").startswith(r)
+    await event_loop.run_in_executor(None, conn.close)
