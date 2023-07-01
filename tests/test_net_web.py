@@ -68,7 +68,7 @@ async def test_web_server(context):
 async def test_keep_alive(context, event_loop, connection, smsg):
     http_version = "1.0" if "1.0" in smsg else "1.1"
     msg = smsg.encode("utf-8")
-    r = f"HTTP/{http_version} 200 OK\r\nServer: aioworkers\r\nConnection: {connection}\r\n"
+    r = f"HTTP/{http_version} 200 OK\r\nServer: aioworkers\r\n"
     conn = socket.create_connection((None, context.config.http.port))
 
     for _ in range(4 if connection == "keep-alive" else 1):
@@ -77,5 +77,6 @@ async def test_keep_alive(context, event_loop, connection, smsg):
         while b"asdf" not in response:
             response += await event_loop.run_in_executor(None, conn.recv, 1024)
         assert response.decode("utf-8").startswith(r)
+        assert "keep-alive" not in smsg or b"keep-alive" in response
 
     await event_loop.run_in_executor(None, conn.close)

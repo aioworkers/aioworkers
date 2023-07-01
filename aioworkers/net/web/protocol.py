@@ -14,6 +14,8 @@ from typing import (
 )
 from urllib.parse import unquote
 
+from .headers import CONNECTION, CONTENT_LENGTH
+
 if TYPE_CHECKING:  # pragma: no cover
     from .server import WebServer
 else:
@@ -21,12 +23,23 @@ else:
 
 logger = logging.getLogger(__name__)
 
+HEADER_CONNECTION = frozenset((CONNECTION.lower(), CONNECTION))
+HEADERS_LOWER: Mapping[bytes, bytes] = {
+    CONNECTION.lower(): CONNECTION,
+    CONTENT_LENGTH.lower(): CONTENT_LENGTH,
+}
+
 
 class ASGIResponseSender:
-    status_reason: Mapping[int, str] = {
-        200: "OK",
-        404: "Not found",
-        405: "Method not allowed",
+    SERVER = b"\r\nServer: aioworkers\r\n"
+    KEEP_ALIVE = b"keep-alive"
+    CLOSE = b"close"
+    SEP = b"\r\n"
+    SET = b": "
+    status_reason: Mapping[int, bytes] = {
+        200: b"OK",
+        404: b"Not found",
+        405: b"Method not allowed",
     }
 
     def __init__(
@@ -39,8 +52,7 @@ class ASGIResponseSender:
         self._server = server
         self._scope = scope
         self._status: int = 200
-        self._reason: str = "OK"
-        self._header_connection: bytes = b"keep-alive"
+        self._reason: bytes = b""
         self._headers: Sequence[Tuple[bytes, bytes]] = ()
         self._started: bool = False
         self._handlers = {
@@ -50,60 +62,55 @@ class ASGIResponseSender:
 
     def _response_start(self, message: Mapping) -> None:
         self._status = message["status"]
-        self._reason = message.get("reason") or self.status_reason.get(self._status) or ""
-        self._headers = message.get("headers") or ()
-
-    def _response_head(self, content_length: Optional[int] = None) -> None:
-        write = self._transport.write
-        write(f"HTTP/{self._http_version} {self._status} {self._reason}".encode("utf-8"))
-        write(b"\r\nServer: aioworkers")
-        write(b"\r\nConnection: ")
-        write(self._header_connection)
-        for h, v in self._server.headers.items():
-            write(b"\r\n")
-            write(h)
-            write(b": ")
-            write(v)
-        for h, v in self._headers:
-            if h.lower() == b"content-length":
-                content_length = None
-            write(b"\r\n")
-            write(h)
-            write(b": ")
-            write(v)
-
-        if content_length is not None:
-            write(b"\r\nContent-Length: ")
-            write(str(content_length).encode("utf-8"))
-
-        write(b"\r\n\r\n")
+        self._reason = message.get("reason", "").encode("utf-8")
+        if not self._reason:
+            self._reason = self.status_reason.get(self._status, self._reason)
+        self._headers = message.get("headers", self._headers)
 
     def _response_body(self, message: Mapping) -> None:
-        body = message.get("body")
+        body = message.get("body", b"")
         more_body = message.get("more_body", False)
-        self._http_version = self._scope["http_version"]
         close = False
         if not self._started:
-            content_length: Optional[int] = 0
+            http_version: str = self._scope["http_version"]
+
+            vec: List[bytes] = [
+                b"HTTP/",
+                f"{http_version} {self._status} ".encode("utf-8"),
+                self._reason,
+                self.SERVER,
+            ]
+            headers: Dict[bytes, bytes] = self._server.headers.copy()
+
             if more_body:
-                content_length = None
-                self._header_connection = b"close"
                 close = True
             elif body:
-                content_length = len(body)
+                headers[CONTENT_LENGTH] = str(len(body)).encode("utf-8")
             if not close:
                 for name, value in self._scope["headers"]:
-                    if name in (b"Connection", b"connection"):
-                        if value == b"close":
-                            self._header_connection = value
+                    if name in HEADER_CONNECTION:
+                        if value == self.KEEP_ALIVE:
+                            headers[CONNECTION] = value
+                        else:
+                            headers[CONNECTION] = self.CLOSE
                             close = True
                         break
                 else:
-                    if self._http_version == "1.0":
-                        self._header_connection = b"close"
+                    if http_version == "1.0":
                         close = True
+                    else:
+                        headers.setdefault(CONTENT_LENGTH, b"0")
 
-            self._response_head(content_length)
+            for h, v in self._headers:
+                headers[HEADERS_LOWER.get(h, h)] = v
+
+            for name, value in headers.items():
+                vec.extend((name, self.SET, value, self.SEP))
+            vec.append(self.SEP)
+            if body:
+                vec.append(body)
+            body = b"".join(vec)
+
             self._started = True
 
         if body:
@@ -206,8 +213,11 @@ class Protocol(asyncio.Protocol):
         self._transport.pause_reading()
 
     def connection_lost(self, exc):
-        if not self._body_future.done():
-            exc = exc or ConnectionResetError()
+        if exc is None:
+            if not self._body_future.done():
+                self._body_future.set_result(None)
+            self._transport.close()
+        elif not self._body_future.done():
             self._body_future.set_exception(exc)
 
     def on_chunk_header(self):  # no cov
