@@ -5,6 +5,14 @@ History
 Development
 -----------
 
+* Improve SocketServer.cleanup (#177)
+* Web server support keep-alive (#179)
+
+
+
+0.23 (2023-06-20)
+-----------------
+
 * Load plugins from entry_points (#165)
 * Fix race init for Subprocess (#168)
 * Skip start step on run command (#169)
