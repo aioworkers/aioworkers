@@ -312,23 +312,17 @@ class UriType(argparse.FileType):
         return urlopen(string)
 
 
-class ExtendAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        getattr(namespace, self.dest).extend(values)
-
-
 class plugin(Plugin):
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: argparse.ArgumentParser):
         default: List[UriType] = []
         parser.set_defaults(config=default)
         parser.add_argument(
-            '-c',
-            '--config',
-            nargs='+',
-            action=ExtendAction,
-            type=UriType('r', encoding='utf-8'),
+            "-c",
+            "--config",
+            action="append",
+            type=UriType("r", encoding="utf-8"),
         )
-        parser.add_argument('--config-stdin', action='store_true')
+        parser.add_argument("--config-stdin", action="store_true")
 
 
 def main_with_conf(*args, **kwargs):
