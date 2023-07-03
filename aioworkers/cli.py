@@ -148,7 +148,7 @@ def main(
     run = partial(
         loop_run,
         group_resolver=GroupResolver(
-            include=sum_g(args.groups),
+            include=args.groups,
             exclude=sum_g(args.exclude_groups),
             all_groups=args.exclude_groups is not None,
             default=True,
