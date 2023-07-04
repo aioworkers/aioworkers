@@ -7,8 +7,8 @@ Development
 
 * Improve SocketServer.cleanup (#177)
 * Web server support keep-alive (#179)
-* Option --config one value on key (#182)
-* Option --group one value on key (#183)
+* Option --config/-c one value on key (#182)
+* Option ++group/+g one value on key (#183)
 
 
 
