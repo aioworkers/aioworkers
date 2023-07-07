@@ -10,7 +10,7 @@ import time
 from functools import partial, reduce
 from pathlib import Path
 from typing import List, Mapping, Optional, Sequence, Tuple
-from urllib.parse import splittype  # type: ignore
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from . import utils
@@ -305,8 +305,7 @@ def loop_run(
 
 class UriType(argparse.FileType):
     def __call__(self, string):
-        t, path = splittype(string)
-        if not t:
+        if urlparse(string).scheme not in {"http", "https"}:
             return super().__call__(string)
         return urlopen(string)
 
