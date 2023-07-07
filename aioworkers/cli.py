@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from . import utils
-from .core import command
+from .core import command, formatter
 from .core.config import Config
 from .core.context import Context, GroupResolver
 from .core.plugin import Plugin, search_plugins
@@ -291,15 +291,24 @@ def loop_run(
         context.loop.add_signal_handler(signal.SIGTERM, lambda *args: loop.create_task(shutdown()))
         if future is not None:
             future.set_result(context)
+        results = {}
         for cmd in cmds:
             try:
                 result = command.run(cmd, context, argv=argv, ns=ns)
             except command.CommandNotFound:
-                print('Command {} not found'.format(cmd))
+                print("Command {} not found".format(cmd), file=sys.stderr)
                 continue
-            if result is not None:
-                print('{} => {}'.format(cmd, result))
-        if not loop.is_closed() and hasattr(loop, 'shutdown_asyncgens'):
+            else:
+                if cmd not in results:
+                    results[cmd] = []
+                results[cmd].append(result)
+            if not ns.formatter:
+                print("{} => {}".format(cmd, result))
+        if ns.formatter and results:
+            line = ns.formatter.encode(results)
+            sys.stdout.buffer.write(line)
+            sys.stdout.write("\n")
+        if not loop.is_closed() and hasattr(loop, "shutdown_asyncgens"):
             loop.run_until_complete(loop.shutdown_asyncgens())
 
 
@@ -321,6 +330,7 @@ class plugin(Plugin):
             type=UriType("r", encoding="utf-8"),
         )
         parser.add_argument("--config-stdin", action="store_true")
+        parser.add_argument("--formatter", type=formatter.registry.get)
 
 
 def main_with_conf(*args, **kwargs):
