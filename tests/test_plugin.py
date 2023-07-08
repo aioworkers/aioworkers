@@ -65,6 +65,9 @@ def test_search_plugins(mocker):
         pl = PluginLoader.from_entry_point(ep)
         pls[pl.module] = pl
 
+    for ep in core_plugin.iter_entry_points("pytest11", name="aioworkers"):
+        assert ep.name == "aioworkers"
+
     assert search_plugins("pytest_aioworkers.plugin", force=True)
 
 
