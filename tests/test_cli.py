@@ -77,9 +77,10 @@ def test_process_iter(cfg, count):
 @pytest.mark.timeout(5)
 def test_loop_run():
     cli.loop_run(
-        cmds=['time.time'],
+        cmds=["time.time"],
         process_name="pytest",
         conf={},
+        ns=argparse.Namespace(formatter=None),
     )
 
 
