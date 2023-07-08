@@ -10,6 +10,7 @@ Development
 * Option --config/-c one value on key (#182)
 * Option ++group/+g one value on key (#183)
 * Cli support --output and --formatter for format results (#186)
+* Use name in iter_entry_points (#187)
 
 
 
