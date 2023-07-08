@@ -15,12 +15,13 @@ else:
     from importlib.metadata import EntryPoint, entry_points
 
     def iter_entry_points(group: str, name: Optional[str] = None):
-        assert not name
-        eps = entry_points()
+        group_eps: Iterable[EntryPoint]
         if sys.version_info < (3, 10):
-            group_eps = eps.get(group, ())
+            group_eps = entry_points().get(group, ())
+            if name:
+                group_eps = filter(lambda x: x.name == name, group_eps)
         else:  # no cov
-            group_eps = eps.select(group=group)
+            group_eps = entry_points(group=group, name=name)
         for entry_point in group_eps:
             yield entry_point
 
