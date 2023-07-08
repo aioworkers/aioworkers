@@ -9,6 +9,7 @@ Development
 * Web server support keep-alive (#179)
 * Option --config/-c one value on key (#182)
 * Option ++group/+g one value on key (#183)
+* Cli support --output and --formatter for format results (#186)
 
 
 
