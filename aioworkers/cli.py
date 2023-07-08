@@ -305,7 +305,7 @@ def loop_run(
                     results[cmd] = []
                 results[cmd].append(result)
             if not ns.formatter:
-                print("{} => {}".format(cmd, result))
+                print("{} => {}".format(cmd, result), file=ns.output)
 
         if not loop.is_closed() and hasattr(loop, "shutdown_asyncgens"):
             loop.run_until_complete(loop.shutdown_asyncgens())
@@ -313,12 +313,10 @@ def loop_run(
     if ns.formatter and results:
         f = formatter.registry.get(ns.formatter)
         line = f.encode(results)
-        if ns.output is None:
-            sys.stdout.buffer.write(line)
-            sys.stdout.flush()
+        ns.output.write(line)
+        ns.output.flush()
+        if ns.output is sys.stdout.buffer:
             print(file=sys.stderr)
-        else:
-            ns.output.write(line)
 
 
 class UriType(argparse.FileType):
@@ -340,7 +338,7 @@ class plugin(Plugin):
         )
         parser.add_argument("--config-stdin", action="store_true")
         parser.add_argument("--formatter")
-        parser.add_argument("--output", type=argparse.FileType("wb"))
+        parser.add_argument("--output", type=argparse.FileType("wb"), default=sys.stdout.buffer)
 
 
 def main_with_conf(*args, **kwargs):
