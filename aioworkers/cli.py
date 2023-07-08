@@ -280,6 +280,7 @@ def loop_run(
         context._sent_start = False
     argv = argv or []
     ns = ns or argparse.Namespace()
+    output = ns.output or sys.stdout.buffer
 
     async def shutdown():
         await context.__aexit__(None, None, None)
@@ -305,7 +306,7 @@ def loop_run(
                     results[cmd] = []
                 results[cmd].append(result)
             if not ns.formatter:
-                print("{} => {}".format(cmd, result), file=ns.output)
+                output.write("{} => {}\n".format(cmd, result).encode("utf-8"))
 
         if not loop.is_closed() and hasattr(loop, "shutdown_asyncgens"):
             loop.run_until_complete(loop.shutdown_asyncgens())
@@ -313,9 +314,9 @@ def loop_run(
     if ns.formatter and results:
         f = formatter.registry.get(ns.formatter)
         line = f.encode(results)
-        ns.output.write(line)
-        ns.output.flush()
-        if ns.output is sys.stdout.buffer:
+        output.write(line)
+        output.flush()
+        if ns.output is None:
             print(file=sys.stderr)
 
 
@@ -338,7 +339,7 @@ class plugin(Plugin):
         )
         parser.add_argument("--config-stdin", action="store_true")
         parser.add_argument("--formatter")
-        parser.add_argument("--output", type=argparse.FileType("wb"), default=sys.stdout.buffer)
+        parser.add_argument("--output", type=argparse.FileType("wb"))
 
 
 def main_with_conf(*args, **kwargs):
