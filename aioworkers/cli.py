@@ -287,11 +287,11 @@ def loop_run(
             await loop.shutdown_asyncgens()
         loop.stop()
 
+    results = {}
     with utils.monkey_close(loop), context:
         context.loop.add_signal_handler(signal.SIGTERM, lambda *args: loop.create_task(shutdown()))
         if future is not None:
             future.set_result(context)
-        results = {}
         for cmd in cmds:
             try:
                 result = command.run(cmd, context, argv=argv, ns=ns)
@@ -299,17 +299,26 @@ def loop_run(
                 print("Command {} not found".format(cmd), file=sys.stderr)
                 continue
             else:
-                if cmd not in results:
+                if result is None:
+                    continue
+                elif cmd not in results:
                     results[cmd] = []
                 results[cmd].append(result)
             if not ns.formatter:
                 print("{} => {}".format(cmd, result))
-        if ns.formatter and results:
-            line = ns.formatter.encode(results)
-            sys.stdout.buffer.write(line)
-            sys.stdout.write("\n")
+
         if not loop.is_closed() and hasattr(loop, "shutdown_asyncgens"):
             loop.run_until_complete(loop.shutdown_asyncgens())
+
+    if ns.formatter and results:
+        f = formatter.registry.get(ns.formatter)
+        line = f.encode(results)
+        if ns.output is None:
+            sys.stdout.buffer.write(line)
+            sys.stdout.flush()
+            print(file=sys.stderr)
+        else:
+            ns.output.write(line)
 
 
 class UriType(argparse.FileType):
@@ -330,7 +339,8 @@ class plugin(Plugin):
             type=UriType("r", encoding="utf-8"),
         )
         parser.add_argument("--config-stdin", action="store_true")
-        parser.add_argument("--formatter", type=formatter.registry.get)
+        parser.add_argument("--formatter")
+        parser.add_argument("--output", type=argparse.FileType("wb"))
 
 
 def main_with_conf(*args, **kwargs):
