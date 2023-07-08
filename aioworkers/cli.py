@@ -9,12 +9,12 @@ import sys
 import time
 from functools import partial, reduce
 from pathlib import Path
-from typing import List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from . import utils
-from .core import command
+from .core import command, formatter
 from .core.config import Config
 from .core.context import Context, GroupResolver
 from .core.plugin import Plugin, search_plugins
@@ -250,15 +250,15 @@ def create_process(cfg):
 
 
 def loop_run(
-    conf=None,
-    future=None,
-    group_resolver=None,
-    ns=None,
-    cmds=None,
-    argv=None,
-    loop=None,
-    prompt=None,
-    process_name=None,
+    conf: Optional[Mapping] = None,
+    future: Optional[asyncio.Future] = None,
+    group_resolver: Optional[GroupResolver] = None,
+    ns: Optional[argparse.Namespace] = None,
+    cmds: Sequence[str] = (),
+    argv: Sequence[str] = (),
+    loop: Optional[asyncio.AbstractEventLoop] = None,
+    prompt: Optional[str] = None,
+    process_name: Optional[str] = None,
 ):
     if process_name:
         utils.setproctitle(process_name)
@@ -280,6 +280,7 @@ def loop_run(
         context._sent_start = False
     argv = argv or []
     ns = ns or argparse.Namespace()
+    output = ns.output or sys.stdout.buffer
 
     async def shutdown():
         await context.__aexit__(None, None, None)
@@ -287,20 +288,36 @@ def loop_run(
             await loop.shutdown_asyncgens()
         loop.stop()
 
+    results: Dict = {}
     with utils.monkey_close(loop), context:
-        context.loop.add_signal_handler(signal.SIGTERM, lambda *args: loop.create_task(shutdown()))
+        loop.add_signal_handler(signal.SIGTERM, lambda *args: context.loop.create_task(shutdown()))
         if future is not None:
             future.set_result(context)
         for cmd in cmds:
             try:
                 result = command.run(cmd, context, argv=argv, ns=ns)
             except command.CommandNotFound:
-                print('Command {} not found'.format(cmd))
+                print("Command {} not found".format(cmd), file=sys.stderr)
                 continue
-            if result is not None:
-                print('{} => {}'.format(cmd, result))
-        if not loop.is_closed() and hasattr(loop, 'shutdown_asyncgens'):
+            else:
+                if result is None:
+                    continue
+                elif cmd not in results:
+                    results[cmd] = []
+                results[cmd].append(result)
+            if not ns.formatter:
+                output.write("{} => {}\n".format(cmd, result).encode("utf-8"))
+
+        if not loop.is_closed() and hasattr(loop, "shutdown_asyncgens"):
             loop.run_until_complete(loop.shutdown_asyncgens())
+
+    if ns.formatter and results:
+        f = formatter.registry.get(ns.formatter)
+        line = f.encode(results)
+        output.write(line)
+        output.flush()
+        if ns.output is None:
+            print(file=sys.stderr)
 
 
 class UriType(argparse.FileType):
@@ -321,6 +338,8 @@ class plugin(Plugin):
             type=UriType("r", encoding="utf-8"),
         )
         parser.add_argument("--config-stdin", action="store_true")
+        parser.add_argument("--formatter")
+        parser.add_argument("--output", type=argparse.FileType("wb"))
 
 
 def main_with_conf(*args, **kwargs):
