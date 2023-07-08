@@ -5,7 +5,6 @@ import pytest
 
 from aioworkers.core import plugin as core_plugin
 from aioworkers.core.plugin import (
-    EntryPoint,
     PluginLoader,
     ProxyPlugin,
     get_names,
@@ -63,7 +62,6 @@ def test_search_plugins(mocker):
     assert len(plugins) == 1
 
     for ep in core_plugin.iter_entry_points("pytest11"):
-        assert isinstance(ep, EntryPoint)
         pl = PluginLoader.from_entry_point(ep)
         pls[pl.module] = pl
 
