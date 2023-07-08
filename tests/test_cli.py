@@ -1,5 +1,6 @@
 import argparse
 import io
+import json
 import tempfile
 
 import pytest
@@ -76,12 +77,15 @@ def test_process_iter(cfg, count):
 
 @pytest.mark.timeout(5)
 def test_loop_run():
+    out = io.BytesIO()
     cli.loop_run(
-        cmds=["time.time"],
+        cmds=["time.time", "tim"],
         process_name="pytest",
         conf={},
-        ns=argparse.Namespace(formatter=None),
+        ns=argparse.Namespace(formatter="json", output=out),
     )
+    data = json.loads(out.getvalue())
+    assert "time.time" in data
 
 
 def test_pidfile():
