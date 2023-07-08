@@ -9,7 +9,7 @@ import sys
 import time
 from functools import partial, reduce
 from pathlib import Path
-from typing import List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -250,15 +250,15 @@ def create_process(cfg):
 
 
 def loop_run(
-    conf=None,
-    future=None,
-    group_resolver=None,
-    ns=None,
-    cmds=None,
-    argv=None,
-    loop=None,
-    prompt=None,
-    process_name=None,
+    conf: Optional[Mapping] = None,
+    future: Optional[asyncio.Future] = None,
+    group_resolver: Optional[GroupResolver] = None,
+    ns: Optional[argparse.Namespace] = None,
+    cmds: Sequence[str] = (),
+    argv: Sequence[str] = (),
+    loop: Optional[asyncio.AbstractEventLoop] = None,
+    prompt: Optional[str] = None,
+    process_name: Optional[str] = None,
 ):
     if process_name:
         utils.setproctitle(process_name)
@@ -288,9 +288,9 @@ def loop_run(
             await loop.shutdown_asyncgens()
         loop.stop()
 
-    results = {}
+    results: Dict = {}
     with utils.monkey_close(loop), context:
-        context.loop.add_signal_handler(signal.SIGTERM, lambda *args: loop.create_task(shutdown()))
+        loop.add_signal_handler(signal.SIGTERM, lambda *args: context.loop.create_task(shutdown()))
         if future is not None:
             future.set_result(context)
         for cmd in cmds:
