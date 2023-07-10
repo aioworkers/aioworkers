@@ -5,6 +5,12 @@ History
 Development
 -----------
 
+* Fix using optional formatter and output (#188)
+
+
+0.24 (2023-07-08)
+-----------------
+
 * Improve SocketServer.cleanup (#177)
 * Web server support keep-alive (#179)
 * Option --config/-c one value on key (#182)
