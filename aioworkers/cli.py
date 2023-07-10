@@ -317,7 +317,7 @@ def loop_run(
         if not loop.is_closed() and hasattr(loop, "shutdown_asyncgens"):
             loop.run_until_complete(loop.shutdown_asyncgens())
 
-    if opt_formatter and results:
+    if out_formatter and results:
         line = out_formatter.encode(results)
         output.write(line)
         output.flush()
