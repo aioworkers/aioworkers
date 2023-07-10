@@ -280,7 +280,13 @@ def loop_run(
         context._sent_start = False
     argv = argv or []
     ns = ns or argparse.Namespace()
-    output = ns.output or sys.stdout.buffer
+
+    output = getattr(ns, "output", None) or sys.stdout.buffer
+
+    out_formatter = None
+    opt_formatter = getattr(ns, "formatter", None)
+    if opt_formatter:
+        out_formatter = formatter.registry.get(opt_formatter)
 
     async def shutdown():
         await context.__aexit__(None, None, None)
@@ -305,15 +311,14 @@ def loop_run(
                 elif cmd not in results:
                     results[cmd] = []
                 results[cmd].append(result)
-            if not ns.formatter:
+            if not opt_formatter:
                 output.write("{} => {}\n".format(cmd, result).encode("utf-8"))
 
         if not loop.is_closed() and hasattr(loop, "shutdown_asyncgens"):
             loop.run_until_complete(loop.shutdown_asyncgens())
 
-    if ns.formatter and results:
-        f = formatter.registry.get(ns.formatter)
-        line = f.encode(results)
+    if opt_formatter and results:
+        line = out_formatter.encode(results)
         output.write(line)
         output.flush()
         if ns.output is None:
