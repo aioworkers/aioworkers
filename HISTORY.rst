@@ -5,6 +5,11 @@ History
 Development
 -----------
 
+
+
+0.24.1 (2023-07-10)
+-------------------
+
 * Fix using optional formatter and output (#188)
 
 
