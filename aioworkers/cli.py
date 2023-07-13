@@ -23,11 +23,19 @@ parser = argparse.ArgumentParser(prefix_chars='-+')
 
 group = parser.add_mutually_exclusive_group(required=False)
 group.add_argument(
-    "+g",
     "++groups",
-    action="append",
+    nargs="+",
+    action="extend",
     metavar="GROUP",
     help="Run groups",
+)
+group.add_argument(
+    "+g",
+    "++group",
+    action="append",
+    metavar="GROUP",
+    help="Run group",
+    dest="groups",
 )
 group.add_argument(
     '-g',
