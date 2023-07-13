@@ -20,7 +20,6 @@ from .core.context import Context, GroupResolver
 from .core.plugin import Plugin, search_plugins
 
 parser = argparse.ArgumentParser(prefix_chars='-+')
-parser.version = __version__
 
 group = parser.add_mutually_exclusive_group(required=False)
 if sys.version_info >= (3, 8):
@@ -54,7 +53,7 @@ parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-I', '--interact-kernel', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
 parser.add_argument('--shutdown-timeout', type=float, default=60)
-parser.add_argument("--version", action="version")
+parser.add_argument("--version", action="version", version=__version__)
 
 
 PROMPT = """======== Running aioworkers ========
