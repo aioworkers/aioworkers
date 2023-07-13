@@ -13,7 +13,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
-from . import utils
+from . import __version__, utils
 from .core import command, formatter
 from .core.config import Config
 from .core.context import Context, GroupResolver
@@ -53,6 +53,7 @@ parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-I', '--interact-kernel', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
 parser.add_argument('--shutdown-timeout', type=float, default=60)
+parser.add_argument("--version", action="version", version=__version__)
 
 
 PROMPT = """======== Running aioworkers ========
