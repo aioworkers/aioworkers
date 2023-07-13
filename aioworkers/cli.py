@@ -22,13 +22,14 @@ from .core.plugin import Plugin, search_plugins
 parser = argparse.ArgumentParser(prefix_chars='-+')
 
 group = parser.add_mutually_exclusive_group(required=False)
-group.add_argument(
-    "++groups",
-    nargs="+",
-    action="extend",
-    metavar="GROUP",
-    help="Run groups",
-)
+if sys.version_info >= (3, 8):
+    group.add_argument(
+        "++groups",
+        nargs="+",
+        action="extend",  # not supported on py3.7
+        metavar="GROUP",
+        help="Run groups",
+    )
 group.add_argument(
     "+g",
     "++group",
