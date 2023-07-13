@@ -13,7 +13,9 @@ Options:
 
 --host: listen host
 
-+g ++groups: run groups
++g ++group: run groups
+
+++groups: run groups
 
 -g --groups: run all exclude groups
 
