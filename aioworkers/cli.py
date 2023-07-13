@@ -13,13 +13,14 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
-from . import utils
+from . import __version__, utils
 from .core import command, formatter
 from .core.config import Config
 from .core.context import Context, GroupResolver
 from .core.plugin import Plugin, search_plugins
 
 parser = argparse.ArgumentParser(prefix_chars='-+')
+parser.version = __version__
 
 group = parser.add_mutually_exclusive_group(required=False)
 if sys.version_info >= (3, 8):
@@ -53,6 +54,7 @@ parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-I', '--interact-kernel', action='store_true')
 parser.add_argument('-l', '--logging', help='logging level')
 parser.add_argument('--shutdown-timeout', type=float, default=60)
+parser.add_argument("--version", action="version")
 
 
 PROMPT = """======== Running aioworkers ========
