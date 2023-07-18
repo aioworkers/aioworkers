@@ -159,7 +159,7 @@ class AsyncPath(PurePath):
         if fs:
             self.fs = fs
         else:
-            self.fs = DefaultFileSystem()
+            self.fs = _UnlimitedFileSystem()
         self.path = Path(self)
 
     async def exists(self) -> bool:
@@ -269,7 +269,7 @@ class AsyncWindowsPath(AsyncPath, pathlib.PureWindowsPath):
     pass
 
 
-class DefaultFileSystem(AbstractFileSystem):
+class _UnlimitedFileSystem(AbstractFileSystem):
     async def next_space_waiter(self):
         pass
 
