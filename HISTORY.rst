@@ -5,6 +5,8 @@ History
 Development
 -----------
 
+* Improve and fix AsyncPath and add AbstractFileSystem (#195)
+* Option --version (#193)
 
 
 0.24.1 (2023-07-10)
