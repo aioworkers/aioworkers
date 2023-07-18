@@ -48,6 +48,7 @@ group.add_argument(
     help='Run all exclude groups',
 )
 
+parser.add_argument("--process", action="append", dest="processes")
 parser.add_argument('--multiprocessing', action='store_true')
 parser.add_argument('-i', '--interact', action='store_true')
 parser.add_argument('-I', '--interact-kernel', action='store_true')
@@ -155,6 +156,17 @@ def main(
 
     assert args is not None
 
+    cfg_processes = config.get('processes', {})
+    if not args.multiprocessing:
+        for process in args.processes or ():
+            c = cfg_processes.get(process)
+            if c:
+                if not getattr(args, "groups"):
+                    args.groups = []
+                args.groups.extend(c.get("groups") or ())
+            else:
+                raise ValueError(f"Invalid process name {process}")
+
     run = partial(
         loop_run,
         group_resolver=GroupResolver(
@@ -174,7 +186,9 @@ def main(
             with context.processes():
                 print(PROMPT)
                 logger = multiprocessing.get_logger()
-                processes = process_iter(config.get('processes', {}))
+                if args.processes:
+                    cfg_processes = {name: c for name, c in cfg_processes.items() if name in args.processes}
+                processes = process_iter(cfg_processes)
                 for process in processes:
                     logger.info('Create process %s', process['name'])
                     process['process'] = create_process(process)
