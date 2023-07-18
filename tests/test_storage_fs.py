@@ -111,6 +111,25 @@ async def test_copy(context):
     await storage.move(key2, fstor, key4)
 
 
+async def test_du():
+    with tempfile.NamedTemporaryFile() as fd:
+        storage = FileSystemStorage(path=fd.name)
+    assert await storage.disk_usage()
+
+
+@pytest.mark.parametrize(
+    "p,r",
+    [
+        (1, 2**20),
+        (1.0, 2**20),
+        ("1K", 2**10),
+    ],
+)
+async def test_limit(p, r):
+    storage = FileSystemStorage(limit_free_space=p)
+    assert storage._limit == r
+
+
 async def test_freespace(context):
     storage = context.storage
     key1 = '1'
@@ -128,7 +147,7 @@ async def test_freespace(context):
         _get_free_space_mock,
     ):
         assert 1 == await storage.get_free_space()
-        storage.config._val.limit_free_space = 2
+        storage._limit = 2
         f = asyncio.ensure_future(storage.set(key1, data))
         await asyncio.sleep(0)
     await storage.set(key2, data)
@@ -182,19 +201,22 @@ async def test_fd(context):
     assert isinstance('2' / k, AsyncPath)
     assert isinstance(AsyncPath(k), AsyncPath)
     assert isinstance(k.parent, AsyncPath)
-    assert k.parent.storage
+    assert k.parent.fs
 
     async with k.open('w') as f:
         await f.write('123')
 
-    assert '123' == await k.read_text()
+    async with k.open(mode="r") as f:
+        assert await f.read()
 
-    assert b'123' == await storage.get('1')
-    await storage.set('1', None)
+    assert "123" == await k.read_text()
 
-    f = await k.open('w')
+    assert b"123" == await storage.get("1")
+    await storage.set("1", None)
+
+    f = await k.open("w")
     async with f:
-        await f.write('123')
+        await f.write("123")
 
     f = await k.open()
     async for line in f:
@@ -245,9 +267,21 @@ async def test_asyncpath_glob(context):
 
 async def test_async_path(tmp_dir):
     d = AsyncPath(tmp_dir)
-    f = d / '1'
-    await f.write_text('123')
-    assert '123' == await f.read_text()
+    f = d / "1"
+    f1 = f.with_suffix(".html").with_name("1")
+    assert f.fs is f1.fs
+
+    await f.write_text("123")
+    assert b"123" == await f.read_bytes()
+
+    await f.write_bytes(b"123")
+    assert "123" == await f.read_text()
+
+    async with f.open("rb") as fd:
+        assert b"123" == await fd.read()
+
+    assert await f.stat()
+    await f.unlink()
 
 
 async def test_standalone(tmp_dir):
