@@ -117,11 +117,14 @@ async def test_du():
     assert await storage.disk_usage()
 
 
-@pytest.mark.parametrize('p,r', [
-    (1, 2 ** 20),
-    (1.0, 2 ** 20),
-    ("1K", 2 ** 10),
-])
+@pytest.mark.parametrize(
+    "p,r",
+    [
+        (1, 2**20),
+        (1.0, 2**20),
+        ("1K", 2**10),
+    ],
+)
 async def test_limit(p, r):
     storage = FileSystemStorage(limit_free_space=p)
     assert storage._limit == r
