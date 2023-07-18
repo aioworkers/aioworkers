@@ -65,7 +65,7 @@ dev-test = [
     "pytest-aioworkers[asyncio,aiohttp]==0.4",
     "pytest-mock==3.11.1",
     "pytest-timeout==2.1.0",
-    "pyyaml==6.0",
+    "pyyaml==6.0.1",
     "msgpack==1.0.5",
     "bson==0.5.10",
     "httptools==0.6.0",
