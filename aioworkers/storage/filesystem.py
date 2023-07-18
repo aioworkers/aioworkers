@@ -2,10 +2,12 @@ import hashlib
 import os
 import pathlib
 import shutil
+import sys
 import tempfile
+from abc import abstractmethod
 from functools import partial
 from pathlib import Path, PurePath
-from typing import Mapping, Union
+from typing import Mapping, Optional, Union
 
 from .. import humanize
 from ..core.base import AbstractNestedEntity, ExecutorEntity
@@ -36,21 +38,33 @@ def flat(parts):
         raise TypeError(f"Key must be relative path [str or Path]. But {parts}")
 
 
+class AbstractFileSystem(
+    ExecutorEntity,
+):
+    @abstractmethod
+    async def next_space_waiter(self):
+        pass  # no cov
+
+    @abstractmethod
+    async def wait_free_space(self, size: Optional[int] = None):
+        pass  # no cov
+
+
 class AsyncFile:
-    def __init__(self, fd, storage=None):
+    def __init__(self, fd, fs: AbstractFileSystem):
         self.fd = fd
-        self.storage = storage
+        self.fs = fs
         self._closed = False
 
     async def read(self, *args, **kwargs):
-        return await self.storage.run_in_executor(
+        return await self.fs.run_in_executor(
             self.fd.read,
             *args,
             **kwargs,
         )
 
     async def write(self, *args, **kwargs):
-        return await self.storage.run_in_executor(self.fd.write, *args, **kwargs)
+        return await self.fs.run_in_executor(self.fd.write, *args, **kwargs)
 
     async def __aenter__(self):
         assert not self._closed
@@ -61,14 +75,14 @@ class AsyncFile:
 
     async def close(self):
         assert not self._closed
-        await self.storage.run_in_executor(self.fd.close)
-        await self.storage.next_space_waiter()
+        await self.fs.run_in_executor(self.fd.close)
+        await self.fs.next_space_waiter()
 
     def __aiter__(self):
         return self
 
     async def __anext__(self):
-        result = await self.storage.run_in_executor(next, self.fd, None)
+        result = await self.fs.run_in_executor(next, self.fd, None)
         if result is None:
             raise StopAsyncIteration()
         else:
@@ -90,12 +104,12 @@ class AsyncFileContextManager:
     async def __aenter__(self):
         assert self.af is None, "File already opened"
         path = self.path
-        storage = path.storage
-        await storage.wait_free_space()
+        fs = path.fs
+        await fs.wait_free_space()
         if 'w' in self.mode or '+' in self.mode:
             await path.parent.mkdir(parents=True, exist_ok=True)
-        fd = await storage.run_in_executor(self._constructor)
-        self.af = AsyncFile(fd, storage)
+        fd = await fs.run_in_executor(self._constructor)
+        self.af = AsyncFile(fd, fs)
         return self.af
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -111,82 +125,82 @@ class AsyncGlob:
     def __init__(self, path, pattern):
         self._factory = type(path)
         self._iter = path.path.glob(pattern)
-        self.storage = path.storage
+        self.fs = path.fs
 
     def __aiter__(self):
         return self
 
     async def __anext__(self):
-        result = await self.storage.run_in_executor(next, self._iter, None)
+        result = await self.fs.run_in_executor(next, self._iter, None)
         if result is None:
             raise StopAsyncIteration()
         else:
-            return self._factory(result, storage=self.storage)
+            return self._factory(result, fs=self.fs)
 
 
 class AsyncPath(PurePath):
-    storage: "FileSystemStorage"
+    fs: AbstractFileSystem
 
-    def __new__(cls, *args, storage=None):
+    def __new__(cls, *args, fs: Optional[AbstractFileSystem] = None):
         if cls is AsyncPath:
-            cls = AsyncWindowsPath if os.name == 'nt' else AsyncPosixPath
+            cls = AsyncWindowsPath if os.name == "nt" else AsyncPosixPath
         self = cls._from_parts(args, init=False)
         if not self._flavour.is_supported:
             raise NotImplementedError(f"cannot instantiate {cls.__name__} on your system")
-        if storage is None:
+        if fs is None:
             for i in args:
                 if isinstance(i, AsyncPath):
-                    storage = i.storage
+                    fs = i.fs
                     break
-        self._init(storage=storage)
+        self._init(fs=fs)
         return self
 
-    def _init(self, storage=None):
-        if storage:
-            self.storage = storage
+    def _init(self, fs=None):
+        if fs:
+            self.fs = fs
         else:
-            self.storage = MockFileSystemStorage()
+            self.fs = DefaultFileSystem()
         self.path = Path(self)
 
     async def exists(self) -> bool:
-        return await self.storage.run_in_executor(self.path.exists)
+        return await self.fs.run_in_executor(self.path.exists)
 
     async def mkdir(self, *args, **kwargs):
-        return await self.storage.run_in_executor(self.path.mkdir, *args, **kwargs)
+        return await self.fs.run_in_executor(self.path.mkdir, *args, **kwargs)
 
     async def stat(self) -> os.stat_result:
-        return await self.storage.run_in_executor(self.path.stat)
+        return await self.fs.run_in_executor(self.path.stat)
 
     async def unlink(self):
-        return await self.storage.run_in_executor(self.path.unlink)
+        return await self.fs.run_in_executor(self.path.unlink)
 
-    async def read_text(self, *args, **kwargs):
-        return await self.storage.run_in_executor(
+    async def read_text(self, *args, **kwargs) -> str:
+        return await self.fs.run_in_executor(
             self.path.read_text,
             *args,
             **kwargs,
         )
 
     async def write_text(self, *args, **kwargs):
-        return await self.storage.run_in_executor(
+        return await self.fs.run_in_executor(
             self.path.write_text,
             *args,
             **kwargs,
         )
 
-    async def read_bytes(self, *args, **kwargs):
-        return await self.storage.run_in_executor(
+    async def read_bytes(self, *args, **kwargs) -> bytes:
+        return await self.fs.run_in_executor(
             self.path.read_bytes,
             *args,
             **kwargs,
         )
 
     async def write_bytes(self, *args, **kwargs):
-        return await self.storage.run_in_executor(self.path.write_bytes, *args, **kwargs)
+        return await self.fs.run_in_executor(self.path.write_bytes, *args, **kwargs)
 
     def _make_child(self, args):
         k = super()._make_child(args)  # type: ignore
-        k._init(self.storage)
+        k._init(self.fs)
         return k
 
     @classmethod
@@ -197,12 +211,12 @@ class AsyncPath(PurePath):
         self._root = root  # type: ignore
         self._parts = parts  # type: ignore
         if init:
-            storage = None
+            fs = None
             for t in args:
                 if isinstance(t, AsyncPath):
-                    storage = t.storage
+                    fs = t.fs
                     break
-            self._init(storage=storage)
+            self._init(fs=fs)
         return self
 
     def open(self, *args, **kwargs):
@@ -216,18 +230,35 @@ class AsyncPath(PurePath):
     @property
     def parent(self):
         p = super().parent
-        p._init(self.storage)
+        p._init(self.fs)
         return p
 
     @property
     def normpath(self):
         return type(self)(
             os.path.normpath(str(self)),
-            storage=self.storage,
+            fs=self.fs,
         )
 
     def glob(self, pattern):
         return AsyncGlob(self, pattern)
+
+    def with_suffix(self, suffix: str):
+        result = super().with_suffix(suffix)
+        result._init(self.fs)
+        return result
+
+    def with_name(self, name: str):
+        result = super().with_name(name)
+        result._init(self.fs)
+        return result
+
+    if sys.version_info >= (3, 9):  # no cov
+
+        def with_stem(self, stem: str):
+            result = super().with_stem(stem)
+            result._init(self.fs)
+            return result
 
 
 class AsyncPosixPath(AsyncPath, pathlib.PurePosixPath):
@@ -238,24 +269,17 @@ class AsyncWindowsPath(AsyncPath, pathlib.PureWindowsPath):
     pass
 
 
-class MockFileSystemStorage(ExecutorEntity):
-    def set_config(self, config):
-        cfg = config.new_child(executor=1)
-        super().set_config(cfg)
-
-    @property
-    def loop(self):
-        if self._loop is None:
-            self._loop = __import__('asyncio').get_event_loop()
-        return self._loop
-
+class DefaultFileSystem(AbstractFileSystem):
     async def next_space_waiter(self):
+        pass
+
+    async def wait_free_space(self, size: Optional[int] = None):
         pass
 
 
 class BaseFileSystemStorage(
     AbstractNestedEntity,
-    ExecutorEntity,
+    AbstractFileSystem,
     FormattedEntity,
     base.AbstractStorage,
 ):
@@ -263,9 +287,9 @@ class BaseFileSystemStorage(
 
     def __init__(self, *args, **kwargs):
         self._space_waiters = []
-        path = kwargs.get('path', '.')
-        self._path = AsyncPath(path, storage=self)
-        self._tmp = kwargs.get('tmp') or path
+        path = kwargs.get("path", ".")
+        self._path = AsyncPath(path, fs=self)
+        self._tmp = kwargs.get("tmp") or path
         self._limit = self._get_limit_free_space(kwargs)
         super().__init__(*args, **kwargs)
 
@@ -281,8 +305,8 @@ class BaseFileSystemStorage(
 
     def set_config(self, config):
         super().set_config(config)
-        self._path = AsyncPath(self.config.path, storage=self)
-        self._tmp = self.config.get('tmp') or self.config.path
+        self._path = AsyncPath(self.config.path, fs=self)
+        self._tmp = self.config.get("tmp") or self.config.path
         self._limit = self._get_limit_free_space(self._config)
 
     def factory(self, item, config=None):
@@ -367,8 +391,7 @@ class BaseFileSystemStorage(
     def raw_key(self, *key):
         rel = os.path.normpath(str(PurePath(*flat(key))))
         path = self._path.joinpath(self.path_transform(rel)).normpath
-        if path.relative_to(self._path) == '.':
-            raise ValueError('Access denied: %s' % path)
+        path.relative_to(self._path)  # Access denied: raise ValueError
         return path
 
     async def set(self, key, value):
