@@ -12,7 +12,7 @@ on:
 jobs:
   tests:
     strategy:
-      max-parallel: 7
+      max-parallel: 5
       matrix:
         os:
           - ubuntu-latest
@@ -21,8 +21,6 @@ jobs:
           - '3.9'
           - '3.10'
           - '3.11'
-          - pypy-3.8
-          - pypy-3.9
         continue-on-error:
           - false
         include:
@@ -36,6 +34,12 @@ jobs:
             continue-on-error: false
           - os: windows-latest
             python-version: '3.8'
+            continue-on-error: true
+          - os: ubuntu-latest
+            python-version: pypy-3.8
+            continue-on-error: true
+          - os: ubuntu-latest
+            python-version: pypy-3.9
             continue-on-error: true
 
     runs-on: ${{ matrix.os }}
