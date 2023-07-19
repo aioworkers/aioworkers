@@ -5,8 +5,9 @@ History
 Development
 -----------
 
-* Improve and fix AsyncPath and add AbstractFileSystem (#195)
+* Fix option ++groups and add ++group (#192)
 * Option --version (#193)
+* Improve and fix AsyncPath and add AbstractFileSystem (#195)
 
 
 0.24.1 (2023-07-10)
