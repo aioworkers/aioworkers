@@ -283,6 +283,16 @@ async def test_async_path(tmp_dir):
     assert await f.stat()
     await f.unlink()
 
+    d2 = d / "directory"
+    await d2.mkdir()
+    await d2.rmdir()
+    assert not await d2.exists()
+
+    await d2.mkdir()
+    assert await d2.exists()
+    await d2.rmtree()
+    assert not await d2.exists()
+
 
 async def test_standalone(tmp_dir):
     s = FileSystemStorage(path=tmp_dir, format='json')
