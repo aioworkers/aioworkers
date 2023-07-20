@@ -168,6 +168,12 @@ class AsyncPath(PurePath):
     async def mkdir(self, *args, **kwargs):
         return await self.fs.run_in_executor(self.path.mkdir, *args, **kwargs)
 
+    async def rmdir(self):
+        return await self.fs.run_in_executor(self.path.rmdir)
+
+    async def rmtree(self, ignore_errors: bool = False, onerror=None):
+        return await self.fs.run_in_executor(shutil.rmtree, self.path, ignore_errors=ignore_errors, onerror=onerror)
+
     async def stat(self) -> os.stat_result:
         return await self.fs.run_in_executor(self.path.stat)
 
