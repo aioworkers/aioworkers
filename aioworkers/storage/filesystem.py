@@ -171,8 +171,15 @@ class AsyncPath(PurePath):
     async def stat(self) -> os.stat_result:
         return await self.fs.run_in_executor(self.path.stat)
 
-    async def unlink(self):
-        return await self.fs.run_in_executor(self.path.unlink)
+    if sys.version_info < (3, 8):
+
+        async def unlink(self):  # no cov
+            return await self.fs.run_in_executor(self.path.unlink)
+
+    else:
+
+        async def unlink(self, missing_ok=False):
+            return await self.fs.run_in_executor(self.path.unlink, missing_ok=missing_ok)
 
     async def read_text(self, *args, **kwargs) -> str:
         return await self.fs.run_in_executor(
