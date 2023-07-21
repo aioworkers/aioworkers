@@ -5,9 +5,18 @@ History
 Development
 -----------
 
+* AsyncPath.unlink with missing_ok (#197)
+* AsyncPath.rmtree and rmdir (#198)
+
+
+
+0.25 (2023-07-19)
+-----------------
+
 * Fix option ++groups and add ++group (#192)
 * Option --version (#193)
 * Improve and fix AsyncPath and add AbstractFileSystem (#195)
+
 
 
 0.24.1 (2023-07-10)
