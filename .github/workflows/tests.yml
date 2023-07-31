@@ -37,10 +37,10 @@ jobs:
             continue-on-error: true
           - os: ubuntu-latest
             python-version: pypy-3.8
-            continue-on-error: true
+            continue-on-error: false
           - os: ubuntu-latest
             python-version: pypy-3.9
-            continue-on-error: true
+            continue-on-error: false
 
     runs-on: ${{ matrix.os }}
 
