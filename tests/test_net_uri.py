@@ -15,7 +15,7 @@ def test_netloc():
     assert uri.with_auth('') == URI('http://localhost/a')
     assert uri.with_auth('', password='123') == URI('http://:123@localhost/a')
     assert uri.with_auth('user') == URI('http://user@localhost/a')
-    assert uri.with_host('') == URI('http:///a')
+    assert uri.with_host("") == URI("http://user:pass@/a")
 
 
 def test_uri_parse_bytes():
