@@ -19,11 +19,9 @@ TURI = TypeVar('TURI', bound='BaseURI')
 def _netloc(
     username: Optional[str] = None,
     password: Optional[str] = None,
-    hostname: Optional[str] = None,
+    hostname: str = "",
     port: Optional[int] = None,
 ) -> str:
-    if not hostname:
-        return ''
     if username and password:
         result = f'{username}:{password}@{hostname}'
     elif username:
@@ -159,7 +157,7 @@ class BaseURI(str):
         netloc: str = _netloc(
             username,
             password,
-            self._split.hostname,
+            self._split.hostname or "",
             self._split.port,
         )
         sr = self._split._replace(netloc=netloc)
@@ -189,7 +187,7 @@ class BaseURI(str):
         netloc: str = _netloc(
             self._split.username,
             self._split.password,
-            self._split.hostname,
+            self._split.hostname or "",
             port,
         )
         sr = self._split._replace(netloc=netloc)
