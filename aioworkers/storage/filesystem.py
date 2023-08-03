@@ -177,6 +177,12 @@ class AsyncPath(PurePath):
     async def stat(self) -> os.stat_result:
         return await self.fs.run_in_executor(self.path.stat)
 
+    async def is_dir(self) -> bool:
+        return await self.fs.run_in_executor(self.path.is_dir)
+
+    async def is_file(self) -> bool:
+        return await self.fs.run_in_executor(self.path.is_file)
+
     if sys.version_info < (3, 8):
 
         async def unlink(self):  # no cov

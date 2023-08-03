@@ -281,6 +281,8 @@ async def test_async_path(tmp_dir):
         assert b"123" == await fd.read()
 
     assert await f.stat()
+    assert not await f.is_dir()
+    assert await f.is_file()
     await f.unlink()
 
     d2 = d / "directory"
