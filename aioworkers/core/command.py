@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import importlib
 import inspect
-from typing import Mapping
+from typing import Awaitable, Mapping
 
 
 class CommandNotFound(RuntimeError):
@@ -13,7 +13,7 @@ def kwargs_from_argv(params, ns, argv):
     parser = argparse.ArgumentParser()
     for i in params:
         p = params[i]
-        if p.annotation is p.empty:
+        if p.annotation is p.empty or not callable(p.annotation):
             parser.add_argument('--' + i)
         else:
             parser.add_argument('--' + i, type=p.annotation)
@@ -35,12 +35,13 @@ def run(cmd, context, loop=None, ns=None, argv=None):
         kwargs = kwargs_from_argv(params, ns, argv)
         if 'context' in params:
             kwargs['context'] = context
-        if asyncio.iscoroutinefunction(cmd):
-            return loop.run_until_complete(cmd(**kwargs))
-        elif callable(cmd):
-            return cmd(**kwargs)
+        if callable(cmd):
+            result = cmd(**kwargs)
         else:
-            return cmd
+            result = cmd
+        if isinstance(result, Awaitable):
+            result = loop.run_until_complete(result)
+        return result
 
     cmdl = cmd.split('.')
     obj = context
