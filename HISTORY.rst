@@ -5,6 +5,16 @@ History
 Development
 -----------
 
+* Drop incorrect stubgen (#202)
+* Method URI.with_host keep auth (#203)
+* Add methods AsyncPath.is_dir/is_file (#205)
+* Fix cmd from cython (#210)
+
+
+
+0.26 (2023-07-21)
+-----------------
+
 * AsyncPath.unlink with missing_ok (#197)
 * AsyncPath.rmtree and rmdir (#198)
 
