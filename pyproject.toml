@@ -29,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -125,6 +126,7 @@ python = [
     "3.9",
     "3.10",
     "3.11",
+    "3.12",
 ]
 
 [tool.pytest.ini_options]
@@ -164,6 +166,7 @@ target-version = [
     "py39",
     "py310",
     "py311",
+    "py312",
 ]
 skip-string-normalization = true
 
