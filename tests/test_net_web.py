@@ -65,6 +65,7 @@ async def test_web_server(context):
         ("keep-alive", "GET /api/str HTTP/1.1\r\n\r\n"),
     ],
 )
+@pytest.mark.timeout(5)
 async def test_keep_alive(context, event_loop, connection, smsg):
     http_version = "1.0" if "1.0" in smsg else "1.1"
     msg = smsg.encode("utf-8")
