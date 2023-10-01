@@ -145,8 +145,6 @@ class AsyncPath(PurePath):
         if cls is AsyncPath:
             cls = AsyncWindowsPath if os.name == "nt" else AsyncPosixPath
         self = cls._from_parts(args, init=False)
-        if not self._flavour.is_supported:
-            raise NotImplementedError(f"cannot instantiate {cls.__name__} on your system")
         if fs is None:
             for i in args:
                 if isinstance(i, AsyncPath):
@@ -155,12 +153,26 @@ class AsyncPath(PurePath):
         self._init(fs=fs)
         return self
 
-    def _init(self, fs=None):
-        if fs:
-            self.fs = fs
-        else:
-            self.fs = _UnlimitedFileSystem()
-        self.path = Path(self)
+    if sys.version_info < (3, 12):
+
+        def _init(self, fs=None):
+            if fs:
+                self.fs = fs
+            else:
+                self.fs = _UnlimitedFileSystem()
+            self.path = Path(self)
+
+    else:
+
+        def _init(self, fs=None):
+            if fs:
+                self.fs = fs
+            else:
+                self.fs = _UnlimitedFileSystem()
+
+        def __init__(self, *args, fs: Optional[AbstractFileSystem] = None):
+            super().__init__(*args)
+            self.path = Path(self)
 
     async def exists(self) -> bool:
         return await self.fs.run_in_executor(self.path.exists)
@@ -222,21 +234,37 @@ class AsyncPath(PurePath):
         k._init(self.fs)
         return k
 
-    @classmethod
-    def _from_parts(cls, args, init=True):
-        self = object.__new__(cls)
-        drv, root, parts = self._parse_args(args)  # type: ignore
-        self._drv = drv  # type: ignore
-        self._root = root  # type: ignore
-        self._parts = parts  # type: ignore
-        if init:
-            fs = None
-            for t in args:
-                if isinstance(t, AsyncPath):
-                    fs = t.fs
-                    break
-            self._init(fs=fs)
-        return self
+    if sys.version_info < (3, 12):
+
+        @classmethod
+        def _from_parts(cls, args, init=True):
+            self = object.__new__(cls)
+            drv, root, parts = self._parse_args(args)  # type: ignore
+            self._drv = drv  # type: ignore
+            self._root = root  # type: ignore
+            self._parts = parts  # type: ignore
+            if init:
+                fs = None
+                for t in args:
+                    if isinstance(t, AsyncPath):
+                        fs = t.fs
+                        break
+                self._init(fs=fs)
+            return self
+
+    else:
+
+        @classmethod
+        def _from_parts(cls, args, init=True):
+            self = object.__new__(cls)
+            if init:
+                fs = None
+                for t in args:
+                    if isinstance(t, AsyncPath):
+                        fs = t.fs
+                        break
+                self._init(fs=fs)
+            return self
 
     def open(self, *args, **kwargs):
         return AsyncFileContextManager(
