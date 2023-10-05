@@ -1,5 +1,9 @@
 import pytest
-from aiohttp import web
+
+try:
+    from aiohttp import web
+except ImportError:
+    web = None
 
 
 @pytest.fixture
@@ -12,6 +16,7 @@ def config_yaml():
     """
 
 
+@pytest.mark.skipif(web is None, reason="Need aiohttp")
 @pytest.mark.timeout(5)
 async def test_web_client(context, aiohttp_client):
     async def _handler(request):
