@@ -1,11 +1,7 @@
 import atexit
 import os
 import sys
-
-if sys.version_info < (3, 8):  # no cov
-    from pkg_resources import get_distribution as distribution
-else:
-    from importlib.metadata import distribution
+from importlib.metadata import distribution
 
 from aioworkers.worker.subprocess import Subprocess
 
