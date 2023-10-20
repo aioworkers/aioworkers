@@ -62,7 +62,7 @@ dev-test = [
     "coverage[toml]==7.3.2",
     "pytest==7.4.2",
     "pytest-aioworkers[asyncio,aiohttp]==0.4",
-    "pytest-mock==3.11.1",
+    "pytest-mock==3.12.0",
     "pytest-timeout==2.2.0",
     "pyyaml==6.0.1",
     "msgpack==1.0.7",
