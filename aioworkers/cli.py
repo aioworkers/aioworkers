@@ -102,6 +102,7 @@ def main(
             break
 
     args, argv = parser.parse_known_args(argv, namespace=args)
+    assert args, "Namespace is None"
     if args.logging:
         logging.basicConfig(level=args.logging.upper())
 
@@ -128,6 +129,7 @@ def main(
         i.add_arguments(parser)
 
     args, argv = parser.parse_known_args(argv, namespace=args)
+    assert args, "Namespace is None"
     cmds = list(commands)
     while argv and not argv[0].startswith(tuple(parser.prefix_chars)):
         cmds.append(argv.pop(0))
