@@ -74,7 +74,7 @@ dev-interactive = [
     "ipython==8.18.1",
 ]
 dev-lint = [
-    "ruff==0.1.7",
+    "ruff==0.1.8",
     "isort==5.12.0",
     "black==23.11.0",
     "mypy==1.7.1",
