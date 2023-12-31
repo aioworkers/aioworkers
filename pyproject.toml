@@ -71,7 +71,7 @@ dev-test = [
 ]
 dev-interactive = [
     "ipykernel==6.28.0",
-    "ipython==8.18.1",
+    "ipython==8.19.0",
 ]
 dev-lint = [
     "ruff==0.1.9",
