@@ -70,7 +70,7 @@ dev-test = [
     "httptools==0.6.1",
 ]
 dev-interactive = [
-    "ipykernel==6.28.0",
+    "ipykernel==6.29.0",
     "ipython==8.20.0",
 ]
 dev-lint = [
