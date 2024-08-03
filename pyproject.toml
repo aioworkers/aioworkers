@@ -76,7 +76,7 @@ dev-interactive = [
 dev-lint = [
     "ruff==0.5.6",
     "isort==5.13.2",
-    "black==24.3.0",
+    "black==24.8.0",
     "mypy==1.11.1",
     "types-PyYAML",
     "types-setuptools",
