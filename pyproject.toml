@@ -77,7 +77,7 @@ dev-lint = [
     "ruff==0.6.1",
     "isort==5.13.2",
     "black==24.8.0",
-    "mypy==1.11.1",
+    "mypy==1.11.2",
     "types-PyYAML",
     "types-setuptools",
 ]
