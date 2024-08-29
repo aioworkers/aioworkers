@@ -10,7 +10,7 @@ dynamic = [
 ]
 description = "Easy configurable workers based on asyncio"
 license = "Apache-2.0"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 authors = [
     { name = "Alexander Malev", email = "malev@somedev.ru" },
 ]
@@ -24,7 +24,6 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -61,25 +60,25 @@ interactive = [
     "ipykernel",
 ]
 dev-test = [
-    "coverage[toml]==7.2.7",
-    "pytest==7.4.2",
+    "coverage[toml]==7.6.1",
+    "pytest==8.3.2",
     "pytest-aioworkers[asyncio]==0.4",
-    "pytest-mock==3.11.1",
-    "pytest-timeout==2.1.0",
-    "pyyaml==6.0.1",
-    "msgpack==1.0.5",
+    "pytest-mock==3.14.0",
+    "pytest-timeout==2.3.1",
+    "pyyaml==6.0.2",
+    "msgpack==1.0.8",
     "bson==0.5.10",
-    "httptools==0.6.0",
+    "httptools==0.6.1",
 ]
 dev-interactive = [
-    "ipykernel==6.25.2",
-    "ipython==8.16.0",
+    "ipykernel==6.29.5",
+    "ipython==8.26.0",
 ]
 dev-lint = [
-    "ruff==0.0.284",
-    "isort==5.12.0",
-    "black==23.9.1",
-    "mypy==1.5.1",
+    "ruff==0.6.3",
+    "isort==5.13.2",
+    "black==24.8.0",
+    "mypy==1.11.2",
     "types-PyYAML",
     "types-setuptools",
 ]
@@ -121,7 +120,6 @@ cov = [
 
 [[tool.hatch.envs.all.matrix]]
 python = [
-    "3.7",
     "3.8",
     "3.9",
     "3.10",
@@ -161,7 +159,6 @@ exclude_lines = [
 [tool.black]
 line-length = 120
 target-version = [
-    "py37",
     "py38",
     "py39",
     "py310",

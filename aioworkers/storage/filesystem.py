@@ -195,15 +195,8 @@ class AsyncPath(PurePath):
     async def is_file(self) -> bool:
         return await self.fs.run_in_executor(self.path.is_file)
 
-    if sys.version_info < (3, 8):
-
-        async def unlink(self):  # no cov
-            return await self.fs.run_in_executor(self.path.unlink)
-
-    else:
-
-        async def unlink(self, missing_ok=False):
-            return await self.fs.run_in_executor(self.path.unlink, missing_ok=missing_ok)
+    async def unlink(self, missing_ok=False):
+        return await self.fs.run_in_executor(self.path.unlink, missing_ok=missing_ok)
 
     async def read_text(self, *args, **kwargs) -> str:
         return await self.fs.run_in_executor(

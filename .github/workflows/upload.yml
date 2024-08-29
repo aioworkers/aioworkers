@@ -11,9 +11,9 @@ jobs:
       name: PyPI
       url: https://pypi.org/project/aioworkers/${{ github.ref_name }}
     steps:
-    - uses: actions/checkout@v4.1.0
+    - uses: actions/checkout@v4.1.7
     - name: Set up Python
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v5.2.0
       with:
         python-version: '3.x'
     - name: Install dependencies
@@ -25,7 +25,7 @@ jobs:
         hatch version $GITHUB_REF_NAME
         hatch build
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist
         path: dist

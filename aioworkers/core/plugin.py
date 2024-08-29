@@ -2,6 +2,7 @@ import functools
 import logging
 import sys
 from dataclasses import dataclass
+from importlib.metadata import EntryPoint, entry_points
 from pathlib import Path, PurePath
 from typing import Dict, Iterable, Mapping, Optional, Sequence, Union
 
@@ -9,21 +10,19 @@ from . import config, formatter
 
 logger = logging.getLogger(__name__)
 
-if sys.version_info < (3, 8):  # no cov
-    from pkg_resources import EntryPoint, iter_entry_points
-else:
-    from importlib.metadata import EntryPoint, entry_points
 
-    def iter_entry_points(group: str, name: Optional[str] = None):
-        group_eps: Iterable[EntryPoint]
-        if sys.version_info < (3, 10):
-            group_eps = entry_points().get(group, ())
-            if name:
-                group_eps = filter(lambda x: x.name == name, group_eps)
-        else:  # no cov
-            group_eps = entry_points(group=group, name=name)
-        for entry_point in group_eps:
-            yield entry_point
+def iter_entry_points(group: str, name: Optional[str] = None):
+    group_eps: Iterable[EntryPoint]
+    if sys.version_info < (3, 10):
+        group_eps = entry_points().get(group, ())
+        if name:
+            group_eps = filter(lambda x: x.name == name, group_eps)
+    elif name:  # no cov
+        group_eps = entry_points(group=group, name=name)
+    else:  # no cov
+        group_eps = entry_points(group=group)
+    for entry_point in group_eps:
+        yield entry_point
 
 
 def load_plugin(
@@ -137,9 +136,7 @@ class PluginLoader:
 
     @classmethod
     def from_entry_point(cls, ep: EntryPoint) -> "PluginLoader":
-        if sys.version_info < (3, 8):  # no cov for 3.8
-            module = ep.module_name
-        elif sys.version_info < (3, 9):
+        if sys.version_info < (3, 9):
             m = ep.pattern.match(ep.value)
             assert m is not None, f"Not valid value of EntryPoint {ep.value}"
             module = m.group("module")
