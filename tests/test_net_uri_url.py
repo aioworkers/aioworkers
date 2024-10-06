@@ -1,5 +1,9 @@
 import pytest
-import yarl
+
+try:
+    import yarl
+except ImportError:
+    yarl = None
 
 from aioworkers.net.uri import URL
 
@@ -21,6 +25,7 @@ def test_div_err_slash():
         assert url / '/b'
 
 
+@pytest.mark.skipif(yarl is None, reason="need yarl")
 @pytest.mark.parametrize(
     'a',
     [

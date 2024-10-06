@@ -1,5 +1,9 @@
 import pytest
-from aiohttp import web
+
+try:
+    from aiohttp import web
+except ImportError:
+    web = None
 
 from aioworkers.core.config import Config
 from aioworkers.core.context import Context
@@ -8,6 +12,7 @@ from aioworkers.storage import StorageError
 from aioworkers.storage.http import Storage
 
 
+@pytest.mark.skipif(web is None, reason="Need aiohttp")
 async def test_set_get(event_loop, aiohttp_client):
     async def _handler(request):
         return web.json_response(["Python"])
