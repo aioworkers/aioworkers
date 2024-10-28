@@ -67,7 +67,7 @@ dev-test = [
     "pyyaml==6.0.2",
     "msgpack==1.1.0",
     "bson==0.5.10",
-    "httptools==0.6.1",
+    "httptools==0.6.4",
 ]
 dev-interactive = [
     "ipykernel==6.29.5",
