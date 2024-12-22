@@ -34,10 +34,7 @@ jobs:
           - os: windows-latest
             python-version: '3.8'
             continue-on-error: true
-          - os: ubuntu-latest
-            python-version: pypy-3.8
-            continue-on-error: false
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             python-version: pypy-3.9
             continue-on-error: false
 
