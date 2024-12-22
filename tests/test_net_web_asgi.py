@@ -1,5 +1,7 @@
 from asyncio import Queue
 
+import pytest
+
 from aioworkers.core.context import Context
 from aioworkers.net.web.asgi import AsgiMiddleware
 
@@ -14,6 +16,7 @@ async def app(scope, receive, send):
     )
 
 
+@pytest.mark.timeout(3)
 async def test_lifespan():
     q: Queue[dict] = Queue()
     q.put_nowait({'type': 'lifespan.startup'})
