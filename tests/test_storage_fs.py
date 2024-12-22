@@ -43,9 +43,7 @@ def config_yaml(tmp_dir):
       path: {path}
       executor: executor
     executor: null
-    """.format(
-        path=tmp_dir
-    )
+    """.format(path=tmp_dir)
 
 
 async def test_set_get(context):

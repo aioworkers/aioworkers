@@ -15,7 +15,7 @@ async def app(scope, receive, send):
 
 
 async def test_lifespan():
-    q = Queue()
+    q: Queue[dict] = Queue()
     q.put_nowait({'type': 'lifespan.startup'})
     q.put_nowait({'type': 'lifespan.shutdown'})
     a = AsgiMiddleware(app, plugin=__name__)
@@ -29,7 +29,7 @@ async def test_lifespan():
 
 
 async def test_http():
-    q = Queue()
+    q: Queue[dict] = Queue()
     a = AsgiMiddleware(app, context=Context())
     await a({'type': 'http'}, q.get, q.put)
     assert {

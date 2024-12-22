@@ -60,7 +60,7 @@ class FieldStorageMixin(AbstractStorage):
     model = dict
 
     async def get(self, key, *, field=None, fields=None):
-        value = await super().get(key)
+        value = await super().get(key)  # type: ignore
         if field:
             return value[field]
         elif fields:
@@ -73,11 +73,11 @@ class FieldStorageMixin(AbstractStorage):
 
     async def set(self, key, value, *, field=None, fields=None):
         if field or fields:
-            m = await super().get(key)
+            m = await super().get(key)  # type: ignore
             if field:
                 m[field] = value
             else:
                 for f in fields:
                     m[f] = value[f]
             value = m
-        await super().set(key, value)
+        await super().set(key, value)  # type: ignore

@@ -52,7 +52,7 @@ class MergeDict(dict):
         try:
             return self[item]
         except KeyError:
-            raise AttributeError(item)
+            raise AttributeError(item) from None
 
     def __setattr__(self, key, value):
         self[key] = value
@@ -88,7 +88,7 @@ class MergeDict(dict):
                 value = type(self)(value)
             super().__setitem__(key, value)
 
-    def update(self, d, *args, **kwargs):
+    def update(self, d, *args, **kwargs):  # type: ignore
         for k, v in d.items():
             self[k] = v
 
@@ -183,7 +183,7 @@ class YamlLoader(ConfigFileLoader):
     def __init__(self, *args, **kwargs):
         yaml = __import__('yaml')
         Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
-        setattr(self, '_load', lambda data: yaml.load(data, Loader))
+        setattr(self, '_load', lambda data: yaml.load(data, Loader))  # noqa: B010
 
     def load_str(self, s):
         return self._load(s)
@@ -200,8 +200,8 @@ class TomlLoader(ConfigFileLoader):
             import tomllib
         except ImportError:
             import tomli as tomllib
-        setattr(self, '_load', tomllib.loads)
-        setattr(self, '_load_fd', tomllib.load)
+        setattr(self, '_load', tomllib.loads)  # noqa: B010
+        setattr(self, '_load_fd', tomllib.load)  # noqa: B010
 
     def load_fd(self, fd) -> Mapping:
         return self._load_fd(fd.buffer)
@@ -216,7 +216,7 @@ class JsonLoader(ConfigFileLoader):
 
     def __init__(self, *args, **kwargs):
         json = __import__('json')
-        setattr(self, '_load', json.load)
+        setattr(self, '_load', json.load)  # noqa: B010
         self._loads = json.loads
 
     def load_str(self, s):
@@ -382,7 +382,7 @@ class Registry(dict):
                 raise ValueError(f"Duplicate MimeType {mime}")
             self[mime] = cls
 
-    def get(self, key):
+    def get(self, key: str) -> ConfigFileLoader:  # type: ignore
         if key not in self:
             raise LookupError(key)
         loader = self[key]
@@ -437,8 +437,8 @@ class ValueExtractor(abc.Mapping):
             if isinstance(m, ValueExtractor):
                 m = m._val
             if isinstance(m, ChainMap):
-                for m in m.maps:
-                    maps[id(m)] = m
+                for mn in m.maps:
+                    maps[id(mn)] = mn
             elif not isinstance(m, Mapping):
                 raise ValueError(m)
             else:
@@ -468,7 +468,7 @@ class ValueExtractor(abc.Mapping):
         try:
             v = self._val[item]
         except KeyError:
-            raise KeyError(item)
+            raise KeyError(item) from None
         if isinstance(v, Mapping):
             return self._mapping_factory(v)
         return v
@@ -491,7 +491,7 @@ class ValueExtractor(abc.Mapping):
             try:
                 v = self._val[item]
             except KeyError:
-                raise AttributeError(item)
+                raise AttributeError(item) from None
             if not isinstance(v, Mapping):
                 return v
             return self._mapping_factory(v)
@@ -506,7 +506,7 @@ class ValueExtractor(abc.Mapping):
                 try:
                     val = self._val[key]
                 except KeyError:
-                    raise KeyError(key)
+                    raise KeyError(key) from None
             if val is None and null:
                 return val
             return converter(val)
@@ -565,7 +565,7 @@ class Config(ValueExtractor):
         if isinstance(response, http.client.HTTPResponse):
             url = URL(response.geturl())
             self.uris.append(url)
-            mime_type = response.headers.get('Content-Type')
+            mime_type = response.headers.get("Content-Type") or ""
             if mime_type:
                 mime_type = mime_type.split(';')[0].strip()
             logger.info('Config found: {} [{}]'.format(url, mime_type))
@@ -576,8 +576,8 @@ class Config(ValueExtractor):
             logger.info('Config found: {}'.format(path))
         elif mime_type in registry:
             loader = registry.get(mime_type)
-        elif mimetypes.guess_extension(mime_type) in registry:
-            loader = registry.get(mimetypes.guess_extension(mime_type))
+        elif (ext := mimetypes.guess_extension(mime_type)) and ext in registry:
+            loader = registry.get(ext)
         elif not mime_type:
             raise LookupError('Not found mime_type %s' % mime_type)
         else:
@@ -709,7 +709,7 @@ class Config(ValueExtractor):
         try:
             return super().__getitem__(item)
         except KeyError:
-            raise KeyError(item)
+            raise KeyError(item) from None
 
     def __contains__(self, item):
         if item == 'logging':

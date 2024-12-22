@@ -1,16 +1,20 @@
+from typing import Any, TypeVar
+
 from aioworkers.core.config import MergeDict
-from aioworkers.queue.base import Queue, ScoreQueue
+from aioworkers.queue.base import Queue, ScoreQueue, ScoreQueueMixin
+
+TScoreQueue = TypeVar("TScoreQueue", bound=ScoreQueueMixin)
 
 
-async def test_queue(event_loop):
-    q = Queue({}, loop=event_loop)
+async def test_queue():
+    q = Queue({})
     await q.init()
     await q.put(2)
     assert 2 == await q.get()
 
 
-async def test_score_base(event_loop):
-    q = ScoreQueue({}, loop=event_loop)
+async def test_score_base():
+    q: Any = ScoreQueue({})
     await q.init()
     await q.put(2, 3)
     assert 2 == await q.get()
@@ -19,12 +23,11 @@ async def test_score_base(event_loop):
     assert not q
 
 
-async def test_score_time(event_loop):
-    q = ScoreQueue(
+async def test_score_time():
+    q: Any = ScoreQueue(
         MergeDict(
-            default_score='time.time',
+            default_score="time.time",
         ),
-        loop=event_loop,
     )
     await q.init()
     await q.put(2)

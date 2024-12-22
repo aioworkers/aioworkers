@@ -42,9 +42,7 @@ def config_yaml():
       dyaTypeError: .linked
       dybNone: .linked
       d_warn: linked
-    """.format(
-        import_uri(Linked)
-    )
+    """.format(import_uri(Linked))
 
 
 async def test_link(context):

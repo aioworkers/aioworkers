@@ -13,14 +13,13 @@ Route = namedtuple('Route', 'handler kwargs')
 
 class Application(LoggingEntity):
     async def init(self):
-        self._routes = defaultdict(dict)
-        resources = self.config.get('resources')
+        self._routes: dict = defaultdict(dict)
+        resources = self.config.get("resources")
         for url, name, routes in Resources(resources):
             for method, operation in routes.items():
                 if not isinstance(operation, Mapping):
                     raise TypeError(
-                        'operation for {method} {url} '
-                        'expected Mapping, not {t}'.format(
+                        "operation for {method} {url} expected Mapping, not {t}".format(
                             method=method.upper(),
                             url=url,
                             t=type(operation),
@@ -87,7 +86,7 @@ class Application(LoggingEntity):
             )
         route = handlers[method]
         handler = route.handler
-        kwargs = {}
+        kwargs: dict = {}
         if 'request' in route.kwargs:
             kwargs['request'] = request
         if 'context' in route.kwargs:
