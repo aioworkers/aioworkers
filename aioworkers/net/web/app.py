@@ -19,8 +19,7 @@ class Application(LoggingEntity):
             for method, operation in routes.items():
                 if not isinstance(operation, Mapping):
                     raise TypeError(
-                        'operation for {method} {url} '
-                        'expected Mapping, not {t}'.format(
+                        "operation for {method} {url} expected Mapping, not {t}".format(
                             method=method.upper(),
                             url=url,
                             t=type(operation),
