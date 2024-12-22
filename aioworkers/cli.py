@@ -162,7 +162,7 @@ def main(
         for process in args.processes or ():
             c = cfg_processes.get(process)
             if c:
-                if not getattr(args, "groups"):
+                if not args.groups:
                     args.groups = []
                 args.groups.extend(c.get("groups") or ())
             else:
