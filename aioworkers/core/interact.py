@@ -63,7 +63,7 @@ def kernel(run):
     from tornado import ioloop
 
     io_loop = ioloop.IOLoop.current()
-    setattr(io_loop, 'start', lambda: None)  # without run_forever
+    setattr(io_loop, "start", lambda: None)  # without run_forever # noqa: B010
 
     kernelapp._ctrl_c_message = 'IPKernelApp running'
 

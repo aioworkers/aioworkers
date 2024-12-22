@@ -61,24 +61,22 @@ interactive = [
 ]
 dev-test = [
     "coverage[toml]==7.6.1",
-    "pytest==8.3.2",
+    "pytest==8.3.3",
     "pytest-aioworkers[asyncio]==0.4",
     "pytest-mock==3.14.0",
     "pytest-timeout==2.3.1",
     "pyyaml==6.0.2",
-    "msgpack==1.0.8",
+    "msgpack==1.1.0",
     "bson==0.5.10",
-    "httptools==0.6.1",
+    "httptools==0.6.4",
 ]
 dev-interactive = [
     "ipykernel==6.29.5",
-    "ipython==8.26.0",
+    "ipython==8.30.0",
 ]
 dev-lint = [
-    "ruff==0.6.3",
-    "isort==5.13.2",
-    "black==24.8.0",
-    "mypy==1.11.2",
+    "ruff==0.8.4",
+    "mypy==1.13.0",
     "types-PyYAML",
     "types-setuptools",
 ]
@@ -129,6 +127,7 @@ python = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = [
     "aioworkers",
     "tests",
@@ -156,30 +155,56 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = [
-    "py38",
-    "py39",
-    "py310",
-    "py311",
-    "py312",
-]
-skip-string-normalization = true
+indent-width = 4
+target-version = "py38"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-include_trailing_comma = true
+[tool.ruff.lint]
+extend-select = [
+  # pycodestyle
+  "E",
+  # Pyflakes
+  "F",
+  # pyupgrade
+  # "UP",
+  # flake8-bugbear
+  "B",
+  # flake8-simplify
+  # "SIM",
+  # isort
+  "I",
+]
+extend-ignore = [
+    "E501",
+]
+
+[tool.ruff.format]
+quote-style = "preserve"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.mypy]
 follow_imports = "silent"
 strict_optional = true
 warn_redundant_casts = true
-ignore_missing_imports = true
+check_untyped_defs = true
 
-[tool.ruff]
-line-length = 120
+[[tool.mypy.overrides]]
+module = [
+    "pytest",
+    "aiohttp",
+    "yarl",
+    "setproctitle",
+    "uvloop",
+    "tomllib",
+    "IPython.*",
+    "ipykernel",
+    "prompt_toolkit",
+    "tornado",
+]
+ignore_missing_imports = true
 
 [tool.hatch.envs.lint]
 python = "3.8"
@@ -189,14 +214,12 @@ features = [
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:aioworkers tests}"
 style = [
-    "ruff {args:aioworkers tests}",
-    "isort --check-only --diff {args:aioworkers tests}",
-    "black --check --diff {args:aioworkers tests}",
+    "ruff check {args:aioworkers tests}",
+    "ruff format --check --diff {args:aioworkers tests}",
 ]
 fmt = [
-    "ruff --fix {args:aioworkers tests}",
-    "isort {args:aioworkers tests}",
-    "black {args:aioworkers tests}",
+    "ruff check --fix {args:aioworkers tests}",
+    "ruff format {args:aioworkers tests}",
     "style",
 ]
 all = [

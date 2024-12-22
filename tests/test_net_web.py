@@ -7,7 +7,7 @@ from aioworkers.storage import StorageError
 
 @pytest.fixture
 def aioworkers(aioworkers):
-    aioworkers.plugins.append('aioworkers.net.web')
+    aioworkers.plugins.append("aioworkers.net.web")
     return aioworkers
 
 
@@ -26,14 +26,12 @@ def config_yaml(unused_tcp_port_factory):
     data: 1
     str_data: asdf
     storage.cls: aioworkers.storage.http.Storage
-    """.format(
-        port=unused_tcp_port_factory()
-    )
+    """.format(port=unused_tcp_port_factory())
 
 
 @pytest.fixture
 def config(config):
-    config.update(bin_data=b'qwerty')
+    config.update(bin_data=b"qwerty")
     return config
 
 

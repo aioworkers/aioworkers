@@ -99,7 +99,7 @@ class AsyncFileContextManager:
             self.mode = args[1]
         else:
             self.mode = 'r'
-        self._constructor = partial(*args, **kwargs)
+        self._constructor = partial(*args, **kwargs)  # type: ignore
 
     async def __aenter__(self):
         assert self.af is None, "File already opened"

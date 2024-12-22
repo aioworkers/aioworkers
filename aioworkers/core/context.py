@@ -5,13 +5,12 @@ import logging.config
 import os
 from collections import OrderedDict
 from functools import wraps
-from typing import Iterable  # noqa
-from typing import Tuple  # noqa
-from typing import Type  # noqa
 from typing import (
+    Any,
     Awaitable,
     Callable,
     FrozenSet,
+    Iterable,
     Iterator,
     List,
     Mapping,
@@ -19,6 +18,8 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
+    Type,
     TypeVar,
     Union,
 )
@@ -112,8 +113,12 @@ class Octopus(MutableMapping):
                 result.append('\n')
         return ''.join(result)
 
-    def find_iter(self, cls, *, exclude=None):
-        #  type: (Type[T], Optional[Set[int]]) -> Iterable[Tuple[str, T]]
+    def find_iter(
+        self,
+        cls: Type[T],
+        *,
+        exclude: Optional[Set[int]] = None,
+    ) -> Iterable[Tuple[str, T]]:
         can_add = False
         if not exclude:
             can_add = True
@@ -125,8 +130,8 @@ class Octopus(MutableMapping):
                     continue
                 if can_add:
                     exclude.add(identy)
-                for pc, obj in obj.find_iter(cls, exclude=exclude):
-                    yield DOT.join((pp, pc)), obj
+                for pc, o in obj.find_iter(cls, exclude=exclude):
+                    yield DOT.join((pp, pc)), o
             if isinstance(obj, cls):
                 yield pp, obj
 
@@ -179,7 +184,7 @@ class Signal:
                 name,
                 e,
             )
-            raise TimeoutError(f"{self._name} from {name}")
+            raise TimeoutError(f"{self._name} from {name}") from e
         except Exception as e:
             self._counter += 1
             self._logger.warning(
@@ -361,6 +366,7 @@ class GroupsContextProcessor(ContextProcessor):
             return
         groups = value.get(cls.key)
         if not context._group_resolver.match(groups):
+            assert isinstance(value, ValueExtractor)
             return cls(context, path, value)
 
 
@@ -377,9 +383,9 @@ class EntityContextProcessor(ContextProcessor):
                 signature = inspect.signature(cls)
                 signature.bind(config=None, context=None, loop=None)
             except TypeError as e:
-                raise TypeError(f"Error while creating entity on {path} from {value[self.key]}: {e}")
+                raise TypeError(f"Error while creating entity on {path} from {value[self.key]}: {e}") from e
             except ValueError as e:
-                raise ValueError(f"Error while checking entity on {path} from {value[self.key]}: {e}")
+                raise ValueError(f"Error while checking entity on {path} from {value[self.key]}: {e}") from e
             entity = cls(value, context=context, loop=context.loop)
         context[path] = entity
         self.entity = entity
@@ -456,7 +462,7 @@ class FuncContextProcessor(ContextProcessor):
 
 
 class RootContextProcessor(ContextProcessor):
-    processors = (
+    processors: Sequence[Type[ContextProcessor]] = (
         LoggingContextProcessor,
         GroupsContextProcessor,
         InstanceEntityContextProcessor,
@@ -470,7 +476,7 @@ class RootContextProcessor(ContextProcessor):
         self.on_ready = Signal(context, name='ready')
         self._processors = OrderedDict((i.key, i) for i in self.processors)
 
-    def __iter__(self) -> Iterator[ContextProcessor]:
+    def __iter__(self) -> Iterator[Type[ContextProcessor]]:
         yield from self._processors.values()
 
     def processing(self, config, path=None):
@@ -536,7 +542,7 @@ class Context(AbstractEntity, Octopus):
         if self._loop is not None:
             raise RuntimeError('Loop already set')
         self._set_loop(loop)
-        for path, obj in self.find_iter(AbstractEntity):
+        for _path, obj in self.find_iter(AbstractEntity):
             obj._set_loop(loop)
 
     @contextlib.contextmanager
@@ -656,7 +662,7 @@ class Context(AbstractEntity, Octopus):
         try:
             return self._config[item]
         except KeyError:
-            raise AttributeError(item)
+            raise AttributeError(item) from None
 
     def __enter__(self):
         if self._loop is None:
@@ -683,7 +689,7 @@ class Context(AbstractEntity, Octopus):
         await self.disconnect()
         await self._on_cleanup.send(self._group_resolver)
 
-    def get_object(self, path):
+    def get_object(self, path: str) -> Any:
         if path.startswith(DOT):
             item = path[1:]
 
