@@ -2,8 +2,8 @@ from abc import abstractmethod
 from typing import Any, FrozenSet, Mapping, Sequence, Union
 
 from ..core.base import ExecutorEntity, LoggingEntity
-from ..core.formatter import FormattedEntity
-from ..http import URL
+from ..core.formatter import FormattedEntity, PFormatter
+from ..net.uri import URL
 from ..net.web.client import Session
 from . import StorageError, base
 
@@ -101,7 +101,7 @@ class AbstractHttpStorage(
         async with self.session.request(url, **kwargs) as response:
             data = await response.read()
         try:
-            formatter = self.registry.get(response.headers['Content-Type'])
+            formatter: PFormatter = self.registry.get(response.headers["Content-Type"])
         except KeyError:
             formatter = self
         result = formatter.decode(data)
@@ -125,7 +125,7 @@ class RoStorage(ExecutorEntity, AbstractHttpStorage):
     async def session_factory(self, **kwargs):
         return Session.from_entity(self, **kwargs)
 
-    async def request(self, url, **kwargs):
+    async def request(self, url: Union[str, URL], **kwargs):  # type: ignore
         try:
             return await super().request(url, **kwargs)
         except StorageError:

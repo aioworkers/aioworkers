@@ -1,6 +1,7 @@
 import io
 import os
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -9,7 +10,6 @@ from aioworkers.core.config import (
     Config,
     IniLoader,
     MergeDict,
-    StringReplaceLoader,
     TomlLoader,
     ValueExtractor,
 )
@@ -74,10 +74,10 @@ def test_dict_set2():
 
 
 def test_dict_set3():
-    d = MergeDict(f=3, d=dict(g=1))
+    d: Any = MergeDict(f=3, d=dict(g=1))
     d.d = dict(r=4)
-    assert d.d.r == 4, d
-    assert d.d.g == 1, d
+    assert d.d.r == 4, d  # type: ignore
+    assert d.d.g == 1, d  # type: ignore
 
 
 def test_dict_set4():
@@ -151,7 +151,7 @@ def test_ini():
             assert isinstance(v, list)
             assert v == [1, 2]
         else:
-            assert False
+            assert False  # noqa: B011
 
 
 def test_toml_path():
@@ -167,7 +167,7 @@ def test_toml_str():
 
 
 def test_string_replacer():
-    c = StringReplaceLoader()
+    c = IniLoader()
     conf = {'a': '1', 'b': ['2'], 'c': {'d': '3'}, 'e': '[]'}
     c._replace(conf)
     assert conf == {'a': 1, 'b': [2], 'c': {'d': 3}, 'e': []}
@@ -179,7 +179,7 @@ def test_md_magic():
     dir(d)
     d.copy()
     with pytest.raises(AttributeError):
-        d.a
+        assert d.a
     d(a=1)
     assert d.a == 1
 
@@ -240,7 +240,7 @@ def test_value_extractor_bool():
 
 
 def test_value_extractor():
-    env = {}
+    env: dict = {}
     v = ValueExtractor({'a': {'b': 1, 'c': None}, 'env': env})
     assert isinstance(v.get('a'), ValueExtractor)
     assert v.a.get_int('b') is v.a.b
@@ -254,7 +254,7 @@ def test_value_extractor():
     assert v.a.get_int('c', null=True) is None
 
     with pytest.raises(AttributeError):
-        getattr(v, '_a')
+        getattr(v, "_a")  # noqa: B009
 
     assert repr(v)
 

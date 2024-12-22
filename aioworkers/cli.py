@@ -219,7 +219,7 @@ def main(
             time.sleep(0.3)
 
 
-def process_iter(cfg, cpus=os.cpu_count() or 1):
+def process_iter(cfg, cpus=os.cpu_count() or 1):  # noqa: B008
     result = []
     for k, v in cfg.items():
         if 'count' in v or 'cpus' in v:

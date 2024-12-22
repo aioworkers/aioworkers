@@ -1,14 +1,14 @@
 import os
 from abc import abstractmethod
-from typing import Callable, List, Tuple, Type, Union
+from typing import Any, Callable, List, Protocol, Tuple, Type, TypeVar, Union
 
 from ..utils import import_name
 from .base import AbstractEntity
 
 
 class BaseFormatter:
-    name = NotImplemented  # type: str
-    mimetypes = ()  # type: Tuple[str, ...]
+    name: str = NotImplemented
+    mimetypes: Tuple[str, ...] = ()
 
     @abstractmethod  # pragma: no cover
     def decode(self, value):
@@ -46,6 +46,18 @@ class ChainFormatter(BaseFormatter):
         return b
 
 
+TBaseFormatter = TypeVar('TBaseFormatter', bound=BaseFormatter)
+
+
+class PFormatter(Protocol):
+    def encode(self, value: Any) -> Any: ...
+    def decode(self, value: Any) -> Any: ...
+
+
+class PTypesFormatter(PFormatter):
+    mimetypes: Tuple[str, ...]
+
+
 class Registry(dict):
     _parent = None
 
@@ -68,17 +80,18 @@ class Registry(dict):
         for mime in cls.mimetypes:
             self[mime] = cls
 
-    def get(self, name):
-        if not name or name == 'bytes':
-            return AsIsFormatter
+    def get(self, name: str) -> BaseFormatter:  # type: ignore
+        key: Union[str, List[str]] = name
+        if not name or name == "bytes":
+            return AsIsFormatter()
         elif not isinstance(name, str):
             pass
         elif name in self:
             return self[name]()
         elif ':' in name:
-            name = name.split(':')
+            key = name.split(":")
         elif '|' in name:
-            name = name.split('|')
+            key = name.split("|")
         else:
             a = self
             while a._parent is not None:
@@ -87,8 +100,8 @@ class Registry(dict):
                     return a[name]()
             raise KeyError(name)
 
-        if isinstance(name, list):
-            return ChainFormatter(self.get(i.strip()) for i in name)
+        if isinstance(key, list):
+            return ChainFormatter(self.get(i.strip()) for i in key)
         else:
             raise KeyError(name)
 
@@ -100,12 +113,10 @@ class StringFormatter(BaseFormatter):
         'text/plain; charset=utf-8',
     )
 
-    @staticmethod
-    def decode(b):
+    def decode(self, b):
         return b.decode("utf-8")
 
-    @staticmethod
-    def encode(b):
+    def encode(self, b):
         return b.encode("utf-8")
 
 
@@ -176,14 +187,14 @@ class JsonFormatter(BaseFormatter):
 
         class Encoder(json.JSONEncoder):
             def default(self, o):
-                for score, klass, conv in convs:
+                for _score, klass, conv in convs:
                     if isinstance(o, klass):
                         return conv(o)
                 return super().default(o)
 
         self._encoder = Encoder
-        setattr(self, '_loads', json.loads)
-        setattr(self, '_dumps', json.dumps)
+        setattr(self, "_loads", json.loads)  # noqa: B010
+        setattr(self, "_dumps", json.dumps)  # noqa: B010
 
     def decode(self, b):
         return self._loads(b.decode("utf-8"))
@@ -215,8 +226,8 @@ class YamlFormatter(JsonFormatter):
         import yaml
 
         Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
-        setattr(self, '_loads', lambda x: yaml.load(x, Loader))
-        setattr(self, '_dumps', yaml.dump)
+        setattr(self, "_loads", lambda x: yaml.load(x, Loader))  # noqa: B010
+        setattr(self, "_dumps", yaml.dump)  # noqa: B010
 
     def encode(self, b):
         return self._dumps(b).encode("utf-8")
@@ -227,8 +238,8 @@ class ZLibFormatter(BaseFormatter):
 
     def __init__(self):
         zlib = __import__('zlib')
-        setattr(self, 'decode', zlib.decompress)
-        setattr(self, 'encode', zlib.compress)
+        setattr(self, "decode", zlib.decompress)  # noqa: B010
+        setattr(self, "encode", zlib.compress)  # noqa: B010
 
 
 class LzmaFormatter(BaseFormatter):
@@ -239,7 +250,7 @@ class LzmaFormatter(BaseFormatter):
         FILTER_LZMA2 = lzma.FILTER_LZMA2
         filters = [{'id': FILTER_LZMA2}]
         FORMAT_RAW = lzma.FORMAT_RAW
-        setattr(
+        setattr(  # noqa: B010
             self,
             'encode',
             lambda v: lzma.compress(
@@ -248,7 +259,7 @@ class LzmaFormatter(BaseFormatter):
                 filters=filters,
             ),
         )
-        setattr(
+        setattr(  # noqa: B010
             self,
             'decode',
             lambda v: lzma.decompress(
@@ -264,8 +275,8 @@ class MsgPackFormatter(BaseFormatter):
 
     def __init__(self):
         msgpack = __import__('msgpack')
-        setattr(self, 'decode', msgpack.loads)
-        setattr(self, 'encode', msgpack.dumps)
+        setattr(self, "decode", msgpack.loads)  # noqa: B010
+        setattr(self, "encode", msgpack.dumps)  # noqa: B010
 
 
 class BsonFormatter(BaseFormatter):
@@ -273,8 +284,8 @@ class BsonFormatter(BaseFormatter):
 
     def __init__(self):
         bson = __import__('bson')
-        setattr(self, 'decode', bson.loads)
-        setattr(self, 'encode', bson.dumps)
+        setattr(self, "decode", bson.loads)  # noqa: B010
+        setattr(self, "encode", bson.dumps)  # noqa: B010
 
 
 registry = Registry()
@@ -295,12 +306,12 @@ class FormattedEntity(AbstractEntity):
     registry = registry
 
     def __init__(self, *args, **kwargs):
-        self._formatter = self.registry.get(kwargs.get('format'))
+        self._formatter: BaseFormatter = self.registry.get(kwargs.get("format") or "")
         super().__init__(*args, **kwargs)
 
     def set_config(self, config):
         super().set_config(config)
-        self._formatter = self.registry.get(self.config.get('format'))
+        self._formatter = self.registry.get(self.config.get("format") or "")
 
     def decode(self, b):
         return self._formatter.decode(b)

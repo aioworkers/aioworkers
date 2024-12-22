@@ -13,6 +13,7 @@ class Facade(LoggingEntity, AbstractSender):
         self._queue = self.context.get_object(self.config.queue)
 
     async def send_message(self, msg):
+        assert self._queue
         await self._queue.put(msg)
 
 

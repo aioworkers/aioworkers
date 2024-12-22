@@ -1,10 +1,11 @@
 import functools
 import logging
 import sys
+from argparse import Namespace
 from dataclasses import dataclass
 from importlib.metadata import EntryPoint, entry_points
 from pathlib import Path, PurePath
-from typing import Dict, Iterable, Mapping, Optional, Sequence, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 
 from . import config, formatter
 
@@ -29,7 +30,7 @@ def load_plugin(
     module: str,
     force: bool = False,
     *,
-    cache: Dict = {},
+    cache: Dict = {},  # noqa: B006
 ) -> Optional['Plugin']:
     if module in cache:
         return cache[module]
@@ -97,7 +98,7 @@ class Plugin:
     def add_arguments(self, parser):
         pass
 
-    def parse_known_args(self, args, namespace):
+    def parse_known_args(self, args: List[str], namespace: Namespace) -> Tuple[Namespace, List[str]]:
         """argparse method"""
         return namespace, args
 

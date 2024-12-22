@@ -15,7 +15,7 @@ jobs:
       max-parallel: 5
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-22.04
         python-version:
           - '3.9'
           - '3.10'
@@ -23,7 +23,7 @@ jobs:
         continue-on-error:
           - false
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             python-version: '3.8'
             coverage: true
             lint: true
@@ -55,15 +55,7 @@ jobs:
       - name: ruff
         if: ${{ matrix.lint }}
         run: |
-          hatch run lint:ruff check aioworkers tests
-      - name: isort
-        if: ${{ matrix.lint }}
-        run: |
-          hatch run lint:isort -c aioworkers tests
-      - name: black
-        if: ${{ matrix.lint }}
-        run: |
-          hatch run lint:black --check --diff aioworkers tests
+          hatch run lint:style aioworkers tests
       - name: mypy
         if: ${{ matrix.lint }}
         run: |
@@ -76,12 +68,3 @@ jobs:
         if: ${{ matrix.coverage }}
         run: |
           hatch run coverage xml
-      - name: Upload coverage to Codecov
-        if: ${{ matrix.coverage }}
-        uses: codecov/codecov-action@v5.1.0
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true

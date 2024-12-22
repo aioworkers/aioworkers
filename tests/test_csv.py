@@ -19,9 +19,7 @@ def config_yaml(csv_file):
     reader:
         cls: aioworkers.queue.csv.DictReader
         file: {}
-    """.format(
-        csv_file.name
-    )
+    """.format(csv_file.name)
 
 
 async def test_dictreader(context):
