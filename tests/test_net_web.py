@@ -1,5 +1,5 @@
-import sys
 import socket
+import sys
 
 import pytest
 
@@ -41,7 +41,10 @@ async def handler_post(request, context):
     return {'body': body.decode()}
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 12), reason="fix me")
+@pytest.mark.skipif(
+    sys.version_info >= (3, 12),
+    reason="https://github.com/aioworkers/aioworkers/issues/435",
+)
 @pytest.mark.timeout(5)
 async def test_web_server(context):
     url = context.http.url
@@ -56,7 +59,10 @@ async def test_web_server(context):
         await context.storage.set(url / 'api/not/found/%aa', b'123')  # 404
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 12), reason="fix me")
+@pytest.mark.skipif(
+    sys.version_info >= (3, 12),
+    reason="https://github.com/aioworkers/aioworkers/issues/435",
+)
 @pytest.mark.parametrize(
     "connection,smsg",
     [
@@ -67,7 +73,7 @@ async def test_web_server(context):
     ],
 )
 @pytest.mark.timeout(5)
-async def test_keep_alive(context, event_loop, connection, smsg):
+async def test_keep_alive(context, connection, smsg):
     http_version = "1.0" if "1.0" in smsg else "1.1"
     msg = smsg.encode("utf-8")
     r = f"HTTP/{http_version} 200 OK\r\nServer: aioworkers\r\n"
@@ -77,17 +83,17 @@ async def test_keep_alive(context, event_loop, connection, smsg):
         conn.send(msg)
         response = b""
         while b"asdf" not in response:
-            response += await event_loop.run_in_executor(None, conn.recv, 1024)
+            response += await context.loop.run_in_executor(None, conn.recv, 1024)
         assert response.decode("utf-8").startswith(r)
         assert "keep-alive" not in smsg or b"keep-alive" in response
 
-    await event_loop.run_in_executor(None, conn.close)
+    await context.loop.run_in_executor(None, conn.close)
 
 
-async def test_parse_error(context, event_loop):
+async def test_parse_error(context):
     conn = socket.create_connection((None, context.config.http.port))
     conn.send(b"GET/api/str HTTP/1.1\r\n\r\n")
     r = "HTTP/1.1 500 Expected space after method\r\nServer: aioworkers\r\n"
-    response = await event_loop.run_in_executor(None, conn.recv, 1024)
+    response = await context.loop.run_in_executor(None, conn.recv, 1024)
     assert response.decode("utf-8").startswith(r)
-    await event_loop.run_in_executor(None, conn.close)
+    await context.loop.run_in_executor(None, conn.close)
