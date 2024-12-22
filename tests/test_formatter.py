@@ -61,6 +61,6 @@ def test_registry():
     with pytest.raises(ValueError):
         registry(BaseFormatter)
     with pytest.raises(KeyError):
-        registry.get(1)
+        registry.get("1")
     assert RtsFormatter.name not in registry
     assert RtsFormatter.name in r

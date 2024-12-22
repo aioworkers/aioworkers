@@ -22,14 +22,13 @@ from .core.plugin import Plugin, search_plugins
 parser = argparse.ArgumentParser(prefix_chars='-+')
 
 group = parser.add_mutually_exclusive_group(required=False)
-if sys.version_info >= (3, 8):
-    group.add_argument(
-        "++groups",
-        nargs="+",
-        action="extend",  # not supported on py3.7
-        metavar="GROUP",
-        help="Run groups",
-    )
+group.add_argument(
+    "++groups",
+    nargs="+",
+    action="extend",
+    metavar="GROUP",
+    help="Run groups",
+)
 group.add_argument(
     "+g",
     "++group",
@@ -104,6 +103,7 @@ def main(
             break
 
     args, argv = parser.parse_known_args(argv, namespace=args)
+    assert args, "Namespace is None"
     if args.logging:
         logging.basicConfig(level=args.logging.upper())
 
@@ -130,6 +130,7 @@ def main(
         i.add_arguments(parser)
 
     args, argv = parser.parse_known_args(argv, namespace=args)
+    assert args, "Namespace is None"
     cmds = list(commands)
     while argv and not argv[0].startswith(tuple(parser.prefix_chars)):
         cmds.append(argv.pop(0))
@@ -232,7 +233,7 @@ def main(
             time.sleep(0.3)
 
 
-def process_iter(cfg, cpus=os.cpu_count() or 1):
+def process_iter(cfg, cpus=os.cpu_count() or 1):  # noqa: B008
     result = []
     for k, v in cfg.items():
         if 'count' in v or 'cpus' in v:

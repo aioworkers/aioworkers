@@ -76,5 +76,5 @@ def test_get_plugin_loaders(mocker):
     loaders = get_plugin_loaders("pytest11")
     assert "" not in loaders
     assert __name__ in loaders
-    for k, v in loaders.items():
+    for _k, v in loaders.items():
         assert v.load()

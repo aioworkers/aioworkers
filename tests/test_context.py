@@ -1,8 +1,9 @@
 import asyncio
+from typing import Any
 
 import pytest
 
-from aioworkers.core.config import Config, MergeDict
+from aioworkers.core.config import Config, MergeDict, ValueExtractor
 from aioworkers.core.context import (
     Context,
     EntityContextProcessor,
@@ -14,7 +15,7 @@ from aioworkers.queue.timeout import TimestampQueue
 
 
 def test_octopus():
-    f = Octopus()
+    f: Any = Octopus()
     f.r = 1
     assert f['r'] == 1
     f['g'] = 2
@@ -35,7 +36,7 @@ def test_octopus():
 
 
 def test_octopus_iter():
-    f = Octopus()
+    f: Any = Octopus()
     f.r = 1
     assert f['r'] == 1
     f['g'] = 2
@@ -76,7 +77,7 @@ async def test_context_create(event_loop):
     await c.init()
     assert c.config.f.e == 1
     with pytest.raises(AttributeError):
-        c.r
+        assert c.r
     with pytest.raises(KeyError):
         c['r']
 
@@ -103,9 +104,6 @@ async def test_context_create(event_loop):
 
     with pytest.raises((ValueError, TimeoutError)):
         await c.on_connect.send(c._group_resolver, timeout=0.1)
-
-    def handler_sync():
-        raise ValueError
 
     c.on_stop.append(handler_sync)
     c.on_stop.append(1)
@@ -147,8 +145,8 @@ async def test_signal(event_loop):
     gr = GroupResolver()
     context = Context({}, loop=event_loop, group_resolver=gr)
     s = Signal(context)
-    s.append(1, ('1',))
-    s.append(1)
+    s.append(lambda: 1, ("1",))
+    s.append(lambda: 1)
     await s.send(gr)
     await s.send(GroupResolver(all_groups=True))
 
@@ -166,9 +164,9 @@ async def test_func(event_loop):
 
 def test_create_entity():
     with pytest.raises((ValueError, TypeError)):
-        EntityContextProcessor(None, 'x', {'cls': 'time.time'})
+        EntityContextProcessor(Context(), "x", ValueExtractor(cls="time.time"))
     with pytest.raises(TypeError):
-        EntityContextProcessor(None, 'x', {'cls': 'aioworkers.humanize.size'})
+        EntityContextProcessor(Context(), "x", ValueExtractor(cls="aioworkers.humanize.size"))
 
 
 async def test_precreate_entity():
@@ -178,14 +176,16 @@ async def test_precreate_entity():
 
 async def test_get_object():
     async with Context(
-        {
-            "a": 1,
-            "x": {
-                "y": {
-                    "groups": ["a"],
-                }
-            },
-        },
+        ValueExtractor(
+            {
+                "a": 1,
+                "x": {
+                    "y": {
+                        "groups": ["a"],
+                    }
+                },
+            }
+        ),
         q=TimestampQueue(),
     ) as ctx:
         assert ctx.get_object(".q") is not None

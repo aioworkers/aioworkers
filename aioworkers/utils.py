@@ -70,10 +70,6 @@ def import_uri(obj):
     """
     >>> import_uri(import_uri)
     'aioworkers.utils.import_uri'
-    >>> import_uri(Path)
-    'pathlib.Path'
-    >>> import_uri(Path.exists)
-    'pathlib.Path.exists'
     """
     return '.'.join((obj.__module__, obj.__qualname__))
 

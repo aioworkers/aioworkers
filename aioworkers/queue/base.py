@@ -52,11 +52,11 @@ class ScoreQueueMixin:
     def _set_default(self, cfg):
         default = cfg.get('default_score', self.default_score)
         if not isinstance(default, str):
-            setattr(self, '_default_score', default)
+            setattr(self, "_default_score", default)  # noqa: B010
         elif default == 'time.time':
-            setattr(self, '_default_score', self._loop_time)
+            setattr(self, "_default_score", self._loop_time)  # noqa: B010
         else:
-            setattr(self, '_default_score', import_name(default))
+            setattr(self, "_default_score", import_name(default))  # noqa: B010
 
     def _loop_time(self) -> float:
         return self._loop.time() + self._base_timestamp
@@ -75,10 +75,10 @@ class ScoreQueueMixin:
             if callable(self._default_score):
                 score = self._default_score()
         v = score, value
-        return super().put(v)
+        return super().put(v)  # type: ignore
 
     async def get(self, score=False):
-        s, val = await super().get()
+        s, val = await super().get()  # type: ignore
         if score:
             return val, s
         else:

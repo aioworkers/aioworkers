@@ -119,7 +119,7 @@ async def test_with_context(context):
 
 @pytest.mark.timeout(2)
 async def test_maxsize(context, event_loop):
-    for i in range(9):
+    for _ in range(9):
         await context.q.put(1)
     assert not context.q.full()
     for i in range(4):

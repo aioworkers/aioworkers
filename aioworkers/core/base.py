@@ -9,7 +9,7 @@ from ..utils import import_name, import_uri
 from .config import ValueExtractor
 
 
-class AbstractEntity(ABC):
+class AbstractEntity(ABC):  # noqa: B024
     def __init__(self, config=None, *, context=None, **kwargs):
         self._loop = kwargs.pop('loop', None)
         self._config = ValueExtractor(kwargs)
@@ -44,7 +44,7 @@ class AbstractEntity(ABC):
         self._context = context
         self._loop = context.loop
 
-    async def init(self):
+    async def init(self):  # noqa: B027
         pass
 
     def _set_loop(self, loop):

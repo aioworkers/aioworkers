@@ -9,7 +9,7 @@ from .base import AbstractQueue
 class ProxyQueue(ExecutorEntity, AbstractQueue):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._lock = None
+        self._lock: asyncio.Lock = None  # type: ignore
 
     async def init(self):
         lock = asyncio.Lock()
