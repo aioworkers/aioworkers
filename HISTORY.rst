@@ -5,6 +5,17 @@ History
 Development
 -----------
 
+* Drop py3.7 by @aamalev in https://github.com/aioworkers/aioworkers/pull/237
+* Update template: common lint rules and fixes by @aamalev in https://github.com/aioworkers/aioworkers/pull/434
+* Support py3.12 by @aamalev in https://github.com/aioworkers/aioworkers/pull/216
+* Support Py3.13 by @aamalev in https://github.com/aioworkers/aioworkers/pull/436
+* Option --process {name} by @aamalev in https://github.com/aioworkers/aioworkers/pull/196
+
+
+
+0.27.0 (2023-08-11)
+-------------------
+
 * Drop incorrect stubgen (#202)
 * Method URI.with_host keep auth (#203)
 * Add methods AsyncPath.is_dir/is_file (#205)
