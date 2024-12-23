@@ -25,6 +25,7 @@ def test_main(mocker):
     ns.config_stdin = False
     ns.multiprocessing = False
     ns.groups = None
+    ns.processes = []
     ns.exclude_groups = None
     ns.shutdown_timeout = 1
     parser.parse_known_args.return_value = ns, [__file__]
