@@ -17,35 +17,32 @@ jobs:
         os:
           - ubuntu-22.04
         python-version:
-          - '3.9'
           - '3.10'
           - '3.11'
           - '3.12'
           - '3.13'
+          - pypy-3.9
         continue-on-error:
           - false
         include:
           - os: ubuntu-22.04
-            python-version: '3.8'
+            python-version: '3.9'
             coverage: true
             lint: true
             continue-on-error: false
           - os: macOS-latest
-            python-version: '3.8'
+            python-version: '3.9'
             continue-on-error: false
           - os: windows-latest
-            python-version: '3.8'
+            python-version: '3.9'
             continue-on-error: true
-          - os: ubuntu-22.04
-            python-version: pypy-3.9
-            continue-on-error: false
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -54,11 +51,11 @@ jobs:
       - name: ruff
         if: ${{ matrix.lint }}
         run: |
-          hatch run lint:style aioworkers tests
+          hatch run lint:style
       - name: mypy
         if: ${{ matrix.lint }}
         run: |
-          hatch run lint:mypy aioworkers tests
+          hatch run lint:typing
       - name: Tests with coverage
         run: |
           hatch run cov
