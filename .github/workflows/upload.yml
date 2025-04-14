@@ -11,9 +11,9 @@ jobs:
       name: PyPI
       url: https://pypi.org/project/aioworkers/${{ github.ref_name }}
     steps:
-    - uses: actions/checkout@v4.2.2
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v5.5.0
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
     - name: Install dependencies
