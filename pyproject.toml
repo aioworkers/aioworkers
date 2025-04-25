@@ -75,7 +75,7 @@ dev-interactive = [
     "ipython==9.0.2",
 ]
 dev-lint = [
-    "ruff==0.11.6",
+    "ruff==0.11.7",
     "mypy==1.15.0",
     "types-PyYAML",
     "types-setuptools",
