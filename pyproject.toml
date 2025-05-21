@@ -60,7 +60,7 @@ interactive = [
     "ipykernel",
 ]
 dev-test = [
-    "coverage[toml]==7.8.0",
+    "coverage[toml]==7.8.1",
     "pytest==8.3.5",
     "pytest-aioworkers[asyncio]==0.4.0",
     "pytest-mock==3.14.0",
